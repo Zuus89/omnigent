@@ -19,6 +19,9 @@ real parked elicitations without duplicating the hook machinery.
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
+
 import httpx
 import pytest
 
@@ -42,6 +45,8 @@ async def test_get_pending_elicitation_shape(client: httpx.AsyncClient) -> None:
     GET on a pending elicitation returns status "pending" with the
     expected top-level keys and correct types.
     """
+    from omnigent.runtime import pending_elicitations
+
     agent = await create_test_agent(client, "test-get-pending-shape")
     session_id = await _create_session(client, agent["id"])
     hook_task, elicitation_id = await _park_permission_hook(client, session_id)
@@ -58,14 +63,21 @@ async def test_get_pending_elicitation_shape(client: httpx.AsyncClient) -> None:
         assert isinstance(data["message"], str) and data["message"]
         assert isinstance(data["phase"], str)
         assert isinstance(data["policy_name"], str)
-        assert "content_preview" in data
-    finally:
+        assert isinstance(data["content_preview"], str)
+
         # Clean up: resolve so the hook doesn't leak.
         await client.post(
             f"/v1/sessions/{session_id}/elicitations/{elicitation_id}/resolve",
             json={"action": "decline"},
         )
-        await hook_task
+        async with asyncio.timeout(5):
+            _ = await hook_task
+    finally:
+        if not hook_task.done():
+            hook_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await hook_task
+        pending_elicitations.reset_for_tests()
 
 
 async def test_get_nonexistent_elicitation_on_valid_session(
@@ -112,24 +124,34 @@ async def test_get_after_resolution_returns_resolved(
     Parks a real elicitation, resolves it, then asserts the GET
     endpoint no longer reports it as pending.
     """
+    from omnigent.runtime import pending_elicitations
+
     agent = await create_test_agent(client, "test-get-after-resolve")
     session_id = await _create_session(client, agent["id"])
     hook_task, elicitation_id = await _park_permission_hook(client, session_id)
 
-    # Resolve it.
-    verdict = await client.post(
-        f"/v1/sessions/{session_id}/elicitations/{elicitation_id}/resolve",
-        json={"action": "accept"},
-    )
-    assert verdict.status_code == 202, verdict.text
-    await hook_task
+    try:
+        # Resolve it.
+        verdict = await client.post(
+            f"/v1/sessions/{session_id}/elicitations/{elicitation_id}/resolve",
+            json={"action": "accept"},
+        )
+        assert verdict.status_code == 202, verdict.text
+        async with asyncio.timeout(5):
+            _ = await hook_task
 
-    # GET should now show resolved.
-    resp = await client.get(
-        f"/v1/sessions/{session_id}/elicitations/{elicitation_id}",
-    )
-    assert resp.status_code == 200, resp.text
-    assert resp.json()["status"] == "resolved"
+        # GET should now show resolved.
+        resp = await client.get(
+            f"/v1/sessions/{session_id}/elicitations/{elicitation_id}",
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["status"] == "resolved"
+    finally:
+        if not hook_task.done():
+            hook_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await hook_task
+        pending_elicitations.reset_for_tests()
 
 
 # ── POST /sessions/{id}/elicitations/{eid}/resolve ───────
@@ -157,25 +179,35 @@ async def test_post_resolve_already_resolved_is_idempotent(
     The ``_resolve_elicitation`` helper skips a done Future gracefully,
     so a double-submit from the UI must not error.
     """
+    from omnigent.runtime import pending_elicitations
+
     agent = await create_test_agent(client, "test-double-resolve")
     session_id = await _create_session(client, agent["id"])
     hook_task, elicitation_id = await _park_permission_hook(client, session_id)
 
-    # First resolve — actually wakes the hook.
-    first = await client.post(
-        f"/v1/sessions/{session_id}/elicitations/{elicitation_id}/resolve",
-        json={"action": "accept"},
-    )
-    assert first.status_code == 202, first.text
-    await hook_task
+    try:
+        # First resolve — actually wakes the hook.
+        first = await client.post(
+            f"/v1/sessions/{session_id}/elicitations/{elicitation_id}/resolve",
+            json={"action": "accept"},
+        )
+        assert first.status_code == 202, first.text
+        async with asyncio.timeout(5):
+            _ = await hook_task
 
-    # Second resolve — the Future is already done; should still 202.
-    second = await client.post(
-        f"/v1/sessions/{session_id}/elicitations/{elicitation_id}/resolve",
-        json={"action": "decline"},
-    )
-    assert second.status_code == 202, second.text
-    assert second.json() == {"queued": False}
+        # Second resolve — the Future is already done; should still 202.
+        second = await client.post(
+            f"/v1/sessions/{session_id}/elicitations/{elicitation_id}/resolve",
+            json={"action": "decline"},
+        )
+        assert second.status_code == 202, second.text
+        assert second.json() == {"queued": False}
+    finally:
+        if not hook_task.done():
+            hook_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await hook_task
+        pending_elicitations.reset_for_tests()
 
 
 async def test_post_resolve_nonexistent_elicitation_on_valid_session(
