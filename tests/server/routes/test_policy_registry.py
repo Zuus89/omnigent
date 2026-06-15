@@ -15,7 +15,7 @@ async def test_list_policy_registry(client: httpx.AsyncClient) -> None:
 
 
 async def test_policy_registry_entry_shape(client: httpx.AsyncClient) -> None:
-    """Each registry entry has handler, description, and param_schema fields."""
+    """Each registry entry has handler, description, and params_schema fields."""
     resp = await client.get("/v1/policy-registry")
     assert resp.status_code == 200
     entries = resp.json()["data"]
@@ -23,3 +23,4 @@ async def test_policy_registry_entry_shape(client: httpx.AsyncClient) -> None:
         for entry in entries:
             assert "handler" in entry
             assert "description" in entry
+            assert "params_schema" in entry

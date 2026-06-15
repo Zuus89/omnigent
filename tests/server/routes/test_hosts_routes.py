@@ -15,10 +15,10 @@ async def test_hosts_not_mounted_without_host_store(client: httpx.AsyncClient) -
     """GET /v1/hosts returns 404 when hosts are not configured."""
     resp = await client.get("/v1/hosts")
     # When host_store is not provided, the router is not mounted at all.
-    assert resp.status_code in (404, 405)
+    assert resp.status_code == 404
 
 
 async def test_get_host_not_mounted(client: httpx.AsyncClient) -> None:
     """GET /v1/hosts/{id} returns 404 when hosts are not configured."""
     resp = await client.get("/v1/hosts/host_nonexistent_12345")
-    assert resp.status_code in (404, 405)
+    assert resp.status_code == 404
