@@ -563,8 +563,8 @@ function PermissionModeOptions({
             onPointerEnter={() => setPreviewed(mode.value)}
             // pl only — the kit's pr-8 reserves room for the
             // absolutely-positioned check.
-            // text-xs matches the other footer-tray menus (host picker).
-            className="rounded-sm pl-2 py-1 text-xs"
+            // text-sm for legibility in the Advanced menu.
+            className="rounded-sm pl-2 py-1 text-sm"
           >
             {mode.label}
           </DropdownMenuRadioItem>
@@ -575,7 +575,7 @@ function PermissionModeOptions({
         data-testid="new-chat-landing-permission-detail"
         // One reserved line, not two: reserving the longest blurb's wrapped
         // second line left a permanent blank row under one-line blurbs.
-        className="min-h-5 px-2 pt-0.5 pb-1 text-xs leading-relaxed text-muted-foreground"
+        className="min-h-5 px-2 pt-0.5 pb-1 text-sm leading-relaxed text-muted-foreground"
       >
         {detail}
       </p>
@@ -612,7 +612,7 @@ function ApprovalModeOptions({
             data-testid={`new-chat-landing-approval-${mode.value}`}
             onFocus={() => setPreviewed(mode.value)}
             onPointerEnter={() => setPreviewed(mode.value)}
-            className="rounded-sm pl-2 py-1 text-xs"
+            className="rounded-sm pl-2 py-1 text-sm"
           >
             {mode.label}
           </DropdownMenuRadioItem>
@@ -621,7 +621,7 @@ function ApprovalModeOptions({
       <DropdownMenuSeparator />
       <p
         data-testid="new-chat-landing-approval-detail"
-        className="min-h-5 px-2 pt-0.5 pb-1 text-xs leading-relaxed text-muted-foreground"
+        className="min-h-5 px-2 pt-0.5 pb-1 text-sm leading-relaxed text-muted-foreground"
       >
         {detail}
       </p>
@@ -649,7 +649,7 @@ function BrainHarnessOptions({
 }) {
   return (
     <>
-      <div className="px-2 pt-1.5 pb-0.5 text-[11px] font-medium text-muted-foreground">
+      <div className="px-2 pt-1.5 pb-0.5 text-xs font-medium text-muted-foreground">
         Agent Harness
       </div>
       <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
@@ -660,8 +660,8 @@ function BrainHarnessOptions({
             data-testid={`new-chat-landing-harness-${id}`}
             // pl only — the kit's pr-8 reserves room for the
             // absolutely-positioned check.
-            // text-xs matches the other footer-tray menus (host picker).
-            className="rounded-sm pl-2 py-1 text-xs"
+            // text-sm for legibility in the Advanced menu.
+            className="rounded-sm pl-2 py-1 text-sm"
           >
             <span className="flex-1">{label}</span>
             {harnessUnconfiguredOnHost(id, host) && (
@@ -1563,9 +1563,7 @@ export function NewChatLandingScreen() {
                             className="gap-1.5 rounded-sm px-2 py-1.5 text-sm font-medium"
                           >
                             <ChevronLeftIcon className="size-4 shrink-0 opacity-70" />
-                            <span className="truncate">
-                              {selectedAgent?.display_name ?? "Advanced settings"}
-                            </span>
+                            <span>Back</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {selectedAgentDefaultHarness != null && (
@@ -1586,7 +1584,7 @@ export function NewChatLandingScreen() {
                           {supportsPermissionMode && (
                             <>
                               {selectedAgentDefaultHarness != null && <DropdownMenuSeparator />}
-                              <div className="px-2 pt-1.5 pb-0.5 text-[11px] font-medium text-muted-foreground">
+                              <div className="px-2 pt-1.5 pb-0.5 text-xs font-medium text-muted-foreground">
                                 Permission mode
                               </div>
                               <PermissionModeOptions
@@ -1604,7 +1602,7 @@ export function NewChatLandingScreen() {
                               {(selectedAgentDefaultHarness != null || supportsPermissionMode) && (
                                 <DropdownMenuSeparator />
                               )}
-                              <div className="px-2 pt-1.5 pb-0.5 text-[11px] font-medium text-muted-foreground">
+                              <div className="px-2 pt-1.5 pb-0.5 text-xs font-medium text-muted-foreground">
                                 Approval mode
                               </div>
                               <ApprovalModeOptions
