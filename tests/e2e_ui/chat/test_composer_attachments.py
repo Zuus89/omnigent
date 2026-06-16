@@ -68,9 +68,7 @@ def test_attach_then_remove_file(
     expect(page.get_by_text(_ATTACH_NAME, exact=True)).to_be_hidden()
 
 
-def test_attach_json_file(
-    page: Page, seeded_session: tuple[str, str], tmp_path: Path
-) -> None:
+def test_attach_json_file(page: Page, seeded_session: tuple[str, str], tmp_path: Path) -> None:
     """A ``.json`` file is admitted by the picker and attaches as a chip.
 
     Guards the change that added ``application/json`` to the composer's
@@ -94,9 +92,9 @@ def test_attach_json_file(
     file_input = page.locator('input[type="file"][accept*="image/"]')
     # The accept attr is what gates the picker/drag-drop; assert JSON is listed.
     accept = file_input.get_attribute("accept")
-    assert accept is not None and "application/json" in accept, (
-        f"composer file input should accept application/json; got {accept!r}"
-    )
+    assert (
+        accept is not None and "application/json" in accept
+    ), f"composer file input should accept application/json; got {accept!r}"
 
     file_input.set_input_files(str(sample))
 
