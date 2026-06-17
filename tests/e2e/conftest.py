@@ -92,7 +92,6 @@ _DATABRICKS_MODEL_MAP: dict[str, str] = {
 # spawning, terminal hierarchies, etc.) and have no docs pointing
 # at them from elsewhere in the repo.
 _CLAUDE_CODER_DIR = _REPO_ROOT / "tests" / "resources" / "agents" / "claude-coder"
-_CLAUDE_CODER_SANDBOX_DIR = _REPO_ROOT / "tests" / "resources" / "agents" / "claude-coder-sandbox"
 _OPENAI_CODER_DIR = _REPO_ROOT / "tests" / "resources" / "examples" / "openai-coder"
 _SANDBOX_DEPS_OS_ENV_DIR = _REPO_ROOT / "tests" / "resources" / "agents" / "sandbox-deps-os-env"
 _SYS_TERMINAL_TEST_DIR = _REPO_ROOT / "tests" / "resources" / "agents" / "sys-terminal-test"
@@ -792,27 +791,6 @@ def claude_coder_agent(http_client: httpx.Client, databricks_workspace_host: str
     return upload_agent(
         http_client,
         _CLAUDE_CODER_DIR,
-        rewrite_model_for_databricks=databricks_workspace_host is not None,
-    )
-
-
-@pytest.fixture(scope="session")
-def claude_coder_sandbox_agent(
-    http_client: httpx.Client, databricks_workspace_host: str | None
-) -> str:
-    """
-    Upload the sandbox-enabled claude-coder test fixture and return its name.
-
-    The shared ``claude_coder_agent`` fixture intentionally remains
-    unsandboxed for existing consumers; this fixture is scoped to e2e tests
-    that assert workspace isolation behavior.
-
-    :param http_client: HTTP client pointed at the server.
-    :returns: The agent name, ``"claude-coder-sandbox"``.
-    """
-    return upload_agent(
-        http_client,
-        _CLAUDE_CODER_SANDBOX_DIR,
         rewrite_model_for_databricks=databricks_workspace_host is not None,
     )
 

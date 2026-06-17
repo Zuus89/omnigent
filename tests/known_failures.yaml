@@ -802,6 +802,32 @@ skips:
   # Cluster: claude_coder sandbox enforcement. All 5 tests in
   # test_claude_coder_sandbox.py flipped together — suggests the
   # sandbox enforcement path or its fixture regressed.
+  - id: tests/e2e/test_claude_coder_sandbox.py::test_edit_blocked_outside_workspace
+    reason: "Sandbox enforcement e2e: claude-sdk harness needs the claude CLI, which is not on PATH after the linux_bwrap sandbox re-exec under flake-stress (FileNotFoundError .../node_modules/.bin/claude). Migration to sessions API is done but live validation must happen in the e2e.yml shard, not flake-stress. Kept suppressed pending that."
+    issue: 0
+    cluster: sandbox-deps-env
+    mode: skip
+  - id: tests/e2e/test_claude_coder_sandbox.py::test_glob_blocked_outside_workspace
+    reason: "Sandbox enforcement e2e: claude-sdk harness needs the claude CLI, which is not on PATH after the linux_bwrap sandbox re-exec under flake-stress (FileNotFoundError .../node_modules/.bin/claude). Migration to sessions API is done but live validation must happen in the e2e.yml shard, not flake-stress. Kept suppressed pending that."
+    issue: 0
+    cluster: sandbox-deps-env
+    mode: skip
+  - id: tests/e2e/test_claude_coder_sandbox.py::test_read_blocked_outside_workspace
+    reason: "Sandbox enforcement e2e: claude-sdk harness needs the claude CLI, which is not on PATH after the linux_bwrap sandbox re-exec under flake-stress (FileNotFoundError .../node_modules/.bin/claude). Migration to sessions API is done but live validation must happen in the e2e.yml shard, not flake-stress. Kept suppressed pending that."
+    issue: 0
+    cluster: sandbox-deps-env
+    mode: skip
+  - id: tests/e2e/test_claude_coder_sandbox.py::test_write_blocked_outside_workspace
+    reason: "Sandbox enforcement e2e: claude-sdk harness needs the claude CLI, which is not on PATH after the linux_bwrap sandbox re-exec under flake-stress (FileNotFoundError .../node_modules/.bin/claude). Migration to sessions API is done but live validation must happen in the e2e.yml shard, not flake-stress. Kept suppressed pending that."
+    issue: 0
+    cluster: sandbox-deps-env
+    mode: skip
+  - id: tests/e2e/test_claude_coder_sandbox.py::test_write_succeeds_inside_workspace
+    reason: "Sandbox enforcement e2e: claude-sdk harness needs the claude CLI, which is not on PATH after the linux_bwrap sandbox re-exec under flake-stress (FileNotFoundError .../node_modules/.bin/claude). Migration to sessions API is done but live validation must happen in the e2e.yml shard, not flake-stress. Kept suppressed pending that."
+    issue: 0
+    cluster: sandbox-deps-env
+    mode: skip
+
   - id: tests/e2e/omnigent/test_example_coding_supervisor_with_forks.py::test_coding_supervisor_with_forks_one_shot[databricks_supervisor]
     reason: "Force-merge backlog (databricks_supervisor harness cluster). First observed failing at 305e9bb9 (2026-05-23T06:06:59Z, E2E)."
     issue: 0

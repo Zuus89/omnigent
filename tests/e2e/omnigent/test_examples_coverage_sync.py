@@ -122,7 +122,6 @@ _ALT_COVERED: frozenset[str] = frozenset(
         # name from existing e2e tests).
         "ask-demo",
         "claude-coder",
-        "claude-coder-sandbox",
         "coding-supervisor",
         "compaction-test",
         # Test-only fixtures added with OMNIGENT_TERMINAL_BRIDGE (commits
