@@ -1,9 +1,18 @@
 # Engineers eligible for round-robin issue assignment.
-# One bare GitHub username per line. Comments start with #.
+# One entry per line: username followed by optional comma-separated domains.
+# Lines starting with # are comments.
+#
+# Format: <username> [domain1,domain2,...]
+# Domains match comp:* labels from the triage bot.
+#
+# When a comp:* label is assigned, the workflow picks from engineers
+# with a matching domain. If no match or no domain listed, the full
+# list is used as fallback.
+#
 # Used by the issue triage workflow for P0/P1 auto-assignment.
-bbqiu
-daniellok-db
-dhruv0811
-PattaraS
-TomeHirata
-serena-ruan
+bbqiu server,runner
+daniellok-db harnesses,runner
+dhruv0811 server,policies
+PattaraS web-ui
+TomeHirata server,harnesses
+serena-ruan repr,policies

@@ -68,10 +68,25 @@ jobs:
 
       - name: Read issue assignees
         if: steps.creds.outputs.available == 'true'
-        id: maintainers
+        id: assignees
         run: |
-          list=$(grep -v '^#' .github/ISSUE_ASSIGNEES | grep -v '^\s*$' | tr '\n' ',' | sed 's/,$//')
-          echo "list=${list}" >> "$GITHUB_OUTPUT"
+          # Parse ISSUE_ASSIGNEES into a JSON map: {"username": ["domain1", ...], ...}
+          # This is consumed by the "Apply triage labels" step for domain-aware routing.
+          python3 <<'PYEOF'
+          import json, pathlib
+
+          assignees = {}
+          for line in pathlib.Path(".github/ISSUE_ASSIGNEES").read_text().splitlines():
+              line = line.strip()
+              if not line or line.startswith("#"):
+                  continue
+              parts = line.split()
+              username = parts[0]
+              domains = parts[1].split(",") if len(parts) > 1 else []
+              assignees[username] = domains
+
+          pathlib.Path("/tmp/assignees.json").write_text(json.dumps(assignees))
+          PYEOF
 
       - name: Fetch issue content and duplicate candidates
         if: steps.creds.outputs.available == 'true'
@@ -274,7 +289,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          MAINTAINERS: ${{ steps.maintainers.outputs.list }}
         run: |
           set -euo pipefail
 
@@ -387,16 +401,44 @@ jobs:
               --body "Potential duplicate of #${dup}. React 👎 to contest."
           fi
 
-          # Round-robin assign maintainer for P0/P1 issues.
+          # Round-robin assign engineer for P0/P1 issues, with domain routing.
           priority=$(echo "$result" | jq -r '.priority // empty')
           if [ "$priority" = "P0-critical" ] || [ "$priority" = "P1-high" ]; then
-            IFS=',' read -ra maintainers <<< "$MAINTAINERS"
-            count=${#maintainers[@]}
-            if [ "$count" -gt 0 ]; then
-              index=$(( ISSUE_NUMBER % count ))
-              assignee="${maintainers[$index]}"
+            component=$(echo "$result" | jq -r '.component // empty')
+            python3 <<PYEOF
+          import json, pathlib, os
+
+          assignees = json.loads(pathlib.Path("/tmp/assignees.json").read_text())
+          issue_number = int(os.environ["ISSUE_NUMBER"])
+          component = "${component}"
+
+          # Extract domain from comp:* label (e.g. "comp:server" → "server").
+          domain = component.removeprefix("comp:") if component else ""
+
+          # Filter to engineers matching the domain; fall back to full list.
+          if domain:
+              candidates = [u for u, ds in assignees.items() if domain in ds]
+          else:
+              candidates = []
+
+          if not candidates:
+              candidates = list(assignees.keys())
+
+          if candidates:
+              candidates.sort()  # deterministic order
+              index = issue_number % len(candidates)
+              assignee = candidates[index]
+              print(f"Assigning to {assignee} (domain={domain or 'any'}, "
+                    f"index {index} of {len(candidates)} candidates)")
+              pathlib.Path("/tmp/assignee.txt").write_text(assignee)
+          else:
+              print("No assignees configured")
+              pathlib.Path("/tmp/assignee.txt").write_text("")
+          PYEOF
+
+            assignee=$(cat /tmp/assignee.txt)
+            if [ -n "$assignee" ]; then
               gh issue edit "$ISSUE_NUMBER" --repo "$REPO" --add-assignee "$assignee"
-              echo "Assigned to: $assignee (index $index of $count)"
             fi
           fi
 
