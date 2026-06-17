@@ -426,6 +426,7 @@ def live_runner_id() -> str:
 def live_server(
     request: pytest.FixtureRequest,
     llm_api_key: str,
+    using_mock_llm: bool,
     databricks_workspace_host: str | None,
     tmp_path_factory: pytest.TempPathFactory,
     live_runner_id: str,
@@ -487,7 +488,7 @@ def live_server(
         "PYTHONPATH": f"{_REPO_ROOT}{os.pathsep}{os.environ.get('PYTHONPATH', '')}",
         "OMNIGENT_BUILTIN_AGENT_DIRS": str(builtin_sdk_chat_spec),
     }
-    if mock_llm_server_url is not None:
+    if using_mock_llm and mock_llm_server_url is not None:
         # Mock mode: point all LLM calls at the mock server.
         # The OpenAI SDK appends /responses to the base URL, so
         # include /v1 in the base so the SDK hits /v1/responses.
@@ -536,7 +537,7 @@ def live_server(
         "--artifact-location",
         str(artifact_dir),
     ]
-    if mock_llm_server_url is not None:
+    if using_mock_llm and mock_llm_server_url is not None:
         server_cfg = tmp_path_factory.mktemp("e2e_server_cfg") / "server.yaml"
         server_cfg.write_text(
             yaml.safe_dump(
