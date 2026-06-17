@@ -7,8 +7,9 @@ name: Polly AI Review
 # Draft PRs are skipped (ready_for_review re-fires).
 #
 # Triggers:
-#   - pull_request opened/synchronize/reopened/ready_for_review (automatic)
+#   - pull_request opened/reopened/ready_for_review (automatic, once per PR)
 #   - `/review` comment on a PR (manual retrigger by write-access users)
+#   - workflow_dispatch with a PR number (manual retrigger from Actions tab)
 
 on:
   pull_request:
@@ -397,10 +398,10 @@ jobs:
             | tail -1)
 
           if [ -n "$existing_id" ]; then
+            # Use -F to read body from file via jq-style @-prefixed path.
             gh api "repos/${REPO}/issues/comments/${existing_id}" \
               -X PATCH \
-              --input /tmp/comment.md \
-              -f body="$(cat /tmp/comment.md)" > /dev/null
+              -F "body=@/tmp/comment.md" > /dev/null
             echo "Updated existing comment ${existing_id}"
           else
             gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file /tmp/comment.md
