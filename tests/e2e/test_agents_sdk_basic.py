@@ -9,6 +9,11 @@ runner-state contract requires ``conversations.runner_id``
 to be set before dispatch, so we create the session and PATCH a
 runner before any ``/events`` POST.
 
+In mock-LLM mode, an inline agent is registered pointing at the
+mock server instead of the bundled openai-coder agent (which has
+sub-agents/skills the mock cannot drive). The mock response queue
+supplies the expected answers directly.
+
 Usage::
 
     pytest tests/e2e/test_agents_sdk_basic.py \
@@ -17,13 +22,17 @@ Usage::
 
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
 import httpx
 
 from tests.e2e.conftest import (
+    configure_mock_llm,
     create_runner_bound_session,
     poll_session_until_terminal,
+    register_inline_agent,
+    reset_mock_llm,
     send_user_message_to_session,
 )
 
@@ -50,6 +59,8 @@ def test_agents_sdk_single_turn_completes(
     http_client: httpx.Client,
     openai_coder_agent: str,
     live_runner_id: str,
+    using_mock_llm: bool,
+    mock_llm_server_url: str,
 ) -> None:
     """
     Basic smoke test: the Agents SDK executor runs a single
@@ -66,9 +77,25 @@ def test_agents_sdk_single_turn_completes(
     - If ``TurnComplete`` is never yielded, the response
       stays in ``in_progress`` forever and the poll times out.
     """
+    if using_mock_llm:
+        model = f"mock-basic-single-{uuid.uuid4().hex[:6]}"
+        reset_mock_llm(mock_llm_server_url)
+        agent_name = register_inline_agent(
+            http_client,
+            name=f"basic-single-{uuid.uuid4().hex[:6]}",
+            harness="openai-agents",
+            model=model,
+            profile="",
+            prompt="You are a helpful math assistant.",
+            mock_llm_base_url=f"{mock_llm_server_url}/v1",
+        )
+        configure_mock_llm(mock_llm_server_url, [{"text": "The answer is 4."}], key=model)
+    else:
+        agent_name = openai_coder_agent
+
     session_id = create_runner_bound_session(
         http_client,
-        agent_name=openai_coder_agent,
+        agent_name=agent_name,
         runner_id=live_runner_id,
     )
     response_id = send_user_message_to_session(
@@ -94,6 +121,8 @@ def test_agents_sdk_multi_turn_remembers(
     http_client: httpx.Client,
     openai_coder_agent: str,
     live_runner_id: str,
+    using_mock_llm: bool,
+    mock_llm_server_url: str,
 ) -> None:
     """
     Two-turn conversation: the agent remembers turn 1 content
@@ -111,9 +140,32 @@ def test_agents_sdk_multi_turn_remembers(
     - If the workflow doesn't load prior items into ``messages``,
       the executor receives an empty history.
     """
+    if using_mock_llm:
+        model = f"mock-basic-multi-{uuid.uuid4().hex[:6]}"
+        reset_mock_llm(mock_llm_server_url)
+        agent_name = register_inline_agent(
+            http_client,
+            name=f"basic-multi-{uuid.uuid4().hex[:6]}",
+            harness="openai-agents",
+            model=model,
+            profile="",
+            prompt="You are a helpful assistant.",
+            mock_llm_base_url=f"{mock_llm_server_url}/v1",
+        )
+        configure_mock_llm(
+            mock_llm_server_url,
+            [
+                {"text": "OK, noted."},
+                {"text": "Your name is Zephyr and you live in Portland."},
+            ],
+            key=model,
+        )
+    else:
+        agent_name = openai_coder_agent
+
     session_id = create_runner_bound_session(
         http_client,
-        agent_name=openai_coder_agent,
+        agent_name=agent_name,
         runner_id=live_runner_id,
     )
 
