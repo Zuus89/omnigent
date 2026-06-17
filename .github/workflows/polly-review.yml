@@ -15,13 +15,19 @@ on:
     types: [opened, reopened, ready_for_review]
   issue_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to review.
+        required: true
+        type: string
 
 permissions:
   contents: read
   pull-requests: write
 
 concurrency:
-  group: polly-review-${{ github.event.pull_request.number || github.event.issue.number }}
+  group: polly-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
   cancel-in-progress: true
 
 env:
@@ -38,7 +44,8 @@ jobs:
   review:
     name: Polly AI Review
     needs: gate
-    # Fire on non-draft PRs OR on `/review` comments on PRs by write-access users.
+    # Fire on non-draft PRs, `/review` comments by write-access users,
+    # or workflow_dispatch with a PR number.
     if: >-
       (
         github.event_name == 'pull_request' &&
@@ -54,7 +61,8 @@ jobs:
           github.event.comment.author_association == 'MEMBER' ||
           github.event.comment.author_association == 'COLLABORATOR'
         )
-      )
+      ) ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -83,16 +91,13 @@ jobs:
       - name: Resolve PR number
         if: steps.trigger.outputs.skip != 'true'
         id: pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "issue_comment" ]; then
-            echo "pr_number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-          fi
+          case "${{ github.event_name }}" in
+            issue_comment)      echo "pr_number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT" ;;
+            workflow_dispatch)   echo "pr_number=${{ inputs.pr }}" >> "$GITHUB_OUTPUT" ;;
+            *)                  echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT" ;;
+          esac
 
       # Always check out the default branch (trusted). The PR diff is
       # fetched via the API — we never execute PR-authored code. This
