@@ -545,4 +545,31 @@ describe("WorkspacePicker new folder", () => {
     const btn = screen.getByTestId("workspace-picker-new-folder") as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
   });
+
+  it("creates under ~ when home is empty (no entry to resolve the absolute path)", async () => {
+    // An empty home has no entries, so the absolute home path can't be
+    // derived — but the listing HAS loaded. The button must still enable
+    // and create under "~" (the host expands it), otherwise the first
+    // folder in an empty home could never be made.
+    listingWith([]);
+    const mutateAsync = vi.fn().mockResolvedValue("/home/e2e/fresh");
+    useCreateHostDirectoryMock.mockReturnValue({
+      mutateAsync,
+      isPending: false,
+    } as unknown as ReturnType<typeof useCreateHostDirectory>);
+
+    render(<WorkspacePicker hostId="host_1" />);
+
+    const btn = screen.getByTestId("workspace-picker-new-folder") as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+
+    fireEvent.click(btn);
+    fireEvent.change(screen.getByTestId("workspace-picker-new-folder-input"), {
+      target: { value: "fresh" },
+    });
+    fireEvent.click(screen.getByTestId("workspace-picker-new-folder-create"));
+
+    await Promise.resolve();
+    expect(mutateAsync).toHaveBeenCalledWith({ hostId: "host_1", path: "~/fresh" });
+  });
 });

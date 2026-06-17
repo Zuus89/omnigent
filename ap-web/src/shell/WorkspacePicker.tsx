@@ -409,10 +409,19 @@ export function WorkspacePicker({
     onSelect?.(currentAbsolute);
   }
 
-  // The "New folder" action only makes sense once we know a real
-  // absolute directory to create in — disabled at the home view until
-  // the listing resolves it.
-  const canCreateFolder = hostId !== null && currentAbsolute.startsWith("/");
+  // Directory the "New folder" action creates in. A resolved absolute
+  // path is used as-is. At the home view the absolute path is derived
+  // from the first listing entry, so an *empty* home yields no entry and
+  // never resolves — fall back to "~" (the host expands it) once the
+  // listing has loaded, otherwise creating the first folder in an empty
+  // home would be impossible. Stays null while loading so the button is
+  // disabled until we know what home resolves to.
+  const createBaseDir = currentAbsolute.startsWith("/")
+    ? currentAbsolute
+    : path === "" && !isLoading && !isPlaceholderData
+      ? "~"
+      : null;
+  const canCreateFolder = hostId !== null && createBaseDir !== null;
 
   function openNewFolder() {
     setCreateError(null);
@@ -426,10 +435,10 @@ export function WorkspacePicker({
 
   async function commitNewFolder() {
     const name = (newFolderName ?? "").trim();
-    if (name === "" || hostId === null || !currentAbsolute.startsWith("/")) {
+    if (name === "" || hostId === null || createBaseDir === null) {
       return;
     }
-    const target = joinPath(currentAbsolute, name);
+    const target = joinPath(createBaseDir, name);
     try {
       const created = await createDir.mutateAsync({ hostId, path: target });
       // Drop into the freshly created folder so the user can pick it
