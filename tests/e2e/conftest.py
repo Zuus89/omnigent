@@ -205,10 +205,8 @@ def mock_llm_server_url(
     Start a mock LLM server for the test session.
 
     Always started regardless of ``--llm-api-key`` so mock-only
-    tests can run alongside real-LLM tests in the same session.
-    The mock server implements ``POST /v1/responses`` with pre-canned
-    SSE responses. Tests configure it via ``POST /mock/configure``
-    before each turn.
+    e2e tests run alongside real-LLM tests in the same session.
+    The mock server is a lightweight FastAPI/uvicorn subprocess.
 
     :param tmp_path_factory: Pytest temp path factory for logs.
     :returns: The mock server base URL.
