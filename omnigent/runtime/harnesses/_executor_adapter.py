@@ -448,7 +448,6 @@ class ExecutorAdapter(HarnessApp):
 
                             record_cancellation(agent_span)
                             tctx.end_agent_span(agent_span, response=None, status="ERROR")
-                            agent_span = None
                         return
                     if isinstance(event, ExecutorError):
                         if tctx is not None and agent_span is not None:
