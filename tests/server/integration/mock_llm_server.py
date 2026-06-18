@@ -247,6 +247,77 @@ def sse_streaming_text(text: str, model: str = "mock-model") -> str:
     return "".join(events)
 
 
+def sse_text_with_native_items(
+    text: str,
+    native_items: list[dict],
+    model: str = "mock-model",
+) -> str:
+    """Build SSE with text + native tool output items (e.g. web_search_call).
+
+    Native items are emitted as ``response.output_item.done`` events
+    before the text message, matching the real API's ordering.
+    """
+    resp_id = _response_id()
+    msg_id = f"msg_{resp_id}"
+    output_tokens = max(5, len(text.split()))
+    now = _time_mod.time()
+
+    message_item = {
+        "id": msg_id,
+        "type": "message",
+        "role": "assistant",
+        "status": "completed",
+        "content": [{"type": "output_text", "text": text}],
+    }
+    all_output: list[dict] = [*native_items, message_item]
+    response_obj = {
+        "id": resp_id,
+        "object": "response",
+        "status": "completed",
+        "model": model,
+        "output": all_output,
+        "parallel_tool_calls": True,
+        "tools": [],
+        "tool_choice": "auto",
+        "usage": {
+            "input_tokens": 10,
+            "output_tokens": output_tokens,
+            "total_tokens": 10 + output_tokens,
+        },
+        "created_at": now,
+        "completed_at": now,
+    }
+    created_response = {
+        **response_obj,
+        "status": "in_progress",
+        "output": [],
+    }
+
+    seq = 0
+    events: list[str] = []
+
+    def _add(evt_type: str, **extra: object) -> None:
+        nonlocal seq
+        data = {"type": evt_type, "sequence_number": seq, **extra}
+        events.append(f"event: {evt_type}\ndata: {json.dumps(data)}\n\n")
+        seq += 1
+
+    _add("response.created", response=created_response)
+    for idx, item in enumerate(all_output):
+        _add("response.output_item.added", output_index=idx, item=item)
+        if item.get("type") == "message":
+            _add(
+                "response.output_text.done",
+                output_index=idx,
+                item_id=msg_id,
+                content_index=0,
+                text=text,
+            )
+        _add("response.output_item.done", output_index=idx, item=item)
+    _add("response.completed", response=response_obj)
+    return "".join(events)
+
+
 # ── Anthropic Messages API SSE builders ─────────────────
 
 
@@ -400,6 +471,8 @@ class QueuedResponse:
 
     :param text: Response text (for text responses).
     :param tool_calls: Tool call list (for function call responses).
+    :param native_items: Raw output items (e.g. ``web_search_call``)
+        included alongside text in the response.
     :param block: If True, block until gate is released.
     :param stream: If True, stream text deltas before completed.
     :param error: If set, return an error response with this message.
@@ -408,6 +481,7 @@ class QueuedResponse:
 
     text: str = "Mock LLM response"
     tool_calls: list[dict[str, str]] | None = None
+    native_items: list[dict] | None = None
     block: bool = False
     stream: bool = False
     error: str | None = None
@@ -539,6 +613,8 @@ async def create_response(
         sse_body = sse_tool_call_response(qr.tool_calls)
     elif qr.stream:
         sse_body = sse_streaming_text(qr.text)
+    elif qr.native_items:
+        sse_body = sse_text_with_native_items(qr.text, qr.native_items)
     else:
         sse_body = sse_text_response(qr.text)
 
@@ -633,6 +709,7 @@ async def configure(request: Request) -> dict[str, object]:
                 QueuedResponse(
                     text=entry.get("text", "Mock LLM response"),
                     tool_calls=entry.get("tool_calls"),
+                    native_items=entry.get("native_items"),
                     block=entry.get("block", False),
                     stream=entry.get("stream", False),
                     error=entry.get("error"),
