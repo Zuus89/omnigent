@@ -34,17 +34,12 @@ mints its own cookie secret and auto-detects its public URL from Render.
 
 1. Click the Deploy to Render button above → **Apply**. Wait ~3–5 min for the
    image pull + health check.
-2. **Get the admin password:** open the service → **Logs** and find the
-   first-boot block:
-   ```
-   ✓ Created initial admin account (accounts auth provider).
-       password: <generated>
-   ```
-   (also written to `/data/admin-credentials` on the disk; printed once).
-3. Open your `https://<service>.onrender.com` URL, log in as the admin, and
-   invite teammates from **Members** in the web UI.
+2. Open your `https://<service>.onrender.com` URL. On first boot, the web UI
+   shows a **Create admin** form; choose the initial admin username and
+   password there.
+3. After setup completes, invite teammates from **Members** in the web UI.
 
-> To set a known admin password instead of the generated one, add
+> To pre-seed the first admin password instead of using the web setup form, add
 > `OMNIGENT_ACCOUNTS_INIT_ADMIN_PASSWORD` in the dashboard before first boot.
 
 ## Use your own IdP instead (OIDC)
