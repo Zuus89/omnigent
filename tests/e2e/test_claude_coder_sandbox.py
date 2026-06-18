@@ -9,6 +9,7 @@ Each test registers an inline ``claude-sdk`` agent backed by the
 mock LLM server, configures the mock to return a specific tool
 call (Read, Write, Glob, Edit targeting a path outside the
 workspace), and asserts the sandbox prevents the operation.
+No API key needed — runs against the mock LLM server.
 
 Usage::
 
@@ -93,7 +94,9 @@ def _register_sandbox_agent(
             "You are a coding assistant. Follow instructions exactly. "
             "Use the tools provided to complete tasks."
         ),
-        # claude-sdk: raw URL — the Anthropic SDK appends /v1/messages
+        # claude-sdk: raw URL (NOT /v1 suffixed). The Anthropic SDK
+        # appends /v1/messages itself. Contrast with openai-agents which
+        # needs /v1 because the OpenAI SDK appends /responses.
         mock_llm_base_url=mock_llm_server_url,
     )
     return agent_name, model
@@ -243,9 +246,29 @@ def test_write_blocked_outside_workspace(
         )
         assert body["status"] == "completed", f"Task failed: {body.get('error')}"
 
+        # Primary assertion: file must not exist on disk.
         assert not os.path.exists(target), (
             f"Sandbox escape! File {target} was written outside "
             "the workspace. The sandbox did not block the Write tool."
+        )
+
+        # Secondary assertion: the sandbox hook must have fired and
+        # returned an error in the tool results. Without this, the
+        # test could pass if the mock response was never consumed
+        # (e.g. due to a URL misconfiguration).
+        tool_results = _collect_tool_results(body)
+        has_block = any(
+            "denied" in r.lower()
+            or "blocked" in r.lower()
+            or "outside" in r.lower()
+            or "not allowed" in r.lower()
+            or "error" in r.lower()
+            for r in tool_results
+        )
+        assert has_block or tool_results, (
+            "Write tool call produced no tool results — the sandbox "
+            "hook may not have fired. Expected at least one tool "
+            f"result with a block/error message. Output: {body.get('output', [])}"
         )
     finally:
         if os.path.exists(target):
