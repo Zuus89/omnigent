@@ -39,6 +39,7 @@ import os
 import pathlib
 import secrets
 import shutil
+import signal
 import subprocess
 import tempfile
 from asyncio import Queue, Task
@@ -903,6 +904,12 @@ class _PiRpcSession:
             stderr=asyncio.subprocess.PIPE,
             cwd=cwd,
             env=env,
+            # New session/process group (pgid == child pid) so teardown can
+            # os.killpg the whole tree.  The spawned child is frequently the
+            # sandbox launcher wrapping the pi node CLI, which itself spawns
+            # MCP servers / shell tools; signalling only the direct child
+            # would orphan that subtree.  Mirrors codex_executor's spawn.
+            start_new_session=(os.name == "posix"),
         )
         self._read_task = asyncio.create_task(self._reader())
         self._stderr_task = asyncio.create_task(self._stderr_reader())
@@ -983,16 +990,34 @@ class _PiRpcSession:
         self._read_task = None
         self._stderr_task = None
         if self.process is not None:
-            with contextlib.suppress(ProcessLookupError):
-                self.process.terminate()
+            pid = self.process.pid
+            if os.name == "posix" and pid is not None:
+                # Signal the whole process group (pgid == child pid, created
+                # via start_new_session at spawn) so the launcher, pi node CLI,
+                # and any descendants it spawned are torn down — not just the
+                # direct child.  Mirrors codex_executor._terminate_process_tree.
+                with contextlib.suppress(ProcessLookupError, PermissionError, OSError):
+                    os.killpg(pid, signal.SIGTERM)
+            else:
+                with contextlib.suppress(ProcessLookupError, Exception):
+                    self.process.terminate()
             try:
                 await asyncio.wait_for(self.process.wait(), timeout=2.0)
             except (asyncio.TimeoutError, ProcessLookupError, RuntimeError):
                 # RuntimeError can happen when the subprocess was created on a
                 # different event loop (e.g. test fixtures that call close() in
-                # a fresh loop).  Fall back to synchronous kill.
-                with contextlib.suppress(ProcessLookupError):
-                    self.process.kill()
+                # a fresh loop).  Fall back to a SIGKILL of the group.
+                if os.name == "posix" and pid is not None:
+                    with contextlib.suppress(ProcessLookupError, PermissionError, OSError):
+                        os.killpg(pid, signal.SIGKILL)
+                else:
+                    with contextlib.suppress(ProcessLookupError):
+                        self.process.kill()
+                # Reap the killed child so its returncode is set and no zombie
+                # lingers under non-default child watchers (F07).  Guarded so a
+                # wrong-event-loop RuntimeError cannot abort the rest of close().
+                with contextlib.suppress(Exception):
+                    await self.process.wait()
             close_subprocess_transport(self.process)
             self.process = None
         if self._tmp_dir is not None:
