@@ -607,6 +607,11 @@ class MockState:
     def reset(self) -> None:
         """Clear all state (queues, captured requests, gates).
 
+        Queues that have a fallback response set (via ``POST /mock/set_fallback``)
+        are not deleted — their regular responses are cleared but the fallback
+        is preserved so session-level callers (e.g. the policy-classifier LLM)
+        continue to receive a valid response after per-test resets.
+
         Atomically swaps the pending-gates list before releasing
         so a handler that appends between the loop and the clear
         doesn't lose its gate.
@@ -615,7 +620,13 @@ class MockState:
         self.pending_gates = []
         for qr in old_gates:
             qr._gate.set()
-        self.queues.clear()
+        # Preserve queues that have a non-resettable fallback; delete others.
+        for key in list(self.queues):
+            queue = self.queues[key]
+            if queue.fallback is not None:
+                queue.reset()  # clear responses/index, keep fallback
+            else:
+                del self.queues[key]
         self.captured_requests.clear()
         self.request_count = 0
 
