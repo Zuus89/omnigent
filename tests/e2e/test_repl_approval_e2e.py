@@ -1433,11 +1433,14 @@ def test_repl_tool_result_ask_passes_output_through(
             welcome_pattern="e2e.tool.result.gate",
         )
         child.send("mangosteen" + "\r")
-        _wait_for_turn_complete(child, timeout=60)
-        full_turn = child.before or ""
-        if isinstance(full_turn, bytes):
-            full_turn = full_turn.decode("utf-8", errors="replace")
-        full_turn = _strip_ansi(full_turn)
+        # Sync on the post-tool follow-up reply: it only renders after the
+        # LLM's second call, which requires the function_call_output round-trip
+        # to have completed (and thus been recorded by the mock server).
+        # Polling get_mock_requests right after `· ready` can race the mock
+        # server's request recording (~3% flake observed) — expecting the
+        # follow-up text first makes the round-trip recording deterministic.
+        child.expect(follow_up, timeout=60)
+        full_turn = _strip_ansi((child.before or "") + follow_up)
         assert "approval required" not in full_turn, (
             "A TOOL_RESULT-phase approval banner surfaced — interactive "
             f"mid-flight ASK is not implemented (see #765).\nCaptured:\n{full_turn[:1500]}"
@@ -1458,9 +1461,6 @@ def test_repl_tool_result_ask_passes_output_through(
         assert "Denied by policy" not in joined, (
             "A deny sentinel appeared — the TOOL_RESULT ASK refuse path is "
             f"not wired in the REPL today (see #765).\noutputs: {joined[:800]}"
-        )
-        assert follow_up in full_turn, (
-            f"The turn did not complete normally.\nCaptured:\n{full_turn[:1500]}"
         )
     finally:
         try:
