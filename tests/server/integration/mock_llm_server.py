@@ -53,6 +53,7 @@ Configuration via ``POST /mock/configure``::
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import sys
 import time as _time_mod
@@ -578,6 +579,21 @@ class MockState:
         self.captured_requests: list[dict] = []
         self.request_count: int = 0
         self.pending_gates: list[QueuedResponse] = []
+        # Replay cache for SDK transport retries: body-hash -> rendered
+        # response. The OpenAI/Anthropic SDKs retry a request (same body,
+        # ``x-stainless-retry-count`` > 0) when the first attempt's normal
+        # response is interrupted at the transport layer (a connection reset
+        # mid-SSE under CI load). The first attempt already advanced the queue
+        # and was captured, so without this cache the retry consumes the NEXT
+        # queued response — an off-by-one desync that hands the *next* logical
+        # call's response to this one (observed flake: the follow-up text
+        # renders but the tool never runs, so ``function_call_output`` is
+        # empty). Replaying the first attempt's response on retry makes
+        # transport retries transparent — their whole purpose. Only NORMAL
+        # (non-error, non-gate) responses are cached: a configured *error*
+        # response must still advance the queue on retry so "error-then-
+        # success" retry-recovery tests keep working.
+        self.served_responses: dict[str, tuple] = {}
         self._lock = asyncio.Lock()
 
     def get_queue(self, key: str) -> _ResponseQueue:
@@ -629,9 +645,58 @@ class MockState:
                 del self.queues[key]
         self.captured_requests.clear()
         self.request_count = 0
+        self.served_responses.clear()
 
 
 _state = MockState()
+
+
+def _is_transport_retry(request: Request) -> bool:
+    """Return True when this POST is an SDK transport retry.
+
+    The OpenAI/Anthropic (stainless) SDKs stamp every request with
+    ``x-stainless-retry-count`` — ``"0"`` on the first attempt, ``"1"``,
+    ``"2"`` … on retries, reusing the exact same request body. A value
+    greater than zero means a prior attempt at the same logical call
+    already reached the server.
+
+    :param request: The incoming HTTP request.
+    :returns: True if ``x-stainless-retry-count`` is present and > 0.
+    """
+    raw = request.headers.get("x-stainless-retry-count")
+    if raw is None:
+        return False
+    try:
+        return int(raw) > 0
+    except ValueError:
+        return False
+
+
+def _body_hash(body: bytes) -> str:
+    """Stable identity for a request body (retries reuse it byte-for-byte)."""
+    return hashlib.sha256(body).hexdigest()
+
+
+def _response_from_rendered(rendered: tuple) -> StreamingResponse | JSONResponse:
+    """Rebuild a fresh HTTP response from a cached ``(kind, payload)`` tuple.
+
+    ``("json", content)`` → a JSON body; ``("sse", body_str)`` → a
+    single-chunk ``text/event-stream``. A new ``StreamingResponse`` is
+    built each call so a replayed SSE body gets its own (one-shot)
+    generator.
+
+    :param rendered: A ``(kind, payload)`` tuple produced when the
+        response was first served.
+    :returns: A fresh ``JSONResponse`` or ``StreamingResponse``.
+    """
+    kind, payload = rendered
+    if kind == "json":
+        return JSONResponse(content=payload)
+
+    async def _generate() -> AsyncIterator[str]:
+        yield payload
+
+    return StreamingResponse(_generate(), media_type="text/event-stream")
 
 
 # ── Endpoints ────────────────────────────────────────────
@@ -653,14 +718,20 @@ async def create_response(
     except (json.JSONDecodeError, ValueError):
         parsed = {"raw": body.decode(errors="replace")}
 
+    body_hash = _body_hash(body)
     async with _state._lock:
+        # Transport retry of an already-served normal response: replay it
+        # without advancing the queue or re-capturing the request.
+        if _is_transport_retry(request) and body_hash in _state.served_responses:
+            return _response_from_rendered(_state.served_responses[body_hash])
         _state.request_count += 1
         _state.captured_requests.append(parsed)
         model = parsed.get("model") if isinstance(parsed, dict) else None
         queue = _state.resolve_queue(model)
         qr = queue.next()
 
-    # Error response
+    # Error response — NOT cached: a retry must advance the queue so
+    # "error-then-success" retry-recovery tests reach the next response.
     if qr.error is not None:
         return JSONResponse(
             status_code=qr.status_code,
@@ -684,25 +755,27 @@ async def create_response(
         model_name = (
             parsed.get("model", "mock-model") if isinstance(parsed, dict) else "mock-model"
         )
-        return JSONResponse(content=json_text_response(qr.text or "", model=model_name))
-
-    # Build SSE body
-    if qr.tool_calls:
-        sse_body = sse_tool_call_response(qr.tool_calls)
-    elif qr.stream:
-        sse_body = sse_streaming_text(qr.text)
-    elif qr.native_items:
-        sse_body = sse_text_with_native_items(qr.text, qr.native_items)
+        rendered: tuple = ("json", json_text_response(qr.text or "", model=model_name))
     else:
-        sse_body = sse_text_response(qr.text)
+        # Build SSE body
+        if qr.tool_calls:
+            sse_body = sse_tool_call_response(qr.tool_calls)
+        elif qr.stream:
+            sse_body = sse_streaming_text(qr.text)
+        elif qr.native_items:
+            sse_body = sse_text_with_native_items(qr.text, qr.native_items)
+        else:
+            sse_body = sse_text_response(qr.text)
+        rendered = ("sse", sse_body)
 
-    async def _generate() -> AsyncIterator[str]:
-        yield sse_body
+    # Cache normal (non-error) responses so a transport retry replays this
+    # exact response instead of consuming the next queued one. Gated
+    # responses are not cached (gate scenarios are not transport-retried).
+    if not qr.block:
+        async with _state._lock:
+            _state.served_responses[body_hash] = rendered
 
-    return StreamingResponse(
-        _generate(),
-        media_type="text/event-stream",
-    )
+    return _response_from_rendered(rendered)
 
 
 @app.post("/v1/messages", response_model=None)
@@ -721,7 +794,10 @@ async def create_message(
     except (json.JSONDecodeError, ValueError):
         parsed = {"raw": body.decode(errors="replace")}
 
+    body_hash = _body_hash(body)
     async with _state._lock:
+        if _is_transport_retry(request) and body_hash in _state.served_responses:
+            return _response_from_rendered(_state.served_responses[body_hash])
         _state.request_count += 1
         _state.captured_requests.append(parsed)
         model = parsed.get("model") if isinstance(parsed, dict) else None
@@ -747,13 +823,12 @@ async def create_message(
     else:
         sse_body = anthropic_sse_text_response(qr.text)
 
-    async def _generate() -> AsyncIterator[str]:
-        yield sse_body
+    rendered: tuple = ("sse", sse_body)
+    if not qr.block:
+        async with _state._lock:
+            _state.served_responses[body_hash] = rendered
 
-    return StreamingResponse(
-        _generate(),
-        media_type="text/event-stream",
-    )
+    return _response_from_rendered(rendered)
 
 
 @app.post("/v1/chat/completions", response_model=None)
@@ -771,7 +846,10 @@ async def create_chat_completion(
     except (json.JSONDecodeError, ValueError):
         parsed = {"raw": body.decode(errors="replace")}
 
+    body_hash = _body_hash(body)
     async with _state._lock:
+        if _is_transport_retry(request) and body_hash in _state.served_responses:
+            return _response_from_rendered(_state.served_responses[body_hash])
         _state.request_count += 1
         _state.captured_requests.append(parsed)
         model = parsed.get("model") if isinstance(parsed, dict) else None
@@ -821,12 +899,15 @@ async def create_chat_completion(
                 }
             ],
         }
+        rendered: tuple = ("sse", f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n")
+    else:
+        rendered = ("json", body_json)
 
-        async def _stream() -> AsyncIterator[str]:
-            yield f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n"
+    if not qr.block:
+        async with _state._lock:
+            _state.served_responses[body_hash] = rendered
 
-        return StreamingResponse(_stream(), media_type="text/event-stream")
-    return JSONResponse(content=body_json)
+    return _response_from_rendered(rendered)
 
 
 @app.get("/v1/models")
