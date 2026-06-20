@@ -41,7 +41,6 @@ _LOCAL_REMOTE_AUTH_TOKEN = "local-e2e-runner-token"
 _READY_TIMEOUT = 90.0
 _TURN_TIMEOUT = 240.0
 _EXIT_TIMEOUT = 20.0
-_RUNNER_CMD_MARKER = "omnigent.runner._entry"
 _POLL_PAUSE = threading.Event()
 
 
@@ -83,22 +82,6 @@ def _pause_between_external_polls(interval_s: float) -> None:
     :param interval_s: Pause length in seconds, e.g. ``0.25``.
     """
     _POLL_PAUSE.wait(interval_s)
-
-
-def _host_daemon_pid(home: Path) -> int:
-    """
-    Return the connect daemon pid recorded under an isolated test HOME.
-
-    :param home: HOME directory used by a REPL subprocess.
-    :returns: The daemon process id.
-    :raises AssertionError: If the pidfile is missing or malformed.
-    """
-    pid_path = home / ".omnigent" / "host.pid"
-    try:
-        first_line = pid_path.read_text().splitlines()[0]
-        return int(first_line)
-    except (IndexError, OSError, ValueError) as exc:
-        raise AssertionError(f"Missing or invalid daemon pidfile at {pid_path}") from exc
 
 
 def _stop_host_daemon(home: Path) -> None:
@@ -443,59 +426,39 @@ def _drive_turn(
     return _LifecycleResult(session_id=session_id, runner_id=runner_id)
 
 
-def _descendant_processes(root_pid: int) -> dict[int, tuple[int, str]]:
+def _runner_pid_from_daemon_log(home: Path, runner_id: str) -> int:
     """
-    Return descendants of a process keyed by pid.
+    Resolve a runner subprocess pid from the connect-daemon log.
 
-    :param root_pid: Root process id.
-    :returns: Mapping of pid to ``(ppid, command)``.
+    The daemon logs ``Launched runner <id> for workspace <ws> (pid=<N>)``
+    when it spawns a runner (omnigent/host/connect.py). Reading the pid
+    from that line is robust across environments — unlike walking the
+    daemon's process tree, which assumes the runner is a process-tree
+    descendant of the daemon. That holds locally but NOT under CI's
+    container/daemon model, where the tree walk yields "No runner
+    subprocess found under <pid>" (the same CI-process-model gap that
+    keeps ``local_mode_launches_runner_subprocess`` quarantined).
+
+    :param home: Isolated HOME for the REPL/daemon under test.
+    :param runner_id: Runner id whose pid to resolve, e.g.
+        ``"runner_token_abc123"``.
+    :returns: The runner subprocess pid.
+    :raises AssertionError: When the pid is not found in the daemon log.
     """
-    proc = subprocess.run(
-        ["ps", "-eo", "pid=,ppid=,command="],
-        capture_output=True,
-        text=True,
-        check=True,
+    log_dir = home / ".omnigent" / "logs" / "host-daemon"
+    logs = sorted(log_dir.glob("daemon-*.log"))
+    if not logs:
+        raise AssertionError(f"no connect-daemon log under {log_dir}")
+    text = "".join(p.read_text(errors="replace") for p in logs)
+    matches = re.findall(
+        rf"Launched runner {re.escape(runner_id)}\b.*?\(pid=(\d+)\)",
+        text,
     )
-    all_processes: dict[int, tuple[int, str]] = {}
-    children_by_parent: dict[int, list[int]] = {}
-    for raw_line in proc.stdout.splitlines():
-        parts = raw_line.strip().split(None, 2)
-        if len(parts) < 3:
-            continue
-        pid = int(parts[0])
-        ppid = int(parts[1])
-        command = parts[2]
-        all_processes[pid] = (ppid, command)
-        children_by_parent.setdefault(ppid, []).append(pid)
-
-    descendants: dict[int, tuple[int, str]] = {}
-    stack = list(children_by_parent.get(root_pid, []))
-    while stack:
-        pid = stack.pop()
-        process = all_processes.get(pid)
-        if process is None:
-            continue
-        descendants[pid] = process
-        stack.extend(children_by_parent.get(pid, []))
-    return descendants
-
-
-def _find_runner_pid(root_pid: int) -> int:
-    """
-    Find the runner subprocess below a REPL process.
-
-    :param root_pid: REPL process id.
-    :returns: Runner process id.
-    :raises AssertionError: If no runner process is found.
-    """
-    descendants = _descendant_processes(root_pid)
-    for pid, (_ppid, command) in descendants.items():
-        if _RUNNER_CMD_MARKER in command:
-            return pid
-    formatted = "\n".join(
-        f"{pid} <- {ppid}: {command}" for pid, (ppid, command) in sorted(descendants.items())
-    )
-    raise AssertionError(f"No runner subprocess found under {root_pid}.\n{formatted}")
+    if not matches:
+        raise AssertionError(
+            f"runner {runner_id!r} launch pid not found in daemon log under {log_dir}"
+        )
+    return int(matches[-1])
 
 
 def _wait_http_ready(base_url: str, proc: subprocess.Popen[bytes], log_path: Path) -> None:
@@ -865,7 +828,7 @@ def test_repl_recover_after_runner_death(
                     base_url=server.base_url,
                     agent_name="repl_session_recover",
                 )
-                runner_pid = _find_runner_pid(_host_daemon_pid(home))
+                runner_pid = _runner_pid_from_daemon_log(home, first_result.runner_id)
                 os.kill(runner_pid, signal.SIGKILL)
 
                 configure_mock_llm(
