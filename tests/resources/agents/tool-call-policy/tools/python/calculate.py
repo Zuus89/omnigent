@@ -19,8 +19,7 @@ def calculate(expression: str) -> str:
     allowed = set("0123456789+-*/().% ")
     if not all(c in allowed for c in expression):
         return (
-            "Error: expression contains disallowed characters. "
-            "Only basic arithmetic is supported."
+            "Error: expression contains disallowed characters. Only basic arithmetic is supported."
         )
     try:
         result = eval(expression, {"__builtins__": {}}, {})

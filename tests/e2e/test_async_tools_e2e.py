@@ -48,9 +48,7 @@ from tests.e2e.conftest import (
 # (auto-discovered, like the archer fixture), so the server loads them by file
 # path from the uploaded bundle on any version — no dependency on the repo's
 # tests/ tree being importable by the server.
-_ASYNC_TOOLS_DIR = (
-    Path(__file__).resolve().parents[1] / "resources" / "agents" / "async-tools"
-)
+_ASYNC_TOOLS_DIR = Path(__file__).resolve().parents[1] / "resources" / "agents" / "async-tools"
 
 
 def _final_text(response_body: dict[str, Any]) -> str:

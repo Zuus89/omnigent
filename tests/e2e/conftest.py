@@ -1030,9 +1030,7 @@ def register_dir_agent_with_mock_llm(
         headers={"Origin": OMNIGENT_INTERNAL_WS_ORIGIN},
     )
     if resp.status_code not in (200, 201, 409):
-        raise RuntimeError(
-            f"dir-agent register failed: {resp.status_code} {resp.text[:500]}"
-        )
+        raise RuntimeError(f"dir-agent register failed: {resp.status_code} {resp.text[:500]}")
     return name
 
 

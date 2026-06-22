@@ -16,10 +16,6 @@ name: Server Backwards-Compat
 #   schedule            nightly; pins the latest non-rc release tag.
 
 on:
-  # TEMP(backcompat validation): run on PR pushes so these jobs execute on
-  # Actions before #896 merges (workflow_dispatch needs the file on main).
-  # REVERT before merge — backcompat is meant to be dispatch/nightly only.
-  pull_request:
   workflow_dispatch:
     inputs:
       server_version:
@@ -27,9 +23,8 @@ on:
         required: false
         default: ""
   schedule:
-    # 11:00 UTC — after e2e.yml (09:00) and integration.yml (09:30) settle, so
-    # a backcompat failure is distinguishable from a baseline-suite failure.
-    - cron: "0 11 * * *"
+    # Every 4 hours.
+    - cron: "0 */4 * * *"
 
 concurrency:
   group: server-compat-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.inputs.server_version || github.sha }}
