@@ -31,7 +31,7 @@ Endpoints:
 
 Usage::
 
-    python tests/server/integration/mock_llm_server.py 9999
+    python tests/unit/server/integration/mock_llm_server.py 9999
 
 Configuration via ``POST /mock/configure``::
 

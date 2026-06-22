@@ -33,7 +33,7 @@ from typing import Any
 # ``scripts/`` is not a package on the Python path, so a normal
 # ``from scripts.dump_openapi import ...`` would not resolve. We
 # load it via ``importlib`` so the test is robust to the layout.
-_REPO_ROOT: Path = Path(__file__).resolve().parent.parent.parent
+_REPO_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent
 _DUMP_OPENAPI_PATH: Path = _REPO_ROOT / "scripts" / "dump_openapi.py"
 _OPENAPI_JSON_PATH: Path = _REPO_ROOT / "openapi.json"
 

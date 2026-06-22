@@ -113,7 +113,7 @@ def test_emit_sites_referenced_by_grep_are_all_in_the_union() -> None:
     # Scope: every file that publishes onto the SSE stream. Each
     # routes its events through the SSE serializer in
     # routes/sessions.py.
-    repo_root = Path(__file__).resolve().parent.parent.parent
+    repo_root = Path(__file__).resolve().parent.parent.parent.parent
     paths = [
         repo_root / "omnigent/runtime/workflow.py",
         repo_root / "omnigent/runtime/compaction.py",
@@ -156,7 +156,7 @@ def test_openapi_json_surfaces_sse_routes_with_typed_schema() -> None:
     no longer see the SSE event union, regressing the wire contract
     visibility.
     """
-    repo_root = Path(__file__).resolve().parent.parent.parent
+    repo_root = Path(__file__).resolve().parent.parent.parent.parent
     openapi_path = repo_root / "openapi.json"
     if not openapi_path.exists():
         pytest.skip(

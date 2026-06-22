@@ -139,7 +139,9 @@ def test_load_harness_app_loads_test_fixture() -> None:
     runner contract (the design doc explicitly forbids parsing
     it from the socket path), so it gets a focused assertion.
     """
-    app = _runner._load_harness_app("test", "tests.unit.runtime.harnesses._test_harness", "conv_xyz")
+    app = _runner._load_harness_app(
+        "test", "tests.unit.runtime.harnesses._test_harness", "conv_xyz"
+    )
     # The fixture's create_app() returns a real FastAPI app — the
     # runner's job is to stash the conversation id on it. If this
     # fails, the harness can't scope its in-memory state per
