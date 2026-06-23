@@ -9,8 +9,8 @@ name: Polly Fix on /fix comment
 # list is always read from main's tip (never the PR head) to prevent a PR from
 # editing the list to grant itself access.
 #
-# The workflow checks out the default branch and fetches the PR diff via the
-# API — it never executes PR-authored code in a privileged context.
+# The workflow checks out the PR branch so Polly's sub-agents see the actual
+# code under review. This is safe because the trigger is maintainer-gated.
 
 on:
   issue_comment:
@@ -35,6 +35,7 @@ jobs:
     outputs:
       ok: ${{ steps.authz.outputs.ok }}
       pr_number: ${{ steps.pr.outputs.pr_number }}
+      head_ref: ${{ steps.pr.outputs.head_ref }}
     steps:
       # Checkout main only for load-maintainers.sh.
       - name: Checkout (for the maintainer script)
@@ -62,10 +63,17 @@ jobs:
             echo "::notice::@$ACTOR is not in .github/MAINTAINER; ignoring /fix."
           fi
 
-      - name: Resolve PR number
+      - name: Resolve PR number and head ref
         id: pr
         if: steps.authz.outputs.ok == 'true'
-        run: echo "pr_number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          PR_NUMBER="${{ github.event.issue.number }}"
+          HEAD_REF=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefName --jq '.headRefName')
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_ref=$HEAD_REF" >> "$GITHUB_OUTPUT"
 
       - name: Acknowledge /fix
         if: steps.authz.outputs.ok == 'true'
@@ -103,13 +111,13 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Always check out the default branch (trusted). The PR diff is fetched
-      # via the API — we never execute PR-authored code in a privileged context.
-      - name: Check out repo
+      # Check out the PR branch so Polly's sub-agents see the actual code under
+      # review. Safe because this job only runs after maintainer authorization.
+      - name: Check out PR branch
         if: steps.creds.outputs.available == 'true'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ needs.authorize.outputs.head_ref }}
           persist-credentials: false
 
       - name: Set up Python
@@ -245,12 +253,37 @@ jobs:
             --json title,body,baseRefName,headRefName,additions,deletions,changedFiles \
             > /tmp/pr_meta.json
 
-          # Build the fix prompt safely using python.
+          # Fetch PR issue comments (general thread comments, e.g. Polly review).
+          # Capped at 32 KB total to stay within prompt limits.
+          gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq '[.[] | {author: .user.login, body: .body}]' \
+            | head -c 32768 > /tmp/pr_comments.json
+
+          # Fetch PR review comments (inline code comments).
+          # Capped at 32 KB total.
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+            --jq '[.[] | {author: .user.login, path: .path, line: .line, body: .body}]' \
+            | head -c 32768 > /tmp/pr_review_comments.json
+
+          # Build the fix prompt safely using python — all untrusted fields
+          # (title, body, diff, comments) are read from files, never
+          # interpolated into shell heredocs.
           python3 <<'PYEOF'
           import json, pathlib
 
           meta = json.loads(pathlib.Path("/tmp/pr_meta.json").read_text())
           diff = pathlib.Path("/tmp/pr_diff.txt").read_text()
+          comments = json.loads(pathlib.Path("/tmp/pr_comments.json").read_text())
+          review_comments = json.loads(pathlib.Path("/tmp/pr_review_comments.json").read_text())
+
+          def fmt_comments(items):
+              if not items:
+                  return "*(none)*"
+              parts = []
+              for c in items:
+                  loc = f" [{c['path']}:{c.get('line', '?')}]" if 'path' in c else ""
+                  parts.append(f"**{c['author']}**{loc}:\n{c['body'][:2048]}")
+              return "\n\n---\n\n".join(parts)
 
           prompt = f"""Fix the blocking issues in this pull request.
 
@@ -262,6 +295,12 @@ jobs:
           ## PR Description
           {(meta.get('body') or '')[:4096]}{"  *(truncated)*" if len(meta.get('body') or '') > 4096 else ""}
 
+          ## PR Comments
+          {fmt_comments(comments)}
+
+          ## Inline Review Comments
+          {fmt_comments(review_comments)}
+
           ## Diff
           ```diff
           {diff}
@@ -270,9 +309,15 @@ jobs:
           ## Instructions
           Load the fix-blocking-issues skill and follow it exactly.
 
+          The codebase is checked out at the PR branch, so files reflect the
+          code exactly as it would land if merged. Use `gh` CLI commands freely
+          to fetch any additional PR context you need — CI status, linked
+          issues, review threads, etc. The PR number is in the environment
+          variable POLLY_PR_NUMBER and the repo in POLLY_REPO.
+
           Identify only issues that are genuinely blocking — correctness bugs,
           broken contracts, or real security risks that actually exist in the
-          changed code above. Do not fix non-blocking notes, style issues, or
+          changed code. Do not fix non-blocking notes, style issues, or
           speculative concerns.
 
           Dispatch implementer sub-agents to fix each blocking issue in an
@@ -311,9 +356,13 @@ jobs:
         id: polly
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          # Expose a write-capable token so Polly's sub-agents can push fix
-          # branches and open PRs via gh CLI.
+          # Expose a write-capable token so Polly and its sub-agents can use
+          # the gh CLI to read PR details and push fix branches / open PRs.
           GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          # Make the PR number available so Polly can fetch additional context
+          # (CI status, linked issues, etc.) without it being in the prompt.
+          POLLY_PR_NUMBER: ${{ needs.authorize.outputs.pr_number }}
+          POLLY_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
