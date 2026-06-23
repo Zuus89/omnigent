@@ -1642,7 +1642,7 @@ def test_cursor_policy_hook_deny(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_cursor_policy_hook_network_error_fails_open(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When post_evaluate_with_retry returns None (network error / retry exhausted), the hook fails open."""
+    """post_evaluate_with_retry returning None (network error) causes the hook to fail open."""
     import io
     from unittest.mock import patch
 
@@ -1718,7 +1718,7 @@ def test_cursor_policy_hook_ask_fails_closed(monkeypatch: pytest.MonkeyPatch) ->
 
 
 def test_cursor_policy_hook_uses_long_read_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
-    """post_evaluate_with_retry is called with an 86400s read_timeout so the hook stays alive while the human responds."""
+    """post_evaluate_with_retry is called with 86400s read_timeout to stay alive for approval."""
     import io
     from unittest.mock import MagicMock, patch
 
