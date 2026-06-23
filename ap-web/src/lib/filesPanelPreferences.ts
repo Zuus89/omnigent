@@ -50,9 +50,7 @@ export function readFilesPanelPreferences(): FilesPanelPreferences {
           ? p.changedOnly
           : DEFAULT_FILES_PANEL_PREFERENCES.changedOnly,
       collapsed:
-        typeof p.collapsed === "boolean"
-          ? p.collapsed
-          : DEFAULT_FILES_PANEL_PREFERENCES.collapsed,
+        typeof p.collapsed === "boolean" ? p.collapsed : DEFAULT_FILES_PANEL_PREFERENCES.collapsed,
     };
   } catch {
     return DEFAULT_FILES_PANEL_PREFERENCES;

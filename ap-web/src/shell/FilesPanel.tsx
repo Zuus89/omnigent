@@ -288,9 +288,7 @@ export function FilesPanel({
   const runnerWentOffline = useChatStore(
     (s) => s.conversationId === conversationId && s.sessionStatus === "failed",
   );
-  const [collapsed, setCollapsed] = useState(
-    () => readFilesPanelPreferences().collapsed,
-  );
+  const [collapsed, setCollapsed] = useState(() => readFilesPanelPreferences().collapsed);
   const [changedSearch, setChangedSearch] = useState("");
   const [treeSearch, setTreeSearch] = useState("");
   const [debouncedTreeSearch, setDebouncedTreeSearch] = useState("");
