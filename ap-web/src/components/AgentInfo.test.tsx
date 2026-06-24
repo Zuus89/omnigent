@@ -23,6 +23,17 @@ vi.mock("@/hooks/usePolicies", () => ({
 }));
 vi.mock("@/lib/clipboard", () => ({ copyText: copyTextMock }));
 
+// Mock bundleManipulation so SessionMcpSection renders without network.
+const { addMcpMock, removeMcpMock } = vi.hoisted(() => ({
+  addMcpMock: vi.fn(() => Promise.resolve()),
+  removeMcpMock: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("@/lib/bundleManipulation", () => ({
+  addMcpServerToSession: addMcpMock,
+  removeMcpServerFromSession: removeMcpMock,
+  isValidMcpServerName: (name: string) => /^[A-Za-z0-9_-]+$/.test(name) && name.length <= 64,
+}));
+
 import { AgentInfoButton, AgentInfoContent, agentDisplayLabel } from "./AgentInfo";
 
 afterEach(() => {
@@ -405,5 +416,95 @@ describe("agentDisplayLabel", () => {
   it("capitalizes non-native names and strips their clone suffix", () => {
     expect(agentDisplayLabel("polly")).toBe("Polly");
     expect(agentDisplayLabel("polly (fork conv_ab12)")).toBe("Polly");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SessionMcpSection (via AgentInfoContent with sessionId)
+// ---------------------------------------------------------------------------
+
+describe("SessionMcpSection", () => {
+  let qc: QueryClient;
+
+  beforeEach(() => {
+    qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    addMcpMock.mockClear();
+    removeMcpMock.mockClear();
+  });
+
+  function renderContent(agent: Agent, sessionId: string) {
+    return render(
+      <QueryClientProvider client={qc}>
+        <TooltipProvider>
+          <AgentInfoContent agent={agent} sessionId={sessionId} />
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+  }
+
+  it("shows the add MCP server button when sessionId is present", () => {
+    renderContent({ id: "a", name: "test", mcp_servers: [] }, "conv_123");
+    expect(screen.getByTestId("add-mcp-server-button")).toBeInTheDocument();
+  });
+
+  it("shows 'No MCP servers' when the agent has no tools", () => {
+    renderContent({ id: "a", name: "test", mcp_servers: [] }, "conv_123");
+    expect(screen.getByText("No MCP servers")).toBeInTheDocument();
+  });
+
+  it("renders MCP server pills as clickable buttons", () => {
+    renderContent(
+      {
+        id: "a",
+        name: "test",
+        mcp_servers: [
+          { name: "github", transport: "stdio", command: "npx" },
+          { name: "search", transport: "http", url: "https://example.com" },
+        ],
+      },
+      "conv_123",
+    );
+    // Server names should be visible as buttons
+    expect(screen.getByText("github")).toBeInTheDocument();
+    expect(screen.getByText("search")).toBeInTheDocument();
+  });
+
+  it("opens the add dialog when the + button is clicked", () => {
+    renderContent({ id: "a", name: "test", mcp_servers: [] }, "conv_123");
+    fireEvent.click(screen.getByTestId("add-mcp-server-button"));
+    expect(screen.getByTestId("add-mcp-server-dialog")).toBeInTheDocument();
+  });
+
+  it("shows remove button in the popover when a server pill is clicked", () => {
+    renderContent(
+      {
+        id: "a",
+        name: "test",
+        mcp_servers: [{ name: "github", transport: "stdio", command: "npx" }],
+      },
+      "conv_123",
+    );
+    fireEvent.click(screen.getByText("github"));
+    expect(screen.getByTestId("remove-mcp-server-github")).toBeInTheDocument();
+  });
+
+  it("shows server details in the popover", () => {
+    renderContent(
+      {
+        id: "a",
+        name: "test",
+        mcp_servers: [
+          { name: "github", transport: "stdio", command: "npx", args: ["-y", "mcp-github"] },
+        ],
+      },
+      "conv_123",
+    );
+    fireEvent.click(screen.getByText("github"));
+    // Transport badge
+    expect(screen.getByText("stdio")).toBeInTheDocument();
+    // Command + args
+    expect(screen.getByText("npx -y mcp-github")).toBeInTheDocument();
   });
 });
