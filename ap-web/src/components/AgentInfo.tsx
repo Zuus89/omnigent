@@ -36,6 +36,9 @@ import { agentRootName } from "@/lib/forkHarness";
 import { nativeCodingAgentForAgentName } from "@/lib/nativeCodingAgents";
 import { copyText } from "@/lib/clipboard";
 import { useChatStore } from "@/store/chatStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { addMcpServerToSession, removeMcpServerFromSession } from "@/lib/bundleManipulation";
+import { AddMcpServerDialog, type McpServerFormResult } from "@/components/AddMcpServerDialog";
 
 /**
  * Display label for an agent name: the wrapper alias when mapped, else
@@ -505,6 +508,130 @@ function AddPolicyDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Session MCP tools section (editable via bundle manipulation)
+// ---------------------------------------------------------------------------
+
+function SessionMcpSection({
+  sessionId,
+  servers,
+}: {
+  sessionId: string;
+  servers: McpServerSummary[];
+}) {
+  const queryClient = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  async function handleAdd(server: McpServerFormResult) {
+    setSubmitting(true);
+    try {
+      await addMcpServerToSession(sessionId, server);
+      await queryClient.invalidateQueries({ queryKey: ["session-agent", sessionId] });
+      setAddOpen(false);
+    } catch (e) {
+      console.error("Failed to add MCP server:", e);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleRemove(serverName: string) {
+    setRemoving(serverName);
+    try {
+      await removeMcpServerFromSession(sessionId, serverName);
+      await queryClient.invalidateQueries({ queryKey: ["session-agent", sessionId] });
+    } catch (e) {
+      console.error("Failed to remove MCP server:", e);
+    } finally {
+      setRemoving(null);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        <SectionLabel>Tools</SectionLabel>
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          className="rounded p-0.5 hover:bg-muted"
+          title="Add MCP server"
+          data-testid="add-mcp-server-button"
+        >
+          <PlusIcon className="size-3 text-muted-foreground" />
+        </button>
+      </div>
+      {servers.length > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {servers.map((srv) => (
+            <Popover key={srv.name}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex cursor-pointer items-center gap-0.5 rounded-full border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground hover:bg-muted/80"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ServerIcon className="size-2.5 shrink-0" />
+                  {srv.name}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="start"
+                className="w-64"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <ServerIcon className="size-3.5 text-muted-foreground" />
+                    <span className="font-medium text-sm">{srv.name}</span>
+                    <span className="rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                      {srv.transport}
+                    </span>
+                  </div>
+                  {srv.description && (
+                    <p className="text-xs text-muted-foreground">{srv.description}</p>
+                  )}
+                  {srv.command && (
+                    <p className="font-mono text-[11px] text-muted-foreground">
+                      {srv.command} {srv.args?.join(" ")}
+                    </p>
+                  )}
+                  {srv.url && (
+                    <p className="font-mono text-[11px] text-muted-foreground break-all">
+                      {srv.url}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(srv.name)}
+                    disabled={removing === srv.name}
+                    className="flex items-center gap-1 self-end rounded px-2 py-1 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                    data-testid={`remove-mcp-server-${srv.name}`}
+                  >
+                    <TrashIcon className="size-3" />
+                    {removing === srv.name ? "Removing…" : "Remove"}
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">No MCP servers</p>
+      )}
+      <AddMcpServerDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onAdd={handleAdd}
+        submitting={submitting}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Session policies section (user-editable only)
 // ---------------------------------------------------------------------------
 
@@ -703,11 +830,15 @@ export function AgentInfoContent({ agent, sessionId }: AgentInfoProps) {
       {sessionId && usageByModel != null && Object.keys(usageByModel).length > 0 && (
         <ModelUsageBreakdown usageByModel={usageByModel} />
       )}
-      {servers.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <SectionLabel>Tools</SectionLabel>
-          <McpServerList servers={servers} />
-        </div>
+      {sessionId ? (
+        <SessionMcpSection sessionId={sessionId} servers={servers} />
+      ) : (
+        servers.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <SectionLabel>Tools</SectionLabel>
+            <McpServerList servers={servers} />
+          </div>
+        )
       )}
       {sessionId && <SessionPoliciesSection sessionId={sessionId} />}
     </div>
