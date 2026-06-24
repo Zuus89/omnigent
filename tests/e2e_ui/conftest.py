@@ -1064,7 +1064,25 @@ def _ensure_runner_online(
             return False
         return resp.status_code == 200 and resp.json().get("online") is True
 
-    if _online():
+    # Don't trust _online() if the runner process we know about is dead —
+    # the WS tunnel deregisters asynchronously, so a just-killed runner can
+    # appear "online" for a few seconds after its process exited
+    # (test_stale_stream SIGKILLs the runner and the WS lingers).
+    def _runner_process_alive() -> bool:
+        respawned = _server_state.get("_respawned_runner")
+        if isinstance(respawned, subprocess.Popen):
+            return respawned.poll() is None
+        # No respawned runner — check the original runner PID.
+        original_pid = _server_state.get("pid")
+        if isinstance(original_pid, int):
+            try:
+                os.kill(original_pid, 0)  # signal 0 = existence check
+                return True
+            except OSError:
+                return False
+        return True  # no PID info — trust _online()
+
+    if _online() and _runner_process_alive():
         return None
 
     # Reuse a previously respawned runner if it is still alive.
