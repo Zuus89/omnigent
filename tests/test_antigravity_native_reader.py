@@ -120,6 +120,16 @@ class _PostSink:
                 out.append(status if isinstance(status, str) else "<none>")
         return out
 
+    def message_roles(self) -> list[str]:
+        """Return the ``role`` of every committed ``message`` item, in order."""
+        out: list[str] = []
+        for event_type, data in self.posts:
+            if event_type == "external_conversation_item" and data.get("item_type") == "message":
+                item_data = data.get("item_data")
+                role = item_data.get("role") if isinstance(item_data, dict) else None
+                out.append(role if isinstance(role, str) else "<none>")
+        return out
+
     def deltas(self) -> list[dict[str, object]]:
         """Return the ``data`` payload of every ``external_output_text_delta``."""
         return [
@@ -528,17 +538,22 @@ async def test_poll_planner_generating_then_done_posts_one_final_message(
 
 
 # ---------------------------------------------------------------------------
-# USER_INPUT posts nothing
+# USER_INPUT commits the user message exactly once (#1155)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_user_input_posts_nothing(
+async def test_user_input_commits_user_message_once(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     patched_discovery: None,
 ) -> None:
-    """A USER_INPUT step maps to [] — no conversation item is posted for it."""
+    """A USER_INPUT step posts one user ``message`` item, deduped across reads.
+
+    Regression guard for #1155: the user turn must be committed (so the web UI
+    reconciles its optimistic bubble) and committed only ONCE — the reader
+    dedups the step by its per-turn ``executionId`` across repeated polls.
+    """
     user = _load("user_input")
     script = _StepScript([[user], [user]])
     sink = _PostSink()
@@ -551,7 +566,7 @@ async def test_user_input_posts_nothing(
         iterations=2,
     )
 
-    assert sink.item_types() == []
+    assert sink.item_types() == ["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -1449,8 +1464,10 @@ async def test_stream_status_running_then_idle(
     )
 
     assert sink.statuses() == ["running", "idle"]
-    # USER_INPUT still posts no conversation item; the assistant message commits.
-    assert sink.item_types() == ["message"]
+    # USER_INPUT commits the user message first, then the assistant message —
+    # so the web UI renders the user turn ABOVE the reply (#1155).
+    assert sink.item_types() == ["message", "message"]
+    assert sink.message_roles() == ["user", "assistant"]
 
 
 # ---------------------------------------------------------------------------
@@ -2096,8 +2113,10 @@ async def test_two_real_wire_turns_each_emit_running_then_idle(
     )
 
     assert sink.statuses() == ["running", "idle", "running", "idle"]
-    # Each turn commits exactly one assistant message; USER_INPUT commits none.
-    assert sink.item_types() == ["message", "message"]
+    # Each turn commits a user message (from USER_INPUT) then an assistant
+    # message — user-before-assistant ordering, per turn (#1155).
+    assert sink.item_types() == ["message", "message", "message", "message"]
+    assert sink.message_roles() == ["user", "assistant", "user", "assistant"]
 
 
 # ---------------------------------------------------------------------------
@@ -2837,9 +2856,15 @@ async def test_run_reader_with_bridge_rebinds_after_rotation(
         client: object,
         on_pending_interaction: object,
         skip_cascade_ids: frozenset[str] = frozenset(),
+        committed_steps_out: list[int] | None = None,
         **_kwargs: object,
     ) -> str | None:
         supervise_session_ids.append(session_id)
+        # Model a GENUINE /clear: the bound cascade HAD committed turns, so the
+        # loop FORKS a replacement session (not the first-cascade adopt-in-place
+        # path, which fires only when the bound cascade committed zero turns).
+        if committed_steps_out is not None:
+            committed_steps_out.append(3)
         # First run detects a rotation; the rebound second run ends normally.
         return new_cascade if len(supervise_session_ids) == 1 else None
 
@@ -2877,6 +2902,72 @@ async def test_run_reader_with_bridge_rebinds_after_rotation(
 
 
 @pytest.mark.asyncio
+async def test_run_reader_with_bridge_adopts_first_cascade_in_place(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """First-cascade adoption: a rotation off a ZERO-turn bound cascade rebinds in place.
+
+    The cold-start ``StartCascade`` cascade is a headless placeholder the agy TUI
+    never shows; the TUI mints its OWN cascade on the first typed turn. That first
+    transition is the conversation STARTING, not a ``/clear`` — so the loop must
+    adopt the new cascade in the SAME Omnigent session (rewrite bridge state, NO
+    fork) so the user's current session starts mirroring (#1156/#1158). Modeled by
+    a supervise_reader that reports ZERO committed turns on the rotation run.
+    """
+    new_cascade = "11111111-2222-3333-4444-555555555555"
+    supervise_session_ids: list[str] = []
+    rotate_calls: list[str] = []
+
+    async def _fake_supervise(
+        bridge_dir: Path,
+        session_id: str,
+        *,
+        client: object,
+        on_pending_interaction: object,
+        skip_cascade_ids: frozenset[str] = frozenset(),
+        committed_steps_out: list[int] | None = None,
+        **_kwargs: object,
+    ) -> str | None:
+        supervise_session_ids.append(session_id)
+        # The bound cascade committed ZERO turns → first-cascade adoption.
+        if committed_steps_out is not None:
+            committed_steps_out.append(0)
+        return new_cascade if len(supervise_session_ids) == 1 else None
+
+    async def _fake_rotate(**_kwargs: object) -> str | None:
+        rotate_calls.append("forked")  # must NOT happen on adopt-in-place
+        return "conv_should_not_be_used"
+
+    monkeypatch.setattr(reader, "supervise_reader", _fake_supervise)
+    monkeypatch.setattr(reader, "_rotate_session_for_cascade", _fake_rotate)
+    monkeypatch.setattr(
+        "omnigent.antigravity_native_interactions.bridge_interaction",
+        lambda *a, **k: None,
+    )
+
+    bridge_dir = _bridge_dir(tmp_path)
+    await reader.run_reader_with_bridge(
+        base_url="http://test",
+        headers={},
+        auth=None,
+        session_id=_SESSION_ID,
+        bridge_dir=bridge_dir,
+    )
+
+    # NO fork: _rotate_session_for_cascade must never be called.
+    assert rotate_calls == []
+    # Both supervise runs stay on the SAME (original) session id; the second
+    # rebinds to the adopted cascade via the rewritten bridge state.
+    assert supervise_session_ids == [_SESSION_ID, _SESSION_ID]
+    # Bridge state now names the adopted cascade under the SAME session.
+    state = reader.read_bridge_state(bridge_dir)
+    assert state is not None
+    assert state.session_id == _SESSION_ID
+    assert state.conversation_id == new_cascade
+
+
+@pytest.mark.asyncio
 async def test_run_reader_with_bridge_keeps_old_binding_when_rotation_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2898,9 +2989,14 @@ async def test_run_reader_with_bridge_keeps_old_binding_when_rotation_fails(
         client: object,
         on_pending_interaction: object,
         skip_cascade_ids: frozenset[str] = frozenset(),
+        committed_steps_out: list[int] | None = None,
         **_kwargs: object,
     ) -> str | None:
         supervise_calls.append((session_id, skip_cascade_ids))
+        # Genuine /clear (bound cascade had committed turns) → the loop attempts a
+        # FORK (which fails here), not the zero-turn adopt-in-place path.
+        if committed_steps_out is not None:
+            committed_steps_out.append(2)
         # First run detects the rotation; the second (post-failure) run ends.
         return failed_cascade if len(supervise_calls) == 1 else None
 
