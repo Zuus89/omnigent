@@ -944,8 +944,8 @@ class ExecutorAdapter(HarnessApp):
                 ctx.provider_usage = event.usage
         elif isinstance(event, CompactionComplete):
             from omnigent.server.schemas import (
-                CompactionInProgressEvent,
                 CompactionCompletedEvent,
+                CompactionInProgressEvent,
             )
 
             ctx.emit(

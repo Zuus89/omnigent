@@ -1086,12 +1086,10 @@ class OpenAIAgentsSDKExecutor(Executor):
 
                 sdk_session = OpenAIResponsesCompactionSession(
                     session_id=session_key,
-                    underlying_session=underlying,  # type: ignore[arg-type]  # ReplayItem ≡ TResponseInputItem at runtime
+                    underlying_session=underlying,  # type: ignore[arg-type]
                     client=self._client,
                 )
             except (ImportError, AttributeError, ValueError):
-                # Older SDK versions or invalid model — fall back to
-                # the plain session.
                 pass
         state = _AgentsSessionState(sdk_session=sdk_session)
         self._session_states[session_key] = state
@@ -1767,10 +1765,6 @@ class OpenAIAgentsSDKExecutor(Executor):
         _notify_usage_from_dict(model=model, usage=turn_usage)
 
         # Emit CompactionComplete if the SDK compacted this turn.
-        # OpenAI's compaction produces encrypted opaque tokens (not
-        # a human-readable summary), so we emit a descriptive
-        # placeholder. The compacted session items are included so
-        # the runner can persist them for session resume.
         if result is not None:
             for item in result.new_items:
                 if getattr(item, "type", None) == "compaction_item":
@@ -1779,18 +1773,19 @@ class OpenAIAgentsSDKExecutor(Executor):
                     _compaction_tokens = 0
                     if turn_usage is not None:
                         _compaction_tokens = turn_usage.get("context_tokens", 0) or 0
-                    # Read the compacted session items so the runner can
-                    # persist them for replay on session resume.
                     _compacted: list[dict[str, Any]] | None = None
                     try:
                         _compacted = await state.sdk_session.get_items()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         logger.warning(
                             "Failed to read compacted session items",
                             exc_info=True,
                         )
                     yield CompactionComplete(
-                        summary="[OpenAI Responses API compaction — context was automatically compacted]",
+                        summary=(
+                            "[OpenAI Responses API compaction"
+                            " — context was automatically compacted]"
+                        ),
                         token_count=_compaction_tokens,
                         model=model,
                         compacted_messages=_compacted,
