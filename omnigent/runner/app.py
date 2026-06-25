@@ -1965,9 +1965,11 @@ async def _auto_create_goose_terminal(
     await _cancel_auto_forwarder_task(session_id)
     from omnigent.goose_native_bridge import bridge_dir_for_session_id, write_tmux_target
     from omnigent.goose_native_forwarder import clear_goose_bridge_state
+    from omnigent.goose_native_usage import clear_goose_usage_state
 
     bridge_dir = bridge_dir_for_session_id(session_id)
     clear_goose_bridge_state(bridge_dir)
+    clear_goose_usage_state(bridge_dir)
 
     # Wire the Omnigent MCP server so goose gets the sys_*/comment/web tools the
     # other native harnesses expose. goose loads it as a stdio extension; we point
@@ -2075,6 +2077,7 @@ async def _auto_create_goose_terminal(
 
     from omnigent.goose_native_forwarder import supervise_goose_forwarder
     from omnigent.goose_native_permissions import supervise_goose_approval_mirror
+    from omnigent.goose_native_usage import supervise_goose_usage_forwarder
 
     if server_client is not None and ensure_comment_relay is not None:
         await ensure_comment_relay(
@@ -2084,13 +2087,15 @@ async def _auto_create_goose_terminal(
         )
 
     async def _supervise_goose_native_bridges() -> None:
-        """Run the transcript forwarder and the approval mirror together.
+        """Run the transcript forwarder, approval mirror, and usage poller together.
 
-        Both are per-session, runner-owned, restart-on-failure; gathering them
-        under one task keeps a single registration/cancellation handle for
+        All three are per-session, runner-owned, restart-on-failure; gathering
+        them under one task keeps a single registration/cancellation handle for
         teardown. The forwarder mirrors Goose's transcript onto the conversation;
-        the approval mirror surfaces Goose's cliclack tool-confirmation prompt as
-        a web elicitation (see :mod:`omnigent.goose_native_permissions`).
+        the approval mirror enforces Omnigent policy on Goose's cliclack
+        tool-confirmation gate (see :mod:`omnigent.goose_native_permissions`); the
+        usage poller mirrors Goose's accumulated token/cost totals onto the
+        session-cost badge (see :mod:`omnigent.goose_native_usage`).
         """
         await asyncio.gather(
             supervise_goose_forwarder(
@@ -2103,6 +2108,14 @@ async def _auto_create_goose_terminal(
                 auth=_runner_auth,
             ),
             supervise_goose_approval_mirror(
+                base_url=server_url,
+                headers={},
+                session_id=session_id,
+                bridge_dir=bridge_dir,
+                goose_session_name=goose_session_name,
+                auth=_runner_auth,
+            ),
+            supervise_goose_usage_forwarder(
                 base_url=server_url,
                 headers={},
                 session_id=session_id,
