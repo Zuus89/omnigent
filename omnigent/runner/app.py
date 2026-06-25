@@ -1963,9 +1963,9 @@ async def _auto_create_goose_terminal(
     # re-creating, so old and new tasks can't both mirror (double-posting), and
     # drop the prior terminal's stale forward cursor.
     await _cancel_auto_forwarder_task(session_id)
-    from omnigent.goose_native_bridge import bridge_dir_for_session_id, write_tmux_target
     from omnigent.cursor_native_bridge import clear_fork_preamble
     from omnigent.goose_native_audit import clear_goose_audit_state
+    from omnigent.goose_native_bridge import bridge_dir_for_session_id, write_tmux_target
     from omnigent.goose_native_forwarder import clear_goose_bridge_state
     from omnigent.goose_native_usage import clear_goose_usage_state
 
