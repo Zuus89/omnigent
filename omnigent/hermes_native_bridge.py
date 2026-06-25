@@ -515,17 +515,17 @@ def inject_user_message(
 
 
 def inject_interrupt(bridge_dir: Path, *, timeout_s: float = _TMUX_READY_TIMEOUT_S) -> None:
-    """Cancel the in-flight Hermes turn by sending ``Escape`` to the pane.
+    """Cancel the in-flight Hermes turn by sending ``C-c`` to the pane.
 
-    The harness ``run_turn`` returns right after the paste, so the runner's
-    in-process cancel floor can't reach the turn — this is the analog of
-    :func:`inject_user_message` for the web UI's Stop button.
+    Hermes uses Ctrl+C to interrupt a running turn (double-press within 2s
+    forces exit). The harness ``run_turn`` returns right after the paste, so
+    the runner's in-process cancel floor can't reach the turn — this is the
+    analog of :func:`inject_user_message` for the web UI's Stop button.
 
     :raises RuntimeError: If the tmux target is not advertised or send-keys fails.
     """
     info = _wait_for_tmux_info(bridge_dir, timeout_s=timeout_s)
-    # No ``-l``: tmux must interpret ``Escape`` as a key name.
-    _run_tmux(info["socket_path"], "send-keys", "-t", info["tmux_target"], "Escape")
+    _run_tmux(info["socket_path"], "send-keys", "-t", info["tmux_target"], "C-c")
 
 
 def kill_session(bridge_dir: Path, *, timeout_s: float = _TMUX_READY_TIMEOUT_S) -> None:
