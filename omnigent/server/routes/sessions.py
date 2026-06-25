@@ -9191,9 +9191,9 @@ def _agent_is_native(agent: Agent) -> bool:
 
     Loads the agent's spec to read its ``harness_kind``. Native targets run
     a vendor TUI in a terminal (claude-native / codex-native / pi-native /
-    cursor-native). This is broader than "can replay fork history" — only
-    claude/codex native carry the transcript-rebuild path; use
-    ``_agent_carries_native_fork_history`` for that narrower gate. Returns
+    cursor-native). This is broader than "can replay fork history" — every
+    native harness except cursor-native carries the session-file-rebuild path;
+    use ``_agent_carries_native_fork_history`` for that narrower gate. Returns
     ``False`` when the bundle can't be loaded (treated as non-native).
 
     :param agent: The agent whose harness to classify.
@@ -9213,25 +9213,29 @@ def _agent_is_native(agent: Agent) -> bool:
 
 
 # Native harnesses that record a resumable session and can rebuild a fork's
-# transcript from copied Omnigent items. Both spellings are listed because
-# canonicalize_harness passes the reversed native ids through unchanged (only
-# "native-pi" is aliased) — same reasoning as model_override._CLAUDE_FAMILY_HARNESSES.
-# cursor/pi native are intentionally absent: they can't replay fork history.
+# transcript from copied Omnigent items. claude/codex are listed in both
+# spellings because canonicalize_harness passes their reversed native ids
+# through unchanged — same reasoning as model_override._CLAUDE_FAMILY_HARNESSES.
+# pi-native needs only the one canonical id ("native-pi" is aliased to
+# "pi-native"); it rebuilds the Pi CLI's JSONL session file from copied items
+# (omnigent/pi_native_resume.py), the same file-based mechanism claude/codex
+# use. cursor-native remains absent: it has no resumable session file to
+# rebuild.
 _FORK_HISTORY_NATIVE_HARNESSES: frozenset[str] = frozenset(
-    {"claude-native", "native-claude", "codex-native", "native-codex"}
+    {"claude-native", "native-claude", "codex-native", "native-codex", "pi-native"}
 )
 
 
 def _agent_carries_native_fork_history(agent: Agent) -> bool:
     """Return whether *agent*'s native harness can replay fork history.
 
-    Only claude-native / codex-native record a resumable native session and
-    can rebuild a fork's transcript from the copied Omnigent items. cursor-
-    native and pi-native are native CLIs but cannot carry chat history into a
-    fork (no resumable external_session_id and their TUIs can't import a
-    transcript), so stamping ``carry_history_into_native`` for them would be a
-    false promise — the fork launches fresh regardless. Returns ``False`` when
-    the bundle can't be loaded (treated as non-carrying).
+    claude-native / codex-native / pi-native each record a resumable native
+    session file that the runner rebuilds from the copied Omnigent items on
+    fork/resume, so a fork bound to one of them carries prior history into the
+    native CLI. cursor-native is a native CLI but has no resumable session
+    file to rebuild, so stamping ``carry_history_into_native`` for it would be
+    a false promise — the fork launches fresh regardless. Returns ``False``
+    when the bundle can't be loaded (treated as non-carrying).
 
     :param agent: The agent whose harness to classify.
     :returns: ``True`` only for fork-history-capable native harnesses.
@@ -13944,9 +13948,10 @@ def create_sessions_router(
         # items (the converters consume Omnigent's normalized item shape, so
         # the source harness doesn't matter). SDK targets replay the
         # transcript as context regardless, so the marker is inert for them.
-        # Only claude/codex native can replay fork history; cursor/pi native
-        # can't (no resumable session, TUI can't import a transcript), so don't
-        # stamp a carry-history promise they'd silently break with a fresh launch.
+        # claude/codex/pi native can replay fork history (each rebuilds its
+        # resumable session file from the copied items); cursor-native can't
+        # (no resumable session file), so don't stamp a carry-history promise
+        # it would silently break with a fresh launch.
         carry_history_into_native = await asyncio.to_thread(
             _agent_carries_native_fork_history, base_agent
         )
@@ -14137,9 +14142,10 @@ def create_sessions_router(
         copy_model_settings = await asyncio.to_thread(
             _same_provider_family, current_agent, target_agent
         )
-        # Only claude/codex native can replay fork history; cursor/pi native
-        # can't (no resumable session, TUI can't import a transcript), so don't
-        # stamp a carry-history promise they'd silently break with a fresh launch.
+        # claude/codex/pi native can replay fork history (each rebuilds its
+        # resumable session file from the copied items); cursor-native can't
+        # (no resumable session file), so don't stamp a carry-history promise
+        # it would silently break with a fresh launch.
         carry_history_into_native = await asyncio.to_thread(
             _agent_carries_native_fork_history, target_agent
         )
