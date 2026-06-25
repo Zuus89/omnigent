@@ -180,6 +180,33 @@ def test_mobile_fab_lists_file_surfaces_and_omits_absent_ones(
     expect(page.get_by_role("menuitem", name="Tasks")).to_have_count(0)
 
 
+def test_mobile_shells_drawer_exposes_new_shell_before_shells_exist(
+    page: Page,
+    terminal_session: tuple[str, str],
+) -> None:
+    """Shell-capable agents expose the mobile Shells drawer at zero shells.
+
+    The desktop rail shows Shells by default when the session agent declares a
+    ``terminals:`` block, because the empty state is the "+ New shell" entry
+    point. Mobile must mirror that behavior: the FAB should list Shells before
+    any user shell has been created, and selecting it should open the full-screen
+    Shells drawer containing the same "+ New shell" row.
+    """
+    base_url, session_id = terminal_session
+    page.set_viewport_size(_MOBILE_VIEWPORT)
+    page.goto(f"{base_url}/c/{session_id}")
+
+    page.get_by_role("button", name="Open session menu").click()
+
+    shells_entry = page.get_by_role("menuitem", name="Shells", exact=True)
+    expect(shells_entry).to_be_visible(timeout=10_000)
+    shells_entry.click()
+
+    drawer = page.get_by_test_id("shells-panel-drawer")
+    expect(drawer).to_have_attribute("data-state", "open")
+    expect(drawer.get_by_role("button", name="New shell")).to_be_visible()
+
+
 def test_mobile_fab_shows_agents_entry_when_child_agents_exist(
     page: Page,
     mobile_session_with_child_agent: tuple[str, str],
