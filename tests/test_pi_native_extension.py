@@ -251,7 +251,9 @@ def test_text_deltas_post_incrementally_with_stable_id() -> None:
     the streamed text, a final marker closes the stream, and the authoritative
     assistant item carries the full text exactly once (no duplication).
     """
-    script = _STREAMING_HARNESS + r"""
+    script = (
+        _STREAMING_HARNESS
+        + r"""
 (async () => {
   await handlers.agent_start({}, ctx);
   await handlers.turn_start({ turnIndex: 1 }, ctx);
@@ -293,6 +295,7 @@ def test_text_deltas_post_incrementally_with_stable_id() -> None:
   assert.equal(assistantText(assistantItems[0]), chunks.join(""));
 })().catch((e) => { console.error(e && e.stack ? e.stack : e); process.exit(1); });
 """
+    )
     result = _run_node(script, str(_extension_path()), "/tmp")
     assert result.returncode == 0, result.stdout + result.stderr
 
@@ -306,7 +309,9 @@ def test_multiple_text_blocks_share_one_message_preview(tmp_path: Path) -> None:
     preview is orphaned. Asserts both blocks' chunks share one ``message_id``
     with a single monotonic index.
     """
-    script = _STREAMING_HARNESS + r"""
+    script = (
+        _STREAMING_HARNESS
+        + r"""
 (async () => {
   await handlers.agent_start({}, ctx);
   await handlers.turn_start({ turnIndex: 1 }, ctx);
@@ -335,6 +340,7 @@ def test_multiple_text_blocks_share_one_message_preview(tmp_path: Path) -> None:
   );
 })().catch((e) => { console.error(e && e.stack ? e.stack : e); process.exit(1); });
 """
+    )
     result = _run_node(script, str(_extension_path()), str(tmp_path))
     assert result.returncode == 0, result.stdout + result.stderr
 
@@ -347,7 +353,9 @@ def test_successive_messages_in_turn_get_distinct_ids(tmp_path: Path) -> None:
     the new text into the already-committed first bubble. Asserts the second
     message's deltas carry a different ``message_id`` whose index restarts at 0.
     """
-    script = _STREAMING_HARNESS + r"""
+    script = (
+        _STREAMING_HARNESS
+        + r"""
 (async () => {
   await handlers.agent_start({}, ctx);
   await handlers.turn_start({ turnIndex: 1 }, ctx);
@@ -384,6 +392,7 @@ def test_successive_messages_in_turn_get_distinct_ids(tmp_path: Path) -> None:
   assert.equal(assistantText(assistantItems[1]), "Done");
 })().catch((e) => { console.error(e && e.stack ? e.stack : e); process.exit(1); });
 """
+    )
     result = _run_node(script, str(_extension_path()), str(tmp_path))
     assert result.returncode == 0, result.stdout + result.stderr
 
@@ -395,7 +404,9 @@ def test_message_without_streamed_text_posts_no_delta(tmp_path: Path) -> None:
     stray final marker — there is no live preview to close, so a spurious delta
     could create an empty preview bubble in the web UI.
     """
-    script = _STREAMING_HARNESS + r"""
+    script = (
+        _STREAMING_HARNESS
+        + r"""
 (async () => {
   await handlers.agent_start({}, ctx);
   await handlers.turn_start({ turnIndex: 1 }, ctx);
@@ -406,5 +417,6 @@ def test_message_without_streamed_text_posts_no_delta(tmp_path: Path) -> None:
   assert.equal(deltas().length, 0, JSON.stringify(deltas()));
 })().catch((e) => { console.error(e && e.stack ? e.stack : e); process.exit(1); });
 """
+    )
     result = _run_node(script, str(_extension_path()), str(tmp_path))
     assert result.returncode == 0, result.stdout + result.stderr
