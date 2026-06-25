@@ -122,14 +122,16 @@ def test_read_new_items_mirrors_tool_calls(tmp_path: Path) -> None:
     )
     import json
 
-    tool_calls_json = json.dumps([
-        {
-            "id": "call_abc",
-            "call_id": "call_abc",
-            "type": "function",
-            "function": {"name": "search_files", "arguments": '{"pattern": "*"}'},
-        }
-    ])
+    tool_calls_json = json.dumps(
+        [
+            {
+                "id": "call_abc",
+                "call_id": "call_abc",
+                "type": "function",
+                "function": {"name": "search_files", "arguments": '{"pattern": "*"}'},
+            }
+        ]
+    )
     rows = [
         ("s1", "assistant", "", None, tool_calls_json, None, 1),
         ("s1", "tool", "found 3 files", "call_abc", None, "search_files", 1),
