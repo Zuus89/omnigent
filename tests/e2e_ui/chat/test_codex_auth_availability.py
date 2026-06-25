@@ -47,10 +47,6 @@ from playwright.async_api import Route, async_playwright, expect
 # host). Keyed identically in the recent-workspaces localStorage seed.
 _HOST_ID = "host_e2e"
 _HOST_NAME = "e2e-host"
-# Bare create endpoint: ``/v1/sessions`` with an optional query, but NOT
-# ``/v1/sessions/{id}/...`` — so the GET conversation list and the
-# agent-discovery scan pass through to the real server.
-_SESSIONS_RE = re.compile(r"/v1/sessions(\?.*)?$")
 
 
 def _run_in_fresh_loop(coro: Coroutine[Any, Any, None]) -> None:
