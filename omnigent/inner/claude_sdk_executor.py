@@ -2444,9 +2444,7 @@ class ClaudeSDKExecutor(Executor):
                                 or retry_error == "authentication_failed"
                             ):
                                 if self._gateway_uses_databricks_profile:
-                                    auth_hint = (
-                                        "Check your selected ~/.databrickscfg profile."
-                                    )
+                                    auth_hint = "Check your selected ~/.databrickscfg profile."
                                 elif self._gateway:
                                     auth_hint = (
                                         "Check your provider's base URL and auth command "
@@ -2471,9 +2469,7 @@ class ClaudeSDKExecutor(Executor):
                                         "configuration."
                                     )
                                 else:
-                                    endpoint_hint = (
-                                        "Check ANTHROPIC_BASE_URL configuration."
-                                    )
+                                    endpoint_hint = "Check ANTHROPIC_BASE_URL configuration."
                                 terminal_error = (
                                     "Claude SDK provider endpoint was not found "
                                     f"({retry_error}, status={error_status}). "
