@@ -1007,8 +1007,14 @@ class TestModelFlagPlumbing:
 
         The config.toml pin (asserted elsewhere) remains the only route.
         """
-        from omnigent.codex_native_app_server import _CODEX_MODEL_ENV_VAR
+        from omnigent.codex_native_app_server import (
+            _CODEX_MODEL_ENV_VAR,
+            _MODEL_FLAG_ENV_VAR,
+        )
 
+        # The opt-in is read from the server's own process env (os.environ);
+        # ensure it isn't ambiently set so "off" is genuinely off.
+        monkeypatch.delenv(_MODEL_FLAG_ENV_VAR, raising=False)
         recorder = _SpawnRecorder()
         _patch_start_spawn(monkeypatch, recorder)
         server = await _model_flag_app_server(
@@ -1044,13 +1050,17 @@ class TestModelFlagPlumbing:
         monkeypatch.setattr(
             "omnigent.codex_native_app_server._codex_supports_model_flag", _supports
         )
+        # The opt-in lives in the server's process env, NOT the cleaned codex
+        # spawn env (env={}): _clean_codex_env strips OMNIGENT_* keys, so a
+        # flag passed via env= would never be seen in production.
+        monkeypatch.setenv(_MODEL_FLAG_ENV_VAR, "1")
         recorder = _SpawnRecorder()
         _patch_start_spawn(monkeypatch, recorder)
         server = await _model_flag_app_server(
             tmp_path,
             codex_path="/usr/bin/codex",
             model="databricks-gpt-5-4-mini",
-            env={_MODEL_FLAG_ENV_VAR: "1"},
+            env={},
         )
         await server.start()
 
@@ -1080,6 +1090,47 @@ class TestModelFlagPlumbing:
         monkeypatch.setattr(
             "omnigent.codex_native_app_server._codex_supports_model_flag", _unsupported
         )
+        # Opt-in lives in the server process env, not the cleaned spawn env.
+        monkeypatch.setenv(_MODEL_FLAG_ENV_VAR, "1")
+        recorder = _SpawnRecorder()
+        _patch_start_spawn(monkeypatch, recorder)
+        server = await _model_flag_app_server(
+            tmp_path,
+            codex_path="/usr/bin/codex",
+            model="databricks-gpt-5-4-mini",
+            env={},
+        )
+        await server.start()
+
+        assert recorder.argv is not None
+        assert "--model" not in recorder.argv
+        assert recorder.env is not None
+        assert recorder.env[_CODEX_MODEL_ENV_VAR] == "databricks-gpt-5-4-mini"
+
+    async def test_flag_in_spawn_env_alone_does_not_enable(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The flag in the cleaned spawn env (``self.env``) must NOT enable it.
+
+        Regression guard: ``self.env`` is the ``_clean_codex_env`` output,
+        whose prefix allowlist strips ``OMNIGENT_*`` keys, so the opt-in can
+        only arrive via the server's own ``os.environ``. If the gate ever
+        reverts to reading ``self.env``, this fails — the flag would appear to
+        work in a unit test that injects it via ``env=`` but be dead in prod.
+        """
+        from omnigent.codex_native_app_server import (
+            _CODEX_MODEL_ENV_VAR,
+            _MODEL_FLAG_ENV_VAR,
+        )
+
+        async def _supports(_codex_path: str) -> bool:
+            return True
+
+        monkeypatch.setattr(
+            "omnigent.codex_native_app_server._codex_supports_model_flag", _supports
+        )
+        # NOT set in os.environ — only smuggled into the spawn env.
+        monkeypatch.delenv(_MODEL_FLAG_ENV_VAR, raising=False)
         recorder = _SpawnRecorder()
         _patch_start_spawn(monkeypatch, recorder)
         server = await _model_flag_app_server(
@@ -1093,4 +1144,4 @@ class TestModelFlagPlumbing:
         assert recorder.argv is not None
         assert "--model" not in recorder.argv
         assert recorder.env is not None
-        assert recorder.env[_CODEX_MODEL_ENV_VAR] == "databricks-gpt-5-4-mini"
+        assert _CODEX_MODEL_ENV_VAR not in recorder.env

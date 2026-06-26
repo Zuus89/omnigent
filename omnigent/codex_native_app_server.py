@@ -664,8 +664,14 @@ class CodexNativeAppServer:
         # (which codex's config loader honors) so the explicit path still
         # carries the model. Either way the config.toml pin remains the
         # primary route, so a probe failure never strands the session.
+        # Read the opt-in from the omnigent server's OWN process environment
+        # (``os.environ``, the default), NOT ``self.env``: ``self.env`` is the
+        # cleaned codex spawn env from ``_clean_codex_env``, whose prefix
+        # allowlist strips ``OMNIGENT_*`` keys — so the flag would never be
+        # visible there. The flag is an operator knob for omnigent, not
+        # something codex itself consumes.
         model_global_args: list[str] = []
-        if self.pinned_model and _model_flag_enabled(self.env):
+        if self.pinned_model and _model_flag_enabled():
             if await _codex_supports_model_flag(self.codex_path):
                 model_global_args = ["--model", self.pinned_model]
             else:
