@@ -31,10 +31,6 @@ Omnigent lets you:
   follow you: start in your terminal, continue in the browser, pick it up on
   your phone. Messages, sub-agents, terminals, and files stay in sync.
 
-- **💻 Or from a native desktop app.** Prefer a dedicated window? The macOS
-  app wraps the same UI natively, with OS notifications and a dock badge.
-  **[⬇️ Download it for macOS](https://omnigent.ai/download/mac)**.
-
 - **🤖 Supervise multiple agents.** Mix Claude Code, Codex, Cursor, OpenCode,
   Hermes, Pi, and custom agents (defined in YAML) together in the same
   session. Ask one agent to review another's work, or split a task across
@@ -203,7 +199,7 @@ omnigent claude                      # Claude Code, in a session your team can j
 omnigent codex                       # Codex
 omnigent cursor                      # Cursor
 omnigent opencode                    # OpenCode
-omnigent hermes                      # Hermes (Nous Research)
+omnigent hermes                      # Hermes Agent (Nous Research)
 omnigent pi                          # Pi
 ```
 
