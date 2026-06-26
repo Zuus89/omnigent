@@ -90,6 +90,16 @@ dependencies = [
     # version against the latest PyPI release. Previously only a
     # transitive dep; pinned here now that we import it directly.
     "packaging>=23,<26",
+    # Security floors for packages that are otherwise transitive and that
+    # Dependabot can't fix on this uv workspace (it does not regenerate
+    # uv.lock). Declared as direct deps so the floor is honored by uv (a
+    # [tool.uv] constraint warns/conflicts with uv.toml, and a uv.toml
+    # constraint-dependencies is silently ignored). Drop the floor once the
+    # transitive resolution is patched on its own.
+    #   cryptography      >=48.0.1: GHSA-537c-gmf6-5ccf (high)
+    #   pydantic-settings >=2.14.2: GHSA-4xgf-cpjx-pc3j (medium)
+    "cryptography>=48.0.1",
+    "pydantic-settings>=2.14.2",
 ]
 
 [project.optional-dependencies]
