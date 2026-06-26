@@ -73,12 +73,13 @@ async function run({
       assignees: currentAssignees.map((l) => ({ login: l })),
     } },
   };
-  const core = { info: () => {}, warning: (m) => console.log("WARN", m) };
+  const warnings = [];
+  const core = { info: () => {}, warning: (m) => warnings.push(m) };
   await script({ github, context, core });
   return {
     added: added.sort(), removed: removed.sort(),
     assigned: assigned.sort(), unassigned: unassigned.sort(),
-    issueAssigned,
+    issueAssigned, warnings,
   };
 }
 
@@ -235,4 +236,32 @@ function assert(name, cond, detail) {
     JSON.stringify(r.added) === JSON.stringify(["dhruv0811"]), JSON.stringify(r));
   assert("cross-repo linked issue is not assigned",
     Object.keys(r.issueAssigned).length === 0, JSON.stringify(r.issueAssigned));
+
+  // 15. linked issue assigned to a maintainer who is NOT in the reviewers pool
+  //     (hzub is in .github/MAINTAINER but not .github/reviewers): NOT adopted
+  //     (adoption is restricted to the managed pool so the reviewer stays
+  //     removable), so the normal area pick stands. The issue already has an
+  //     assignee, so no push-down.
+  r = await run({
+    files: ["omnigent/inner/foo.py"],
+    load: { SabhyaC26: 5, TomeHirata: 4, dhruv0811: 0, dbczumar: 1 },
+    linkedIssues: [{ number: 55, assignees: ["hzub"] }],
+  });
+  assert("non-pool maintainer issue assignee is NOT adopted as reviewer",
+    JSON.stringify(r.added) === JSON.stringify(["dhruv0811"]), JSON.stringify(r));
+  assert("non-pool maintainer issue is left untouched",
+    Object.keys(r.issueAssigned).length === 0, JSON.stringify(r.issueAssigned));
+
+  // 16. push-down is capped: 7 unassigned linked issues -> only MAX_PUSHDOWN (5)
+  //     get the reviewer; the overflow is logged, not silently dropped.
+  const manyIssues = [201, 202, 203, 204, 205, 206, 207].map((n) => ({ number: n, assignees: [] }));
+  r = await run({
+    files: ["omnigent/inner/foo.py"],
+    load: { SabhyaC26: 5, TomeHirata: 4, dhruv0811: 0, dbczumar: 1 },
+    linkedIssues: manyIssues,
+  });
+  assert("push-down capped at 5 issues",
+    Object.keys(r.issueAssigned).length === 5, JSON.stringify(Object.keys(r.issueAssigned)));
+  assert("capped overflow is warned",
+    r.warnings.some((w) => /capping push-down/.test(w)), JSON.stringify(r.warnings));
 })();
