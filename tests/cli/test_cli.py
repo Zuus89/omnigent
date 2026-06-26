@@ -4076,6 +4076,48 @@ def test_setup_no_internal_beta_runs_configure_flow(
     run_onboarding.assert_not_called()
 
 
+def test_setup_uses_compact_branding_on_short_terminals(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A short first-run terminal should show the setup picker, not scroll past it."""
+    configure_flow = Mock()
+    print_landing = Mock()
+    print_brandmark = Mock()
+    monkeypatch.setattr("omnigent.cli._run_configure_harnesses_interactive", configure_flow)
+    monkeypatch.setattr("omnigent.inner.ui.print_landing", print_landing)
+    monkeypatch.setattr("omnigent.inner.ui.print_brandmark", print_brandmark)
+    monkeypatch.setattr(
+        "omnigent.cli.shutil.get_terminal_size",
+        lambda fallback: os.terminal_size((80, 24)),
+    )
+
+    result = CliRunner().invoke(cli, ["setup", "--no-internal-beta"])
+
+    assert result.exit_code == 0, result.output
+    print_brandmark.assert_called_once_with("setup")
+    print_landing.assert_not_called()
+    configure_flow.assert_called_once_with()
+
+
+def test_setup_keeps_full_landing_on_tall_terminals(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Roomy terminals keep the full first-run lockup."""
+    configure_flow = Mock()
+    print_landing = Mock()
+    print_brandmark = Mock()
+    monkeypatch.setattr("omnigent.cli._run_configure_harnesses_interactive", configure_flow)
+    monkeypatch.setattr("omnigent.inner.ui.print_landing", print_landing)
+    monkeypatch.setattr("omnigent.inner.ui.print_brandmark", print_brandmark)
+    monkeypatch.setattr(
+        "omnigent.cli.shutil.get_terminal_size",
+        lambda fallback: os.terminal_size((120, 40)),
+    )
+
+    result = CliRunner().invoke(cli, ["setup", "--no-internal-beta"])
+
+    assert result.exit_code == 0, result.output
+    print_landing.assert_called_once_with(tagline="all your agents, one cli")
+    print_brandmark.assert_not_called()
+    configure_flow.assert_called_once_with()
+
+
 # ─── setup dependency preflight (Node / tmux) ─────────────────────────
 
 

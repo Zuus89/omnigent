@@ -7985,10 +7985,7 @@ def _node_dependency_problem() -> str | None:
     """
     node = shutil.which("node")
     if node is None:
-        return (
-            "node not found on PATH — the Claude, Codex, and Pi harnesses need "
-            f"{_NODE_MIN_VERSION_HINT}."
-        )
+        return f"node not found — Claude, Codex, and Pi need {_NODE_MIN_VERSION_HINT}."
     # Probe the exact API the bundled undici calls. Exit 0 ⇒ capability
     # present; exit 1 ⇒ too old; we treat any other failure as inconclusive.
     probe = (
@@ -8008,11 +8005,7 @@ def _node_dependency_problem() -> str | None:
         return None
     version = _node_version(node)
     detected = f" (detected {version})" if version else ""
-    return (
-        f"Node.js is too old for the bundled harness CLIs{detected} — they need "
-        f"{_NODE_MIN_VERSION_HINT}. Symptom if unfixed: "
-        "'TypeError: webidl.util.markAsUncloneable is not a function'."
-    )
+    return f"Node.js is too old{detected} — Claude, Codex, and Pi need {_NODE_MIN_VERSION_HINT}."
 
 
 @contextlib.contextmanager
@@ -8183,20 +8176,15 @@ def _warn_missing_harness_dependencies() -> None:
         problems.append(node_problem)
     if shutil.which("tmux") is None:
         problems.append(
-            "tmux not found on PATH — `omnigent claude` and `omnigent codex` launch "
-            "the agent through a local tmux terminal and refuse to start without it "
-            "(macOS: `brew install tmux`)."
+            "tmux not found — native Claude/Codex need tmux (macOS: `brew install tmux`)."
         )
     if not problems:
         return
-    ui.err_console.print()
-    ui.warn("External tooling needed for some harnesses is missing or outdated:")
+    ui.warn("Some harnesses need external tools:")
     for problem in problems:
         ui.err_console.print(f"  • {problem}", style="omni.warning", markup=False)
     ui.err_console.print(
-        "You can still configure credentials — the pure-Python openai-agents harness "
-        "runs without these — but install them before `omnigent claude` / "
-        "`omnigent codex` or the Pi harness.\n",
+        "You can configure credentials now; install these before launching those harnesses.",
         style="omni.warning",
         markup=False,
     )
@@ -11289,8 +11277,14 @@ def setup(internal_beta: bool) -> None:
     """
     from omnigent.inner import ui
 
-    # Brand lockup at the top of the first-run experience (TTY-gated).
-    ui.print_landing(tagline="all your agents, one cli")
+    # Brand the first-run experience without pushing the actual picker below a
+    # typical 80×24 terminal. The full lockup is great in roomy terminals, but
+    # on short terminals it combines with the missing-tool warning and scrolls
+    # the menu off the first screen.
+    if shutil.get_terminal_size(fallback=(80, 24)).lines >= 32:
+        ui.print_landing(tagline="all your agents, one cli")
+    else:
+        ui.print_brandmark("setup")
 
     if internal_beta:
         # The internal-beta workspace defaults are excluded from the public OSS
