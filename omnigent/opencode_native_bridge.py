@@ -129,7 +129,10 @@ export const OmnigentPolicyPlugin = async () => ({
   "chat.message": async (_input, output) => {
     const text = output ? joinText(output.parts) : "";
     if (!text) return;
-    const verdict = await evaluate("PHASE_REQUEST", "", text);
+    // ``data`` is the {"text": ...} dict the server's _build_evaluation_context
+    // expects for REQUEST (same shape claude's UserPromptSubmit hook sends);
+    // a bare string 500s the evaluate endpoint and fails the gate open.
+    const verdict = await evaluate("PHASE_REQUEST", "", { text: text });
     if (verdict === "POLICY_ACTION_DENY") {
       throw new Error("Blocked by Omnigent policy (request phase).");
     }
