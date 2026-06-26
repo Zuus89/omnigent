@@ -440,6 +440,7 @@ def _render_startup_banner_ansi(
     ui_name: str,
     *,
     server_url: str | None = None,
+    server_version: str | None = None,
     header: _StartupHeader | None = None,
 ) -> str:
     """
@@ -451,16 +452,25 @@ def _render_startup_banner_ansi(
 
     When *header* is supplied, the box becomes a Claude-Code-style header:
     the agent name (bold) plus dim rows for the one-line summary, the
-    model + credential, the working folder, and (for a remote server) the
-    server URL; a per-family creds line is appended beneath the box for
-    multi-vendor agents. When *header* is ``None`` the box keeps its
-    minimal form — just the name, with the server URL taking the single
-    info row when the host is non-loopback (keybinding hints live in the
-    bottom toolbar, so the hint row is omitted).
+    model + credential, the working folder, and the server URL (shown for
+    any target, loopback included) with the installed version appended
+    inline as ``"<url>  ·  server <ver>"``; a per-family creds line is
+    appended beneath the box for multi-vendor agents. When *header* is
+    ``None`` the box keeps its minimal form — just the name, with the
+    server URL taking the single info row when the host is non-loopback
+    (keybinding hints live in the bottom toolbar, so the hint row is
+    omitted).
 
     :param ui_name: Humanized agent label shown bold at the top of the box.
-    :param server_url: Base URL the REPL is connected to. Surfaced only
-        when the host is non-loopback. ``None`` skips it.
+    :param server_url: Base URL the REPL is connected to. In the header
+        box it's shown for any target (including a local
+        ``http://127.0.0.1:<port>`` dev server); the minimal banner still
+        surfaces it only when the host is non-loopback. ``None`` skips it.
+    :param server_version: Installed server version (e.g. ``"0.3.0.dev0"``)
+        from a best-effort ``GET /v1/info`` probe, rendered inline on the
+        server-URL row (or its own row if there's no URL). ``None`` (probe
+        failed /
+        not attempted) skips the row. Only consulted on the *header* path.
     :param header: Resolved header data (folder / model / credential /
         summary / creds line) from :func:`_build_startup_header`, or
         ``None`` for the minimal banner.
@@ -492,8 +502,20 @@ def _render_startup_banner_ansi(
     elif header.model_label:
         info_lines.append(BannerLine(header.model_label, dim=True))
     info_lines.append(BannerLine(header.folder, dim=True))
-    if remote and server_url is not None:
-        info_lines.append(BannerLine(server_url, dim=True))
+    # Server URL + installed version on one row: "<url>  ·  server <ver>".
+    # The URL is shown for ANY server target, loopback included — a local
+    # dev server (``http://127.0.0.1:<port>``) is meaningful context here,
+    # so "which server am I on / what version is it" reads as one line. The
+    # version comes from a best-effort ``GET /v1/info`` probe; when it's
+    # unresolved (slow / old server) only the URL shows, and when there's no
+    # URL at all the version stands on its own row.
+    if server_url is not None:
+        url_row = server_url
+        if server_version:
+            url_row = f"{server_url}  ·  server {server_version}"
+        info_lines.append(BannerLine(url_row, dim=True))
+    elif server_version:
+        info_lines.append(BannerLine(f"server {server_version}", dim=True))
 
     banner = startup_banner_strings(ui_name, info_lines=info_lines, art_color="#F43BA6")
     if header.creds_line:
@@ -508,6 +530,33 @@ def _render_startup_banner_ansi(
             f"  {_ANSI_DIM}{header.creds_line}{_ANSI_RESET}"
         )
     return banner.ansi
+
+
+def _fetch_server_version(server_url: str | None) -> str | None:
+    """Best-effort ``GET /v1/info`` → ``server_version`` for the header row.
+
+    ``/v1/info`` is unauthed by design, so a plain short-timeout GET
+    suffices. Any failure — unreachable, slow, non-JSON, or a server too
+    old to report the field — returns ``None`` and the banner simply omits
+    the version row. A welcome-banner detail must never block or fail REPL
+    boot, so this swallows every error.
+
+    :param server_url: Base URL the REPL is connected to, e.g.
+        ``"https://omnigent.example.com"``; falsy short-circuits to
+        ``None``.
+    :returns: The installed server version string (e.g. ``"0.3.0.dev0"``),
+        or ``None`` when it can't be resolved.
+    """
+    if not server_url:
+        return None
+    try:
+        import httpx
+
+        resp = httpx.get(f"{server_url.rstrip('/')}/v1/info", timeout=2.0)
+        version = resp.json().get("server_version")
+    except Exception:  # noqa: BLE001 — startup-UI boundary: never block boot on a banner detail
+        return None
+    return version if isinstance(version, str) and version else None
 
 
 def _is_remote_server_url(url: str | None) -> bool:
@@ -4222,8 +4271,17 @@ async def run_repl(
                 _header = _build_startup_header(harness, agent_description, used_families)
             except Exception:  # noqa: BLE001 — startup-UI boundary: a config read must never block REPL boot
                 _log.exception("Failed to build startup header; falling back to plain banner")
+        # Installed server version for the header's "server <ver>" row.
+        # Resolved off the event loop (a 2s-timeout GET /v1/info) so a slow
+        # probe never stalls boot; None on any failure simply omits the row.
+        server_version = await asyncio.to_thread(_fetch_server_version, server_url)
         _sys.stdout.write(
-            _render_startup_banner_ansi(ui_name, server_url=server_url, header=_header)
+            _render_startup_banner_ansi(
+                ui_name,
+                server_url=server_url,
+                server_version=server_version,
+                header=_header,
+            )
         )
         _sys.stdout.flush()
 

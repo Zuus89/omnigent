@@ -25,6 +25,7 @@ from omnigent.repl._repl import (
     _build_startup_header,
     _consume_pending_local_skill_slash_command,
     _decode_terminal_target_key,
+    _fetch_server_version,
     _is_recoverable_sse_transport_error,
     _parse_sub_agent_handle,
     _parse_terminal_tool_output,
@@ -1466,6 +1467,160 @@ def test_render_startup_banner_without_header_is_name_only() -> None:
     # None of the header-only scaffolding leaks into the minimal banner.
     assert "→" not in plain
     assert "~/" not in plain
+
+
+def test_startup_header_shows_server_version_on_url_line() -> None:
+    """A resolved server version renders inline on the URL row: ``<url>  ·  server <ver>``.
+
+    What this proves: the version the user asked to surface (the headline
+    of this change) actually reaches the box and sits on the SAME line as
+    the URL as one "which server / what version" block. A regression that
+    stopped threading ``server_version`` into ``_render_startup_banner_ansi``
+    would drop it and fail the membership assert; one that split it onto its
+    own row would put the URL and version on different lines, failing the
+    same-line assert. The width assert guards the combined row against
+    pushing the 80-column box into a wrap.
+    """
+    import re
+
+    header = _StartupHeader(
+        folder="~/omnigent",
+        description=None,
+        model_label=None,
+        credential=None,
+        creds_line=None,
+    )
+    remote = "https://omnigent.example.com"
+    plain = re.sub(
+        r"\x1b\[[0-9;]*m",
+        "",
+        _render_startup_banner_ansi(
+            "polly", server_url=remote, server_version="0.3.0.dev0", header=header
+        ),
+    )
+    assert "server 0.3.0.dev0" in plain
+    # URL and version share one line — find the row carrying the URL and
+    # assert the version is on that same row.
+    url_line = next(line for line in plain.split("\n") if remote in line)
+    assert "server 0.3.0.dev0" in url_line
+    widths = [len(line) for line in plain.split("\n")]
+    assert max(widths) < 80, f"combined URL+version row widened the box to {max(widths)} cols"
+
+
+def test_startup_header_shows_local_server_url_with_version() -> None:
+    """A loopback server URL IS shown in the header, inline with the version.
+
+    What this proves: unlike the minimal banner (which hides loopback URLs
+    as noise), the header surfaces a local ``http://127.0.0.1:<port>`` dev
+    server so the combined ``<url>  ·  server <ver>`` line appears for local
+    sessions too. A regression that re-gated the header URL row on
+    ``_is_remote_server_url`` would drop the URL and fail the membership
+    assert.
+    """
+    import re
+
+    header = _StartupHeader(
+        folder="~/omnigent",
+        description=None,
+        model_label=None,
+        credential=None,
+        creds_line=None,
+    )
+    local = "http://127.0.0.1:7393"
+    plain = re.sub(
+        r"\x1b\[[0-9;]*m",
+        "",
+        _render_startup_banner_ansi(
+            "polly", server_url=local, server_version="0.3.0.dev0", header=header
+        ),
+    )
+    # The loopback URL and the version share one row in the header box.
+    url_line = next(line for line in plain.split("\n") if local in line)
+    assert "server 0.3.0.dev0" in url_line
+
+
+def test_startup_header_omits_server_version_when_unresolved() -> None:
+    """No ``server <ver>`` row when the version probe returned ``None``.
+
+    What this proves: the row is purely additive — an unreachable or old
+    server (probe → ``None``) yields the same box as before, never a bare
+    ``server`` label or blank row.
+    """
+    import re
+
+    header = _StartupHeader(
+        folder="~/omnigent",
+        description=None,
+        model_label=None,
+        credential=None,
+        creds_line=None,
+    )
+    plain = re.sub(
+        r"\x1b\[[0-9;]*m",
+        "",
+        _render_startup_banner_ansi("polly", server_url=None, server_version=None, header=header),
+    )
+    assert "server " not in plain
+
+
+@pytest.mark.parametrize(
+    "payload,expected",
+    [
+        # Happy path: server_version present in the /v1/info body.
+        ({"server_version": "0.3.0.dev0"}, "0.3.0.dev0"),
+        # Server too old to report the field → None (row omitted).
+        ({"accounts_enabled": False}, None),
+        # Non-string / empty values are rejected rather than rendered.
+        ({"server_version": ""}, None),
+        ({"server_version": 3}, None),
+    ],
+)
+def test_fetch_server_version_parses_info(monkeypatch, payload, expected) -> None:
+    """``_fetch_server_version`` extracts a non-empty string ``server_version`` from /v1/info.
+
+    What this proves: only a usable version string reaches the header; a
+    missing field, empty string, or non-string is treated as "unknown"
+    (``None``) so the banner never shows a garbage version. Also pins the
+    probe target to the unauthed ``/v1/info`` on the slash-normalized base.
+    """
+
+    class _FakeResp:
+        def json(self) -> dict:
+            return payload
+
+    captured: dict[str, object] = {}
+
+    def _fake_get(target: str, timeout: float = 0.0):
+        # ``timeout`` mirrors the real httpx.get keyword the helper passes;
+        # captured only so the call shape stays honest, not asserted.
+        captured["target"] = target
+        return _FakeResp()
+
+    import httpx
+
+    monkeypatch.setattr(httpx, "get", _fake_get)
+    assert _fetch_server_version("https://omnigent.example.com/") == expected
+    # Slash-normalized base + the unauthed capabilities probe path.
+    assert captured["target"] == "https://omnigent.example.com/v1/info"
+
+
+def test_fetch_server_version_never_raises(monkeypatch) -> None:
+    """A falsy URL short-circuits, and any probe error yields ``None`` (boot must not fail).
+
+    What this proves: the version probe is a non-blocking nicety — no
+    ``server_url``, or an ``httpx`` error mid-probe, returns ``None``
+    instead of propagating and taking down REPL boot.
+    """
+    assert _fetch_server_version(None) is None
+    assert _fetch_server_version("") is None
+
+    def _boom(*_args: object, **_kwargs: object) -> object:
+        raise RuntimeError("network down")
+
+    import httpx
+
+    monkeypatch.setattr(httpx, "get", _boom)
+    assert _fetch_server_version("https://omnigent.example.com") is None
 
 
 @pytest.mark.parametrize(
