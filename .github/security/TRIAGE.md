@@ -32,10 +32,14 @@ Per alert the model returns one of:
 
 Mutations are tightly gated:
 
-- **Auto-dismiss** happens only at **confidence ≥ 0.9**, and for CodeQL only
-  for an allow-listed set of rule ids (see `AUTO_DISMISS_RULES` in the
-  workflow). `py/path-injection` and `actions/untrusted-checkout` are **not**
-  auto-dismissable — they always wait for a human.
+- **Auto-dismiss** happens only at **confidence ≥ 0.9**, and is allow-listed
+  on each side:
+  - **CodeQL** — only for an allow-listed set of rule ids (see
+    `AUTO_DISMISS_RULES` in the workflow). `py/path-injection` and
+    `actions/untrusted-checkout` are **not** auto-dismissable.
+  - **Dependabot** — only **low/medium** severity advisories. A **high or
+    critical** dependency advisory is never auto-dismissed on the model's word
+    alone; it always waits for a human.
 - **serious** findings are collected into a **private** GitHub Security
   Advisory draft. They are never posted to public issues.
 - **Mutations are OFF by default.** APPLY mode requires either the repo

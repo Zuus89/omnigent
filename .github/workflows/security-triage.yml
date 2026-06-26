@@ -45,13 +45,14 @@ env:
   OMNIGENT_SKIP_WEB_UI: "true"
   UV_INDEX_URL: https://pypi.org/simple
   PIP_INDEX_URL: https://pypi.org/simple
-  # Mutations stay OFF until explicitly enabled, so merging this workflow
-  # never causes a surprise live run. APPLY mode requires EITHER the repo
-  # variable SECURITY_TRIAGE_APPLY == 'true' (turns on scheduled enforcement)
-  # OR a manual dispatch with dry_run unchecked. Everything else is dry.
+  # Mutations stay OFF until explicitly enabled, so merging this workflow never
+  # causes a surprise live run. A MANUAL dispatch is authoritative — it honours
+  # its own dry_run input (default true), regardless of the repo variable. A
+  # SCHEDULED run applies only when vars.SECURITY_TRIAGE_APPLY == 'true'.
   DRY_RUN: >-
-    ${{ ((github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
-        || vars.SECURITY_TRIAGE_APPLY == 'true') && 'false' || 'true' }}
+    ${{ github.event_name == 'workflow_dispatch'
+        && (inputs.dry_run && 'true' || 'false')
+        || (vars.SECURITY_TRIAGE_APPLY == 'true' && 'false' || 'true') }}
   # Minimum model confidence for an automated dismissal.
   CONFIDENCE_FLOOR: "0.9"
 
@@ -85,19 +86,26 @@ jobs:
         if: steps.creds.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          # Must live in THIS step's env to be readable below. GITHUB_TOKEN
+          # has no scope that grants Dependabot-alert read, so the Dependabot
+          # half only works when this elevated token is present.
+          SECURITY_TRIAGE_TOKEN: ${{ secrets.SECURITY_TRIAGE_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          # CodeQL code-scanning alerts (GITHUB_TOKEN can read these).
+          # CodeQL code-scanning alerts (GITHUB_TOKEN with security-events:read).
           gh api -X GET "/repos/$REPO/code-scanning/alerts" -f state=open --paginate \
-            > /tmp/code_scanning_raw.json 2>/dev/null || echo "[]" > /tmp/code_scanning_raw.json
-          # Dependabot alerts: prefer the elevated token (also lets us dismiss
-          # later); GITHUB_TOKEN can read them too.
-          GH_TOKEN="${SECURITY_TRIAGE_TOKEN:-$GH_TOKEN}" \
-            gh api -X GET "/repos/$REPO/dependabot/alerts" -f state=open --paginate \
-            > /tmp/dependabot_raw.json 2>/dev/null || echo "[]" > /tmp/dependabot_raw.json
-        # SECURITY_TRIAGE_TOKEN is optional; the default expansion above keeps
-        # this step working with only GITHUB_TOKEN.
+            > /tmp/code_scanning_raw.json || echo "[]" > /tmp/code_scanning_raw.json
+          # Dependabot alerts require the elevated token for BOTH read and the
+          # later dismiss. Without it, skip explicitly (don't silently empty).
+          if [ -n "${SECURITY_TRIAGE_TOKEN:-}" ]; then
+            GH_TOKEN="$SECURITY_TRIAGE_TOKEN" \
+              gh api -X GET "/repos/$REPO/dependabot/alerts" -f state=open --paginate \
+              > /tmp/dependabot_raw.json || echo "[]" > /tmp/dependabot_raw.json
+          else
+            echo "::notice::SECURITY_TRIAGE_TOKEN absent — skipping Dependabot alert fetch (GITHUB_TOKEN cannot read Dependabot alerts). CodeQL triage still runs."
+            echo "[]" > /tmp/dependabot_raw.json
+          fi
 
       - name: Build alert batch for the agent
         if: steps.creds.outputs.available == 'true'
@@ -149,8 +157,6 @@ jobs:
                 f"({sum(1 for b in batch if b['kind']=='code-scanning')} CodeQL, "
                 f"{sum(1 for b in batch if b['kind']=='dependabot')} Dependabot).")
           PYEOF
-        env:
-          SECURITY_TRIAGE_TOKEN: ${{ secrets.SECURITY_TRIAGE_TOKEN }}
 
       # ── LLM environment (no tools, no shell, no GH_TOKEN) ────────────────
 
@@ -208,7 +214,9 @@ jobs:
           )
           pathlib.Path.home().joinpath('.databrickscfg').write_text(cfg)
           "
-          echo "DATABRICKS_BEARER=${LLM_API_KEY}" >> "$GITHUB_ENV"
+          # NB: intentionally NOT exporting the key to $GITHUB_ENV — that would
+          # broaden the credential to every later step. The agent step passes
+          # LLM_API_KEY in its own env; the gateway config reads env:LLM_API_KEY.
 
       - name: Write Omnigent provider config
         if: steps.creds.outputs.available == 'true'
@@ -343,6 +351,11 @@ jobs:
 
           decisions = parsed.get("decisions", []) if isinstance(parsed, dict) else []
 
+          def md(s):
+              # Neutralise model-controlled text before it lands in a Markdown
+              # table cell (pipes/newlines could forge rows).
+              return str(s).replace("|", "\\|").replace("\r", " ").replace("\n", " ")
+
           def gh(args, token):
               env = dict(os.environ, GH_TOKEN=token)
               return subprocess.run(["gh", *args], env=env,
@@ -382,6 +395,13 @@ jobs:
                   if not elevated:
                       skipped.append((kind, num, verdict, conf, "no SECURITY_TRIAGE_TOKEN"))
                       continue
+                  # Allow-list by severity: never auto-dismiss a high/critical
+                  # dependency advisory on the model's word alone — those go to
+                  # a human regardless of verdict/confidence (parallels the
+                  # CodeQL AUTO_DISMISS_RULES gate).
+                  if (meta.get("severity") or "").lower() in ("high", "critical"):
+                      skipped.append((kind, num, verdict, conf, "dependabot high/critical — human only"))
+                      continue
                   if dry_run:
                       dismissed.append((kind, num, verdict, conf, reason, "DRY")); continue
                   r = gh(["api", "-X", "PATCH",
@@ -402,7 +422,7 @@ jobs:
               out += ["## Dismissed", "", "| kind | # | verdict | conf | status | reason |",
                       "|---|---|---|---|---|---|"]
               for k, n, v, c, rsn, st in dismissed:
-                  out.append(f"| {k} | {n} | {v} | {c:.2f} | {st} | {rsn} |")
+                  out.append(f"| {k} | {n} | {v} | {c:.2f} | {md(st)} | {md(rsn)} |")
               out.append("")
           if escalated:
               out += ["## Escalated — SERIOUS (needs a private advisory + fix)", "",
@@ -444,15 +464,31 @@ jobs:
           items = json.loads(pathlib.Path("/tmp/serious.json").read_text())
           lines = ["Automated security triage escalated the following findings "
                    "as serious. Review, confirm, and remediate.\n"]
+          # `vulnerabilities` is a REQUIRED field on POST /security-advisories
+          # (each entry needs package.ecosystem). Build it from the findings;
+          # code-scanning findings have no package, so map them to `other`.
+          VALID_ECO = {"rubygems", "npm", "pip", "maven", "nuget", "composer",
+                       "go", "rust", "erlang", "actions", "pub", "swift", "other"}
+          vulns, seen = [], set()
           for it in items:
               m = it["meta"]
               locus = m.get("package") or f"{m.get('path')}:{m.get('line')}"
               ref = m.get("ghsa_or_cve") or m.get("rule_id") or ""
               lines.append(f"- [{it['kind']} #{it['number']}] {locus} {ref}: {it['reason']}")
+              if it["kind"] == "dependabot":
+                  eco = m.get("ecosystem") if m.get("ecosystem") in VALID_ECO else "other"
+                  name = m.get("package") or "unknown"
+              else:
+                  eco, name = "other", (m.get("path") or repo)
+              key = (eco, name)
+              if key not in seen:
+                  seen.add(key)
+                  vulns.append({"package": {"ecosystem": eco, "name": name}})
           body = {
               "summary": f"Auto-triage: {len(items)} serious finding(s) need review",
               "description": "\n".join(lines),
               "severity": "high",
+              "vulnerabilities": vulns,
           }
           r = subprocess.run(
               ["gh", "api", "-X", "POST", f"/repos/{repo}/security-advisories",

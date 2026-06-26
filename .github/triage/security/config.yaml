@@ -71,7 +71,9 @@ prompt: |
     describe a serious finding in a way that would be unsafe to make public.
 
   - **monitor** — you cannot confidently classify it from the given context.
-    Leave it open for a human. Use this whenever confidence would be < 0.8.
+    Leave it open for a human. Use this whenever confidence would be < 0.9
+    (the trusted step only auto-acts at >= 0.9, so anything below is for a
+    human regardless).
 
   ## Calibration
 
