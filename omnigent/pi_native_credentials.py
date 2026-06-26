@@ -24,7 +24,7 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from omnigent.model_override import normalize_model_for_provider
@@ -40,6 +40,12 @@ from omnigent.onboarding.provider_config import (
     default_provider_for_harness,
     load_config,
 )
+
+if TYPE_CHECKING:
+    # Annotation-only import (the runtime import is lazy inside the function,
+    # since ``ambient`` pulls in onboarding-only deps this module avoids on the
+    # runner's session-create hot path).
+    from omnigent.onboarding.ambient import CodexConfigTransport
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,7 +211,7 @@ def _gateway_anthropic_base_url(codex_base_url: str) -> str:
     return f"{trimmed}{_DATABRICKS_GATEWAY_ANTHROPIC_SUFFIX}"
 
 
-def _cli_config_databricks_transport(entry: ProviderEntry) -> Any:
+def _cli_config_databricks_transport(entry: ProviderEntry) -> CodexConfigTransport | None:
     """Return the codex transport for a pi-consumable Databricks cli-config entry.
 
     Shared core of :func:`_cli_config_pi_provider` and
