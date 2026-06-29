@@ -758,12 +758,22 @@ def _init_otel_logs() -> None:
         _logs_initialized = True
 
 
-def init() -> None:
+def init(service_name: str | None = None) -> None:
     """
     Initialize OpenTelemetry tracing for the omnigent runtime.
 
     Safe to call multiple times; the second and subsequent calls
     refresh the content-capture flag but do not re-register providers.
+
+    :param service_name: The OpenTelemetry ``service.name`` for this
+        process, e.g. ``"omni-server"`` / ``"omni-runner"`` /
+        ``"omni-harness"`` / ``"omni-host"``. Each entrypoint names
+        itself so the trace backend can attribute spans to a component;
+        a child process overrides the parent's inherited name with its
+        own. When ``None``, an operator-set ``OTEL_SERVICE_NAME`` is
+        honored, otherwise it defaults to ``"omnigent"``. Deployment-
+        level identity (environment, region) belongs in
+        ``OTEL_RESOURCE_ATTRIBUTES``.
 
     Two modes based on the environment:
 
@@ -783,6 +793,16 @@ def init() -> None:
 
     if _initialized:
         return
+
+    # Per-component service identity. The trace / metrics / logs
+    # providers below all read OTEL_SERVICE_NAME when they build their
+    # Resource, so this must run before any provider is created. A
+    # passed name wins over an inherited one so each process (server /
+    # runner / harness / host) is attributable in the trace backend
+    # instead of collapsing to one anonymous service.
+    os.environ["OTEL_SERVICE_NAME"] = (
+        service_name or os.environ.get("OTEL_SERVICE_NAME") or "omnigent"
+    )
 
     endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "").strip()
     _init_otel_traces(endpoint)

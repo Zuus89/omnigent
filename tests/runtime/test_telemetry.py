@@ -9,6 +9,7 @@ and deterministic. Integration with the full workflow lives in
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterator
 
 import pytest
@@ -478,6 +479,69 @@ def test_init_respects_capture_content_flag(
     assert telemetry.should_capture_content() is False
 
 
+def test_init_sets_service_name_from_argument(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    A passed ``service_name`` becomes ``OTEL_SERVICE_NAME``, overriding
+    any inherited value — so a child process (e.g. the runner spawned by
+    the server) is attributable as its own component rather than
+    inheriting the parent's name.
+    """
+    monkeypatch.delenv("OTEL_EXPORTER_OTLP_ENDPOINT", raising=False)
+    monkeypatch.setenv("OTEL_METRICS_EXPORTER", "none")
+    monkeypatch.setenv("OTEL_LOGS_EXPORTER", "none")
+    # Simulate an inherited value from a parent process.
+    monkeypatch.setenv("OTEL_SERVICE_NAME", "omni-server")
+    monkeypatch.setattr(telemetry, "_initialized", False)
+    monkeypatch.setattr(telemetry, "_metrics_initialized", False)
+    monkeypatch.setattr(telemetry, "_logs_initialized", False)
+
+    telemetry.init("omni-runner")
+
+    assert os.environ["OTEL_SERVICE_NAME"] == "omni-runner"
+
+
+def test_init_defaults_service_name_when_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    With no argument and no operator-set ``OTEL_SERVICE_NAME``, the
+    service name defaults to ``omnigent`` so spans are never anonymous.
+    """
+    monkeypatch.delenv("OTEL_EXPORTER_OTLP_ENDPOINT", raising=False)
+    monkeypatch.delenv("OTEL_SERVICE_NAME", raising=False)
+    monkeypatch.setenv("OTEL_METRICS_EXPORTER", "none")
+    monkeypatch.setenv("OTEL_LOGS_EXPORTER", "none")
+    monkeypatch.setattr(telemetry, "_initialized", False)
+    monkeypatch.setattr(telemetry, "_metrics_initialized", False)
+    monkeypatch.setattr(telemetry, "_logs_initialized", False)
+
+    telemetry.init()
+
+    assert os.environ["OTEL_SERVICE_NAME"] == "omnigent"
+
+
+def test_init_honors_operator_service_name_without_argument(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    With no argument but an operator-set ``OTEL_SERVICE_NAME``, the
+    operator's value is preserved.
+    """
+    monkeypatch.delenv("OTEL_EXPORTER_OTLP_ENDPOINT", raising=False)
+    monkeypatch.setenv("OTEL_SERVICE_NAME", "my-deployment")
+    monkeypatch.setenv("OTEL_METRICS_EXPORTER", "none")
+    monkeypatch.setenv("OTEL_LOGS_EXPORTER", "none")
+    monkeypatch.setattr(telemetry, "_initialized", False)
+    monkeypatch.setattr(telemetry, "_metrics_initialized", False)
+    monkeypatch.setattr(telemetry, "_logs_initialized", False)
+
+    telemetry.init()
+
+    assert os.environ["OTEL_SERVICE_NAME"] == "my-deployment"
+
+
 def _stub_fastapi_instrumentor(monkeypatch: pytest.MonkeyPatch) -> list[FastAPI]:
     """
     Replace ``FastAPIInstrumentor.instrument_app`` with a recorder.
@@ -624,11 +688,9 @@ def test_inject_extract_frame_round_trip(
     nests under the same trace — the JSON-frame websocket propagation
     invariant (host tunnel, session-updates) holds end to end.
     """
-    import mlflow
-    from mlflow.entities import SpanType
-
+    tracer = otel_trace.get_tracer("test")
     with telemetry.trace_context_for_response(response_id=_RESP_ID):
-        with mlflow.start_span("producer", span_type=SpanType.AGENT):
+        with tracer.start_as_current_span("producer"):
             frame = telemetry.inject_trace_context({"kind": "host.launch_runner"})
     assert "traceparent" in frame
 

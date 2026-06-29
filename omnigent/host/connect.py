@@ -1596,7 +1596,7 @@ def run_host_process(
     # daemon inherits OTEL_*/MLFLOW_* config from the launching CLI.
     from omnigent.runtime import telemetry
 
-    telemetry.init()
+    telemetry.init("omni-host")
 
     from omnigent.host.identity import CONFIG_PATH
 
