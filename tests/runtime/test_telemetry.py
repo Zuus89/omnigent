@@ -616,6 +616,54 @@ def test_instrument_sqlalchemy_engine_missing_package_is_noop(
     telemetry.instrument_sqlalchemy_engine(engine)
 
 
+def test_inject_extract_frame_round_trip(
+    in_memory_exporter: InMemorySpanExporter,
+) -> None:
+    """
+    A frame injected under a span and consumed via ``consume_frame_span``
+    nests under the same trace — the JSON-frame websocket propagation
+    invariant (host tunnel, session-updates) holds end to end.
+    """
+    import mlflow
+    from mlflow.entities import SpanType
+
+    with telemetry.trace_context_for_response(response_id=_RESP_ID):
+        with mlflow.start_span("producer", span_type=SpanType.AGENT):
+            frame = telemetry.inject_trace_context({"kind": "host.launch_runner"})
+    assert "traceparent" in frame
+
+    with telemetry.consume_frame_span("host.launch_runner", frame) as span:
+        consumed_hex = format(span.get_span_context().trace_id, "032x")
+
+    assert consumed_hex == _RESP_HEX, (
+        f"consumer trace {consumed_hex!r} should match producer trace "
+        f"{_RESP_HEX!r} — frame trace-context propagation is broken."
+    )
+
+
+def test_inject_trace_context_noop_without_active_span() -> None:
+    """
+    Outside any span, ``inject_trace_context`` leaves the carrier
+    unchanged so frames stay byte-for-byte wire-compatible.
+    """
+    carrier = {"kind": "host.stat", "request_id": "req_1"}
+    result = telemetry.inject_trace_context(carrier)
+    assert result is carrier
+    assert "traceparent" not in carrier
+
+
+def test_consume_frame_span_roots_new_trace_without_carrier(
+    in_memory_exporter: InMemorySpanExporter,
+) -> None:
+    """
+    A carrier with no trace headers roots a fresh trace rather than
+    raising — a frame from a peer that never injected context is still
+    handled, just without an upstream parent.
+    """
+    with telemetry.consume_frame_span("host.hello", {"kind": "host.hello"}) as span:
+        assert span.get_span_context().trace_id != 0
+
+
 def test_httpx_to_fastapi_propagates_trace_across_http_hop(
     in_memory_exporter: InMemorySpanExporter,
     monkeypatch: pytest.MonkeyPatch,

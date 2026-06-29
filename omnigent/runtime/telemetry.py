@@ -31,12 +31,13 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+    from opentelemetry.context import Context
     from opentelemetry.sdk._logs.export import LogExporter
     from opentelemetry.sdk.metrics.export import MetricExporter
     from opentelemetry.trace import Span
@@ -388,6 +389,88 @@ def get_traceparent_env() -> dict[str, str]:
     if "tracestate" in carrier:
         result["TRACESTATE"] = carrier["tracestate"]
     return result
+
+
+def inject_trace_context(carrier: dict[str, str]) -> dict[str, str]:
+    """
+    Inject the active W3C trace context into a dict carrier.
+
+    For the JSON-frame transports that no auto-instrumentor can see —
+    the host-daemon tunnel (``host/frames.py``) and the session-updates
+    websocket — call this on the **send** side so the frame carries a
+    ``traceparent`` (and ``tracestate`` when present). The receiver pairs
+    it with :func:`extract_trace_context`.
+
+    Uses the global OpenTelemetry propagator (W3C Trace Context by
+    default), so the standard lowercase header names are written. When no
+    span is active the carrier is left unchanged.
+
+    :param carrier: A mutable string-keyed dict, typically the frame
+        about to be serialized to JSON.
+    :returns: The same ``carrier`` for convenient chaining.
+    """
+    from opentelemetry.propagate import inject
+
+    inject(carrier)
+    return carrier
+
+
+def extract_trace_context(carrier: Mapping[str, str]) -> Context:
+    """
+    Extract a remote W3C trace context from a dict carrier.
+
+    The **receive**-side counterpart to :func:`inject_trace_context`.
+    Pass the returned context to ``start_as_current_span(context=...)``
+    so the span created while handling the frame nests under the sender's
+    trace instead of rooting a new one.
+
+    :param carrier: A string-keyed mapping that may hold ``traceparent`` /
+        ``tracestate`` keys, e.g. a decoded JSON frame.
+    :returns: An OpenTelemetry :class:`~opentelemetry.context.Context`.
+        When the carrier holds no trace headers this is the current
+        (possibly empty) context, so spans started under it simply root a
+        new trace.
+    """
+    from opentelemetry.propagate import extract
+
+    return extract(carrier)
+
+
+@contextmanager
+def consume_frame_span(
+    name: str,
+    carrier: Mapping[str, str],
+    *,
+    attributes: Mapping[str, Any] | None = None,
+) -> Iterator[Any]:
+    """
+    Open a CONSUMER span parented on a received frame's trace context.
+
+    The receive-side wrapper for the JSON-frame websockets: extracts the
+    W3C context that :func:`inject_trace_context` wrote into ``carrier``,
+    then opens a span that nests under the sender's trace. Any frame
+    encoded while this span is active (e.g. a result frame sent back in
+    reply) inherits it, so request/response round trips stay linked.
+
+    :param name: Span name, e.g. ``"host.launch_runner"``.
+    :param carrier: The decoded inbound frame (a JSON dict) that may
+        hold ``traceparent`` / ``tracestate`` keys.
+    :param attributes: Optional span attributes to set, e.g.
+        ``{"host.request_id": "req_1"}``.
+    :returns: A context manager yielding the started span.
+    """
+    from opentelemetry import trace as otel_trace
+
+    parent = extract_trace_context(carrier)
+    tracer = otel_trace.get_tracer("omnigent.frames")
+    with tracer.start_as_current_span(
+        name,
+        context=parent,
+        kind=otel_trace.SpanKind.CONSUMER,
+    ) as span:
+        for key, value in (attributes or {}).items():
+            span.set_attribute(key, value)
+        yield span
 
 
 def _metrics_exporter_name() -> str:

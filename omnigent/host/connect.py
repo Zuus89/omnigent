@@ -9,6 +9,7 @@ the server.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import subprocess
@@ -1526,7 +1527,22 @@ class HostProcess:
             if isinstance(runner_frame, PingFrame):
                 await ws.send(encode_frame(PongFrame(ts=runner_frame.ts)))
             return
-        await self._dispatch_host_frame(ws, frame)
+        # Handle the frame inside a CONSUMER span parented on the trace
+        # context the server stamped into the frame envelope, so the
+        # host's work (and the result frame it sends back) nests under
+        # the server request that triggered it.
+        from omnigent.runtime import telemetry
+
+        try:
+            carrier = json.loads(raw)
+        except ValueError:
+            carrier = {}
+        if not isinstance(carrier, dict):
+            carrier = {}
+        raw_kind = carrier.get("kind")
+        kind = raw_kind if isinstance(raw_kind, str) else type(frame).__name__
+        with telemetry.consume_frame_span(kind, carrier):
+            await self._dispatch_host_frame(ws, frame)
 
     async def _dispatch_host_frame(
         self,
@@ -1574,6 +1590,14 @@ def run_host_process(
         (auth / authorization / outdated server). The
         actionable cause is printed to stderr first.
     """
+    # Initialize tracing so the host daemon exports its own spans
+    # (e.g. handling launch_runner / stat / list_dir frames) into the
+    # same distributed trace as the server that requested them. The
+    # daemon inherits OTEL_*/MLFLOW_* config from the launching CLI.
+    from omnigent.runtime import telemetry
+
+    telemetry.init()
+
     from omnigent.host.identity import CONFIG_PATH
 
     path = config_path or CONFIG_PATH
