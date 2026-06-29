@@ -979,6 +979,28 @@ def _subagent_harness_override_from_args(args: dict[str, Any]) -> str | None:
     return raw_harness
 
 
+def _subagent_cost_budget_from_args(args: dict[str, Any]) -> float | None:
+    """
+    Extract and validate the per-dispatch cost budget from ``sys_session_send`` args.
+
+    The optional ``cost_budget`` field lives inside the object form of
+    ``args`` (``{"input": ..., "cost_budget": 2.0}``).
+
+    :param args: Parsed ``sys_session_send`` arguments.
+    :returns: The validated budget in USD, or ``None`` when absent.
+    :raises ValueError: If ``cost_budget`` is present but not positive.
+    """
+    raw_args = args.get("args")
+    if isinstance(raw_args, dict):
+        budget = raw_args.get("cost_budget")
+        if budget is not None:
+            budget = float(budget)
+            if budget <= 0:
+                raise ValueError("cost_budget must be > 0")
+            return budget
+    return None
+
+
 def _subagent_allowed_harnesses(sub_agent_name: str, agent_spec: Any | None) -> frozenset[str]:
     """
     Resolve the canonical harness allowlist a sub-agent opts into.
@@ -1138,6 +1160,11 @@ async def _execute_subagent_tool(
     except ValueError as exc:
         return f"Error: sys_session_send invalid 'harness': {exc}"
 
+    try:
+        cost_budget = _subagent_cost_budget_from_args(args)
+    except (ValueError, TypeError) as exc:
+        return f"Error: sys_session_send invalid 'cost_budget': {exc}"
+
     # By-session-id mode: post to an existing direct child instead of
     # spawning/continuing a named (agent, title) sub-agent.
     target_session_id = args.get("session_id")
@@ -1162,6 +1189,13 @@ async def _execute_subagent_tool(
                 "Error: sys_session_send 'harness' applies only when a "
                 "sub-agent session is first created; it cannot change an "
                 "existing session. Re-send without 'harness' to continue "
+                f"session {target_session_id!r}."
+            )
+        if cost_budget is not None:
+            return (
+                "Error: sys_session_send 'cost_budget' applies only when a "
+                "sub-agent session is first created; it cannot change an "
+                "existing session. Re-send without 'cost_budget' to continue "
                 f"session {target_session_id!r}."
             )
         return await _send_to_existing_session(
@@ -1227,6 +1261,15 @@ async def _execute_subagent_tool(
                 f"{child_session_id}. Re-send without 'model' to continue "
                 "it, or sys_session_close it first to spawn a fresh "
                 "session on the requested model."
+            )
+        if cost_budget is not None:
+            return (
+                f"Error: sys_session_send 'cost_budget' applies only when a "
+                f"sub-agent session is first created; {sub_agent_name!r} "
+                f"title {session_name!r} already exists as "
+                f"{child_session_id}. Re-send without 'cost_budget' to "
+                "continue it, or sys_session_close it first to spawn a "
+                "fresh session with the requested budget."
             )
         child_wrapper_label = _session_wrapper_label(existing)
         existing_work = _runner_app.get_subagent_work(child_session_id)
@@ -1355,6 +1398,36 @@ async def _execute_subagent_tool(
             return "Error: server did not return child session_id"
         child_wrapper_label = _session_wrapper_label(child_data)
         created_child = True
+
+        # Attach a subagent_cost_budget policy to the child when requested.
+        # Non-fatal: the child session is still usable without the budget.
+        if cost_budget is not None:
+            policy_body = {
+                "name": "__subagent_cost_budget",
+                "type": "python",
+                "handler": "omnigent.policies.builtins.cost.subagent_cost_budget",
+                "factory_params": {"max_cost_usd": cost_budget},
+                "enabled": True,
+            }
+            try:
+                pol_resp = await server_client.post(
+                    f"/v1/sessions/{child_session_id}/policies",
+                    json=policy_body,
+                    timeout=10.0,
+                )
+                if pol_resp.status_code >= 400:
+                    _logger.warning(
+                        "failed to set subagent_cost_budget policy on child %s: %s %s",
+                        child_session_id,
+                        pol_resp.status_code,
+                        pol_resp.text[:200],
+                    )
+            except httpx.HTTPError:
+                _logger.warning(
+                    "failed to set subagent_cost_budget policy on child %s",
+                    child_session_id,
+                    exc_info=True,
+                )
 
     # Publish session.created on the parent's SSE stream so the
     # REPL debug panel and any client subscribers discover the
