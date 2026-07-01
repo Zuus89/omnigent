@@ -21,7 +21,19 @@
 > are in **§10**; any inline claim about `sys_timer_*` being non-functional (§7-Tools) or runner
 > "no failover" (§7-Runner) is **superseded by §10**.
 
-## Table of contents
+## Document map — all deliverable files
+
+> **New here? The index is [`architecture/README.md`](architecture/README.md).** The four deliverable categories:
+
+| Doc | What |
+|---|---|
+| **`ARCHITECTURE.md`** *(this file)* | **Overall architecture** — read top-to-bottom, or jump via the TOC below. |
+| [`architecture/`](architecture/) | **Component architecture** — 11 per-component deep-dives + index: [server](architecture/server.md) · [runner](architecture/runner.md) · [host](architecture/host.md) · [executor-harness](architecture/executor-harness.md) · [policy](architecture/policy.md) · [tools-mcp-sandbox](architecture/tools-mcp-sandbox.md) · [agents-subagents-routing](architecture/agents-subagents-routing.md) · [web](architecture/web.md) · [tui-repl](architecture/tui-repl.md) · [creds-auth-onboarding](architecture/creds-auth-onboarding.md) · [observability](architecture/observability.md) |
+| [`CUJ-MAP.md`](CUJ-MAP.md) | **CUJs** — the inventory (list of journeys). |
+| [`CUJ-ANALYSIS.md`](CUJ-ANALYSIS.md) | **CUJs** — per-CUJ mechanisms + §7 (round-1) & §8 (round-2) verification. |
+| [`STABILITY-CUJ-ANSWERS.md`](STABILITY-CUJ-ANSWERS.md) | **Gdoc answers** — paste-ready "Stability & Reliability" answers. |
+
+## Table of contents (this file)
 1. [System overview](#1-system-overview)
 2. [Process topology & channels](#2-process-topology--channels)
 3. [End-to-end request lifecycle](#3-end-to-end-request-lifecycle)
@@ -31,6 +43,7 @@
 7. [Component deep-dives](#7-component-deep-dives) — server · runner · host · executor+harnesses · policy · tools/MCP/sandbox · agents/subagents/routing · web · tui/repl · creds/auth
 8. [Observability & how to read traces](#8-observability--how-to-read-traces)
 9. [Trace corpus index](#9-trace-corpus-index)
+10. [Round-2 live-driving corrections](#10-round-2-live-driving-verification-2026-06-30)
 
 ---
 
