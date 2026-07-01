@@ -199,10 +199,10 @@ Harness descriptions:
 Model naming conventions — use these to judge cost and capability:
 - Claude family (cheapest → most capable): haiku < sonnet < opus.
 - GPT family: a -nano or -mini suffix always means cheaper and faster
-  than the base model of the same or higher version number. Tier order:
-  *-nano < *-mini < base (no suffix), regardless of version number.
-  For example: gpt-5.4-mini is cheaper than gpt-5.4, and gpt-5.5 is
-  the most capable base model but gpt-5.4-mini beats it on cost/speed.
+  than any base model (no suffix), regardless of version number. Tier
+  order: *-nano < *-mini < base. A newer base version (e.g. X.5) is
+  more capable and expensive than an older one (e.g. X.4), but a mini
+  or nano variant of any version is still cheaper than any base model.
 
 Trade-off guidance:
 - Simple tasks (greetings, quick lookups, one-line fixes) → cheapest model (nano or mini if available, else haiku).
