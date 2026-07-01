@@ -1,4 +1,13 @@
-"""Tests for the WS tunnel size limits + keepalive budget constants."""
+"""Tests for the WS tunnel size limits + keepalive budget constants.
+
+Scope note (#1116): these guard the shared constants and the tunnel-vs-app-level
+invariant. They do NOT assert anything about the server-global reach of uvicorn's
+``ws_ping_*`` — that setting applies the same 30 s/90 s budget to every WebSocket
+route (session-updates, terminal-attach), which is deliberate: those sockets carry
+their own app-level heartbeat traffic, so the only effect is a slightly later
+half-open-socket reap (~120 s vs ~40 s), not a correctness change. See the comment
+on ``uvicorn.run`` in ``omnigent/cli.py``.
+"""
 
 from __future__ import annotations
 

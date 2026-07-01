@@ -3230,6 +3230,16 @@ def server(
             # Server side of the runner/host tunnels' protocol keepalive, aligned
             # to the 90 s app-level budget instead of uvicorn's 20 s default that
             # drops a busy-but-healthy tunnel with 1011 — issue #1116.
+            #
+            # uvicorn's ws_ping_* is server-global (no per-route override), so this
+            # 30 s/90 s budget also applies to the app's other WebSocket routes —
+            # /v1/sessions/updates (browser stream) and .../terminals/{id}/attach.
+            # Deliberate and acceptable: those sockets carry their own app-level
+            # session.heartbeat / terminal traffic, so the only effect is that a
+            # dead browser/terminal socket with no app traffic is reaped at worst
+            # ~120 s (30 s interval + 90 s timeout) instead of ~40 s — a slightly
+            # later half-open cleanup, not a correctness change. The tunnels are
+            # the sockets that actually need the looser budget (issue #1116).
             ws_ping_interval=TUNNEL_KEEPALIVE_PING_INTERVAL_S,
             ws_ping_timeout=TUNNEL_KEEPALIVE_PING_TIMEOUT_S,
             timeout_graceful_shutdown=_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT_S,

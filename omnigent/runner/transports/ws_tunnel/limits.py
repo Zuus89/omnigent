@@ -19,7 +19,10 @@ RUNNER_TUNNEL_MAX_MESSAGE_BYTES = 100 * 1024 * 1024
 # A PING every 30 s keeps the connection warm and is the runner's ONLY detector
 # of a silently-dead server (the app-level ``_ping_loop`` only runs server->client),
 # while the 90 s PONG timeout tolerates loop stalls up to the same window the
-# app-level loop already allows. ``test_limits.py`` asserts the >= invariant so a
-# future tightening below the app-level budget fails CI.
+# app-level loop already allows. A peer that dies right after a successful PONG is
+# detected at worst ~120 s later (30 s interval before the next PING + 90 s waiting
+# for its PONG) — the deliberate tradeoff for not false-dropping a busy-but-healthy
+# tunnel. ``test_limits.py`` asserts the >= invariant so a future tightening below
+# the app-level budget fails CI.
 TUNNEL_KEEPALIVE_PING_INTERVAL_S = 30.0
 TUNNEL_KEEPALIVE_PING_TIMEOUT_S = 90.0
