@@ -17,14 +17,14 @@ from pathlib import Path
 # (.github/scripts/changelog/generate.py) so the gate and the harvester can
 # never disagree on what the "## Changelog" section means.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _md import (  # noqa: E402
+from _md import (
     CHANGELOG_CATEGORIES,
     is_changelog_skip,
     parse_changelog_entries,
 )
-from _md import heading_spans as _heading_spans  # noqa: E402
-from _md import section as _section  # noqa: E402
-from _md import strip_html_comments as _strip_html_comments  # noqa: E402
+from _md import heading_spans as _heading_spans
+from _md import section as _section
+from _md import strip_html_comments as _strip_html_comments
 
 REQUIRED_HEADINGS = (
     "Summary",

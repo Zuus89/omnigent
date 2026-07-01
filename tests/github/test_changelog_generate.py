@@ -4,9 +4,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-SCRIPT = (
-    Path(__file__).resolve().parents[2] / ".github" / "scripts" / "changelog" / "generate.py"
-)
+SCRIPT = Path(__file__).resolve().parents[2] / ".github" / "scripts" / "changelog" / "generate.py"
 spec = importlib.util.spec_from_file_location("changelog_generate", SCRIPT)
 assert spec and spec.loader
 gen = importlib.util.module_from_spec(spec)
@@ -25,7 +23,7 @@ def test_previous_final_tag_for_minor() -> None:
 
 def test_previous_final_tag_for_patch() -> None:
     # A patch picks the previous patch/minor, never a higher minor.
-    assert gen.previous_final_tag("v0.2.1", _TAGS + ["v0.2.1"]) == "v0.2.0"
+    assert gen.previous_final_tag("v0.2.1", [*_TAGS, "v0.2.1"]) == "v0.2.0"
 
 
 def test_previous_final_tag_ignores_prereleases() -> None:

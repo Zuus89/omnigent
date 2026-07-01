@@ -5,11 +5,7 @@ import sys
 from pathlib import Path
 
 SCRIPT = (
-    Path(__file__).resolve().parents[2]
-    / ".github"
-    / "scripts"
-    / "changelog"
-    / "release_to_mdx.py"
+    Path(__file__).resolve().parents[2] / ".github" / "scripts" / "changelog" / "release_to_mdx.py"
 )
 spec = importlib.util.spec_from_file_location("release_to_mdx", SCRIPT)
 assert spec and spec.loader

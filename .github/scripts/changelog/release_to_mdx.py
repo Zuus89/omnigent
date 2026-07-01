@@ -33,8 +33,8 @@ def mdx_escape(text: str) -> str:
     """Make GitHub-flavoured Markdown safe to parse as MDX."""
     text = _AUTOLINK_RE.sub(r"\1", text)  # <url> -> url (GFM still autolinks bare URLs)
     text = text.replace("{", "&#123;").replace("}", "&#125;")
-    text = text.replace("<", "&lt;")  # neutralise stray tags; '>' stays (blockquotes)
-    return text
+    # neutralise stray tags; '>' stays (blockquotes)
+    return text.replace("<", "&lt;")
 
 
 def linkify_pr_refs(text: str, repo: str) -> str:

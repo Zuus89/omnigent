@@ -28,7 +28,7 @@ from pathlib import Path
 
 # Reuse the exact section + changelog parsing the merge gate uses.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "pr-template"))
-from _md import (  # noqa: E402
+from _md import (
     CHANGELOG_CATEGORIES,
     is_changelog_skip,
     parse_changelog_entries,
@@ -108,7 +108,7 @@ def harvest_pr(pr: int, body: str | None, title: str = "") -> HarvestResult:
     if body is None:
         result.status = "no-section"
         return result
-    if "changelog" not in {h for h in _headings(body)}:
+    if "changelog" not in _headings(body):
         result.status = "no-section"
         return result
     raw = section_text(body, "Changelog")
