@@ -2399,7 +2399,7 @@ class _SessionsChatReplAdapter:
         elicitation_id = getattr(event, "elicitation_id", "")
         hook = self._hooks.on_elicitation_request
         if hook is None:
-            action = "cancel"
+            action = "decline"
         else:
             ctx = ElicitationRequestCtx(
                 elicitation_id=elicitation_id,
@@ -2416,14 +2416,9 @@ class _SessionsChatReplAdapter:
                 result = hook(ctx)
                 if inspect.isawaitable(result):
                     result = await result
-                # REPL refusal uses "cancel" (not "decline") so the agent
-                # continues with the denial marker rather than aborting the
-                # turn. "decline" means an explicit web-UI stop; "cancel"
-                # means dismissed/no-explicit-choice, which lets the LLM
-                # adapt and try a different approach.
-                action = "accept" if result else "cancel"
+                action = "accept" if result else "decline"
             except Exception:  # noqa: BLE001
-                action = "cancel"
+                action = "decline"
         # Build the resolve payload. For accept with a requestedSchema,
         # populate ``content`` from the schema so the MCP server receives
         # the form data it expects. Simple schemas (boolean, enum) are
@@ -2447,7 +2442,7 @@ class _SessionsChatReplAdapter:
                 if prompted is not None:
                     resolve_payload["content"] = prompted
                 else:
-                    resolve_payload["action"] = "cancel"
+                    resolve_payload["action"] = "decline"
 
         try:
             # URL-based elicitation: deliver the verdict to the
