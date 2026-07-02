@@ -68,7 +68,12 @@ def _seed_function_call(
             "type": "external_conversation_item",
             "data": {
                 "item_type": "function_call",
-                "item_data": {"name": name, "arguments": arguments, "call_id": call_id},
+                "item_data": {
+                    "agent": "claude-native-ui",
+                    "name": name,
+                    "arguments": arguments,
+                    "call_id": call_id,
+                },
                 "response_id": response_id,
             },
         },
