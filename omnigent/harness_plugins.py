@@ -211,6 +211,10 @@ _EF = EffortFamily
 _MF = ModelFamily
 _AU = AuthModel
 
+# Trailing two bools are (interrupt, streaming). Only the four P0 SDK harnesses
+# (claude-sdk, codex, pi, openai-agents) have these verified live by the harness
+# bench today; the rest are declared best-effort by integration mode and will be
+# reconciled against the bench's interrupt/streaming probes as coverage expands.
 _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
     # Native-CLI harnesses (wrap a resident vendor TUI/server).
     "claude-native": _C(
@@ -221,6 +225,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.CLAUDE,
         _AU.OMNIGENT_CREDENTIAL,
         True,
+        interrupt=True,
+        streaming=True,
     ),
     "codex-native": _C(
         _IM.NATIVE_TUI,
@@ -230,6 +236,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.GPT,
         _AU.OMNIGENT_CREDENTIAL,
         True,
+        interrupt=True,
+        streaming=True,
     ),
     "pi-native": _C(
         _IM.NATIVE_TUI,
@@ -239,6 +247,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.SESSION_SCOPED_CONFIG,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "cursor-native": _C(
         _IM.NATIVE_TUI,
@@ -248,6 +258,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     # kiro_native_permissions.py: "TUI ACP recorder -> web elicitation".
     "kiro-native": _C(
@@ -258,9 +270,19 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "antigravity-native": _C(
-        _IM.NATIVE_TUI, _EL.NONE, _RS.WARM_REATTACH, _EF.GEMINI, _MF.GEMINI, _AU.OWN_AUTH, False
+        _IM.NATIVE_TUI,
+        _EL.NONE,
+        _RS.WARM_REATTACH,
+        _EF.GEMINI,
+        _MF.GEMINI,
+        _AU.OWN_AUTH,
+        False,
+        interrupt=True,
+        streaming=True,
     ),
     "goose-native": _C(
         _IM.NATIVE_TUI,
@@ -270,6 +292,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "qwen-native": _C(
         _IM.NATIVE_TUI,
@@ -279,6 +303,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "kimi-native": _C(
         _IM.NATIVE_TUI,
@@ -288,6 +314,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.SESSION_SCOPED_CONFIG,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "opencode-native": _C(
         _IM.NATIVE_SERVER,
@@ -297,6 +325,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         True,
+        interrupt=True,
+        streaming=True,
     ),
     "hermes-native": _C(
         _IM.NATIVE_TUI,
@@ -306,8 +336,11 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         False,
+        interrupt=True,
+        streaming=True,
     ),
-    # SDK / subprocess harnesses (run the vendor model directly).
+    # SDK / subprocess harnesses (run the vendor model directly). The first four
+    # are bench-verified interrupt=streaming=True.
     "claude-sdk": _C(
         _IM.SDK_IN_PROCESS,
         _EL.NONE,
@@ -316,6 +349,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.CLAUDE,
         _AU.OMNIGENT_CREDENTIAL,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "codex": _C(
         _IM.CLI_SUBPROCESS,
@@ -325,6 +360,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.GPT,
         _AU.OMNIGENT_CREDENTIAL,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "pi": _C(
         _IM.CLI_SUBPROCESS,
@@ -334,6 +371,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OMNIGENT_CREDENTIAL,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "openai-agents": _C(
         _IM.SDK_IN_PROCESS,
@@ -343,12 +382,30 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OMNIGENT_CREDENTIAL,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "cursor": _C(
-        _IM.SDK_IN_PROCESS, _EL.NONE, _RS.WARM_REATTACH, _EF.NONE, _MF.MULTI, _AU.OWN_AUTH, False
+        _IM.SDK_IN_PROCESS,
+        _EL.NONE,
+        _RS.WARM_REATTACH,
+        _EF.NONE,
+        _MF.MULTI,
+        _AU.OWN_AUTH,
+        False,
+        interrupt=True,
+        streaming=True,
     ),
     "antigravity": _C(
-        _IM.SDK_IN_PROCESS, _EL.NONE, _RS.COLD_ONLY, _EF.GEMINI, _MF.GEMINI, _AU.OWN_AUTH, False
+        _IM.SDK_IN_PROCESS,
+        _EL.NONE,
+        _RS.COLD_ONLY,
+        _EF.GEMINI,
+        _MF.GEMINI,
+        _AU.OWN_AUTH,
+        False,
+        interrupt=True,
+        streaming=True,
     ),
     "goose": _C(
         _IM.ACP_SUBPROCESS,
@@ -358,6 +415,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "qwen": _C(
         _IM.ACP_SUBPROCESS,
@@ -367,6 +426,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OWN_AUTH,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "kimi": _C(
         _IM.CLI_SUBPROCESS,
@@ -376,12 +437,30 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.SESSION_SCOPED_CONFIG,
         False,
+        interrupt=True,
+        streaming=True,
     ),
     "hermes": _C(
-        _IM.CLI_SUBPROCESS, _EL.HOOK, _RS.COLD_ONLY, _EF.NONE, _MF.MULTI, _AU.OWN_AUTH, False
+        _IM.CLI_SUBPROCESS,
+        _EL.HOOK,
+        _RS.COLD_ONLY,
+        _EF.NONE,
+        _MF.MULTI,
+        _AU.OWN_AUTH,
+        False,
+        interrupt=True,
+        streaming=True,
     ),
     "copilot": _C(
-        _IM.SDK_IN_PROCESS, _EL.NONE, _RS.COLD_ONLY, _EF.COPILOT, _MF.MULTI, _AU.OWN_AUTH, False
+        _IM.SDK_IN_PROCESS,
+        _EL.NONE,
+        _RS.COLD_ONLY,
+        _EF.COPILOT,
+        _MF.MULTI,
+        _AU.OWN_AUTH,
+        False,
+        interrupt=True,
+        streaming=True,
     ),
     # open-responses is resolved via an alternate path; conservative defaults.
     "open-responses": _C(
@@ -392,6 +471,8 @@ _BUILTIN_CAPABILITIES: dict[str, HarnessCapabilities] = {
         _MF.MULTI,
         _AU.OMNIGENT_CREDENTIAL,
         False,
+        interrupt=False,
+        streaming=False,
     ),
 }
 

@@ -75,6 +75,16 @@ def test_native_harnesses_resume_warm() -> None:
         assert caps[harness].resume is Resume.WARM_REATTACH, harness
 
 
+def test_p0_bench_harnesses_declare_interrupt_and_streaming() -> None:
+    # The harness bench live-probes these four and declares them SUPPORTED for
+    # interrupt + streaming; the capability declaration must match so the bench
+    # can derive its expected matrix from capabilities without contradiction.
+    caps = harness_capabilities()
+    for harness in ("claude-sdk", "codex", "pi", "openai-agents"):
+        assert caps[harness].interrupt is True, harness
+        assert caps[harness].streaming is True, harness
+
+
 def test_catalog_rows_include_capabilities() -> None:
     rows = harness_catalog()
     caps = harness_capabilities()

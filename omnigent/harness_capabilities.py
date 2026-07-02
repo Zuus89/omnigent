@@ -86,6 +86,12 @@ class HarnessCapabilities:
     :param model_family: Which model vendors the harness accepts.
     :param auth: Where the harness's credentials come from.
     :param subagents: Whether the harness can spawn Omnigent sub-agents.
+    :param interrupt: Whether a running turn can be cancelled mid-stream. This
+        is a *declared* claim; the harness bench's interrupt probe verifies it
+        live and flags drift when a harness does not honor it.
+    :param streaming: Whether the harness forwards token-level deltas (vs a
+        single complete blob). Declared claim; verified by the bench's
+        streaming probe.
     """
 
     integration_mode: IntegrationMode
@@ -95,6 +101,8 @@ class HarnessCapabilities:
     model_family: ModelFamily
     auth: AuthModel
     subagents: bool
+    interrupt: bool
+    streaming: bool
 
     def as_dict(self) -> dict[str, str | bool]:
         """Return a JSON-serializable view for the ``/v1/harnesses`` catalog."""
@@ -106,4 +114,6 @@ class HarnessCapabilities:
             "model_family": self.model_family.value,
             "auth": self.auth.value,
             "subagents": self.subagents,
+            "interrupt": self.interrupt,
+            "streaming": self.streaming,
         }
