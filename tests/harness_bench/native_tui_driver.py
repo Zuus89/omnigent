@@ -78,9 +78,8 @@ _HEALTH_TIMEOUT_S = 90.0
 _HOST_ONLINE_TIMEOUT_S = 45.0
 _POLL_INTERVAL_S = 0.3
 _TURN_TIMEOUT_S = 180.0
-# codex-native's forwarder wires up after the TUI boots and creates its
-# app-server thread; the terminal ensure returns before that. Wait this long
-# for the session's external_session_id to be stamped (forwarder live).
+# How long to wait for the forwarder to come live (external_session_id stamped)
+# after the terminal ensure returns.
 _FORWARDER_READY_TIMEOUT_S = 90.0
 
 # Native turns take longer (terminal boot + a real interactive vendor turn),
@@ -133,18 +132,9 @@ class NativeVendor:
     needs_terminal_ensure: bool = False
 
 
-# Vendor registry. Both entries are OMNIGENT_CREDENTIAL vendors whose output is
-# observable on the shared session HTTP stream (POST events / SSE / item
-# polling) — but they get there differently. claude-native's forwarder tails a
-# transcript and auto-starts on session bind, so the shared path works with no
-# extra provisioning. codex-native delivers via app-server RPC through a
-# runner-side forwarder that only wires up once the codex TUI creates its
-# app-server thread; that needs an explicit runner launch/bind + native
-# terminal ensure (``needs_terminal_ensure``) and codex-specific provider auth
-# (see ``_provision``). Once the forwarder is live, codex turns surface as the
-# same ``response.output_text.delta`` + ``response.output_item.done`` +
-# persisted assistant item the bench already reads. OWN_AUTH natives are absent
-# (login the bench cannot provision).
+# Both shipped vendors surface output on the shared session stream; codex-native
+# needs extra provisioning first (see ``needs_terminal_ensure``). OWN_AUTH
+# natives are absent (login the bench cannot provision).
 _VENDORS: dict[str, NativeVendor] = {
     "claude-native": NativeVendor("claude-native", "claude-native-ui", own_auth=False),
     "codex-native": NativeVendor(
@@ -249,14 +239,9 @@ class NativeTuiDriver:
             "DATABRICKS_CONFIG_PROFILE": self._db_profile,
             "OMNIGENT_RUNNER_TUNNEL_TOKEN": binding_token,
         }
-        # codex-native resolves its LLM provider from omnigent's global config
-        # (`~/.omnigent/config.yaml` auth block), NOT from DATABRICKS_CONFIG_PROFILE
-        # or a minted bearer. Without a provider pointing at our profile, the
-        # codex TUI falls back to ambient detection, hits the vendor login
-        # screen, and never starts an app-server thread — so its forwarder
-        # never wires up and no output reaches the session stream. Point
-        # OMNIGENT_CONFIG_HOME at a bench-owned config that routes codex through
-        # the same Databricks profile the rest of the transport uses.
+        # codex reads its provider from omnigent's global config, not from
+        # DATABRICKS_CONFIG_PROFILE; without it the TUI hits the vendor login
+        # screen and never starts a thread.
         if self._vendor.needs_terminal_ensure:
             base_env["OMNIGENT_CONFIG_HOME"] = str(self._write_provider_config())
         self._proc = spawn_omnigent_server(self._tmp, port, base_env, binding_token)
@@ -282,12 +267,8 @@ class NativeTuiDriver:
             self._wire_native_forwarder(host_id, workspace)
 
     def _write_provider_config(self) -> Path:
-        """Write a bench-owned omnigent config that routes the vendor's LLM
-        provider through this run's Databricks profile, and return its dir.
-
-        This is the ``OMNIGENT_CONFIG_HOME`` the daemon inherits; codex reads
-        its provider from the ``auth:`` block here (see :meth:`_provision`).
-        """
+        """Write the ``OMNIGENT_CONFIG_HOME`` config that routes the vendor's
+        LLM provider through this run's Databricks profile; return its dir."""
         config_home = self._tmp / "omnigent-config"
         config_home.mkdir(exist_ok=True)
         (config_home / "config.yaml").write_text(
@@ -297,15 +278,11 @@ class NativeTuiDriver:
         return config_home
 
     def _wire_native_forwarder(self, host_id: str, workspace: Path) -> None:
-        """Launch/bind a runner and ensure the native terminal so the vendor's
-        runner-side forwarder wires up before any turn is driven.
+        """Launch/bind a runner, ensure the native terminal, and wait for the
+        forwarder to come live, so turns can drive on the shared observe path.
 
-        codex-native's output only reaches the session stream once its
-        app-server-thread forwarder is live (see :class:`NativeVendor`). That
-        needs an explicit runner launch/bind + terminal ensure, then a wait for
-        the forwarder to stamp the session's ``external_session_id`` (the codex
-        thread id). After this returns, turns drive on the shared observe path
-        unchanged.
+        Readiness is the session's ``external_session_id`` being stamped (the
+        vendor thread id), which the forwarder sets once its thread starts.
         """
         assert self._client is not None and self._session_id is not None
         session_id = self._session_id

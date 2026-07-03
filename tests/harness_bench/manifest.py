@@ -153,18 +153,10 @@ OFFICIAL_PROFILES: dict[str, BenchProfile] = {
 #
 # Native harnesses are not in HARNESS_PROBES (that matrix is the SDK-wrap
 # e2e set), so their profiles are built directly here. Both shipped natives
-# are OMNIGENT_CREDENTIAL vendors the bench can run, and both are live-verified
-# end to end.
-#
-# claude-native delivers output tmux-paste → transcript-tail; its forwarder
-# auto-starts on session bind, so the shared observe path works with no extra
-# provisioning. codex-native delivers via app-server RPC through a runner-side
-# forwarder that only wires up after an explicit runner launch/bind + native
-# terminal ensure and codex-specific provider auth (the driver handles this
-# when the vendor is flagged ``needs_terminal_ensure``); once live, its turns
-# surface on the SAME shared stream. OWN_AUTH natives (cursor-native,
-# kiro-native, ...) need a vendor login the bench cannot provision, and are
-# left to a --harness <ref> opt-in rather than the default set.
+# are OMNIGENT_CREDENTIAL vendors the native-tui driver can run and observe
+# (see native_tui_driver for the per-vendor provisioning). OWN_AUTH natives
+# (cursor-native, kiro-native, ...) need a vendor login the bench cannot
+# provision, so they are left to a --harness <ref> opt-in.
 #
 # model: native harnesses take the model as a launch --model, not a
 # HARNESS_<H>_MODEL env var, so they are absent from model_env_keys() and
