@@ -208,8 +208,8 @@ async def test_full_server_async_shims_delegate_to_sync(monkeypatch: pytest.Monk
 
 
 def test_native_tui_registered_and_gates() -> None:
-    """native-tui is in the registry and gates unwired vendors cleanly."""
-    from tests.harness_bench.native_tui_driver import NativeTuiDriver
+    """native-tui is in the registry and derives any native-tui harness."""
+    from tests.harness_bench.native_tui_driver import NativeTuiDriver, native_vendor
     from tests.harness_bench.transport import driver_registry, resolve_driver_class
 
     assert driver_registry()["native-tui"] is NativeTuiDriver
@@ -220,13 +220,19 @@ def test_native_tui_registered_and_gates() -> None:
     )
     assert resolve_driver_class(claude_native, override="native-tui") is NativeTuiDriver
 
-    # A native harness with no vendor entry (not yet wired) is a clean skip,
-    # never a crash — the walking skeleton only wires claude-native.
-    cursor_native = BenchProfile(
-        harness="cursor-native", model="m", env_prefix="HARNESS_CURSOR_NATIVE_", marker="X"
-    )
-    reason = NativeTuiDriver.unavailable(cursor_native, databricks_profile="oss")
-    assert reason is not None and "cursor-native" in reason
+    # Every native-tui harness derives a vendor from the capability model with
+    # no per-vendor table — an own-auth native (cursor) as much as a shipped
+    # credential one (claude). This is what lets a community-plugin native run
+    # by name with no bench edit.
+    assert native_vendor("claude-native") is not None
+    cursor = native_vendor("cursor-native")
+    assert cursor is not None and cursor.own_auth is True
+
+    # A non-native-tui harness derives no vendor and gates cleanly: an SDK
+    # harness, or a native-server one (opencode-native), is not this driver's.
+    assert native_vendor("claude-sdk") is None
+    codex_sdk = BenchProfile(harness="codex", model="m", env_prefix="X_", marker="X")
+    assert NativeTuiDriver.unavailable(codex_sdk, databricks_profile="oss") is not None
 
     # No profile → the same capability-neutral skip contract as other drivers.
     assert NativeTuiDriver.unavailable(claude_native, databricks_profile=None) is not None

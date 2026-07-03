@@ -176,7 +176,19 @@ async def run_harness(
         f"(model={profile.model}); first turn may take ~10-30s...",
     )
     cells: list[CellResult] = []
-    async with driver_cls(profile, databricks_profile=databricks_profile) as driver:
+    try:
+        driver_cm = driver_cls(profile, databricks_profile=databricks_profile)
+        entered = await driver_cm.__aenter__()
+    except Exception as exc:
+        # Provisioning failed (e.g. an own-auth native whose vendor CLI is
+        # installed but not logged in, so its terminal never wires up). Report
+        # a capability-neutral skip for this harness rather than aborting the
+        # whole run — a multi-harness run must survive one unrunnable harness.
+        reason = f"provisioning failed: {exc}"
+        _emit(progress, f"[{profile.harness}] skipped: {reason}")
+        return _uniform_report(profile, probes, ProbeResult.skipped(reason), skipped_reason=reason)
+    try:
+        driver = entered
         prereq_skip: str | None = None
         for probe in probes:
             if not _applicable(probe, profile):
@@ -202,6 +214,8 @@ async def run_harness(
             # they would only re-hit the same failure and pollute the matrix.
             if probe.name == _PREREQ_PROBE and cell.observed is not Verdict.SUPPORTED:
                 prereq_skip = f"prerequisite '{probe.title}' did not pass ({observed.note})"
+    finally:
+        await driver_cm.__aexit__(None, None, None)
     return HarnessReport(profile=profile, cells=cells)
 
 
