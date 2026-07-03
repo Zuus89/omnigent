@@ -45,6 +45,7 @@ import asyncio
 import os
 import signal
 import subprocess
+import threading
 import time
 import uuid
 from dataclasses import dataclass
@@ -295,18 +296,32 @@ class NativeTuiDriver:
     def _drive_turn(self, prompt: str, *, count_deltas: bool = False) -> TurnResult:
         """Send *prompt*; poll for the assistant reply the forwarder mirrors back.
 
-        When *count_deltas*, also subscribe to the session SSE stream to count
-        ``response.output_text.delta`` events (the same signal the full-server
-        streaming probe reads — native forwards real per-chunk deltas).
+        When *count_deltas*, subscribe to the session SSE stream **before**
+        posting (on a background thread) and count ``response.output_text.delta``
+        events — native forwards real per-chunk deltas. Subscribing first is
+        essential: the stream is not replayed, so a subscription opened after
+        the POST misses deltas that already fired (the bug the first live smoke
+        surfaced as a false streaming DRIFT).
         """
         assert self._client is not None
         result = TurnResult()
         if count_deltas:
+            counter = {"n": 0}
+            done = threading.Event()
+            ready = threading.Event()
+            reader = threading.Thread(
+                target=self._count_stream_deltas, args=(counter, done, ready)
+            )
+            reader.start()
+            ready.wait(timeout=10.0)  # ensure the subscription is open before posting
             self._post_message(prompt)
-            result.text_delta_count = self._count_stream_deltas()
         else:
             self._post_message(prompt)
         text = self._poll_assistant_text()
+        if count_deltas:
+            done.set()
+            reader.join(timeout=5.0)
+            result.text_delta_count = counter["n"]
         if text is None:
             result.timed_out = True
             return result
@@ -314,25 +329,33 @@ class NativeTuiDriver:
         result.text = text
         return result
 
-    def _count_stream_deltas(self) -> int:
-        """Count response.output_text.delta events on the session SSE stream."""
+    def _count_stream_deltas(
+        self, counter: dict[str, int], done: threading.Event, ready: threading.Event
+    ) -> None:
+        """Count response.output_text.delta events on the session SSE stream.
+
+        Runs on a background thread: sets *ready* once the stream is open (so
+        the caller posts only after subscribing), increments *counter* per
+        delta, and stops when *done* is set or a terminal event arrives.
+        """
         assert self._client is not None
-        deltas = 0
         try:
             with self._client.stream(
                 "GET", f"/v1/sessions/{self._session_id}/stream", timeout=_TURN_TIMEOUT_S
             ) as resp:
+                ready.set()
                 for line in resp.iter_lines():
+                    if done.is_set():
+                        break
                     if not line.startswith("event:"):
                         continue
                     etype = line[len("event:") :].strip()
                     if etype == "response.output_text.delta":
-                        deltas += 1
+                        counter["n"] += 1
                     elif etype in ("response.completed", "response.failed", "session.idle"):
                         break
         except httpx.HTTPError:
             pass
-        return deltas
 
     def _poll_assistant_text(self, timeout: float = _TURN_TIMEOUT_S) -> str | None:
         """Poll session items until an assistant item appears; return its text."""
