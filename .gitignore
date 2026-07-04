@@ -78,3 +78,7 @@ omnigent/server/static/web-ui/
 # reason — `bundle deploy` must be able to sync it to the app source folder.
 # DAB local state directory (created by `databricks bundle deploy`).
 deploy/databricks/.databricks/
+# Vercel CLI project link + the env file `vercel env pull` / marketplace
+# installs write (holds live DATABASE_URL / BLOB_READ_WRITE_TOKEN secrets).
+.vercel
+.env.local

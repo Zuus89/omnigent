@@ -39,8 +39,9 @@ always-on web server with a durable artifact Volume), and **Vercel**
 (`vercel deploy`, a container function on Fluid compute with Neon Postgres).
 See the menu below. Fly and HF Spaces can run on the **SQLite lite tier**
 with no database to provision (see
-[Database: Postgres or SQLite](#database-postgres-or-sqlite)); Modal and
-Vercel need a bring-your-own Postgres (one marketplace command on Vercel).
+[Database: Postgres or SQLite](#database-postgres-or-sqlite)); Modal needs a
+bring-your-own Postgres, and Vercel needs Postgres (one marketplace command)
+plus an S3-compatible artifact bucket.
 
 ---
 

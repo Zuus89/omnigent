@@ -10,3 +10,18 @@ FROM ghcr.io/omnigent-ai/omnigent-server:latest
 # 80. The entrypoint binds $PORT, so this default makes a zero-config deploy
 # line up; a PORT project env var in Vercel overrides it at runtime.
 ENV PORT=80
+
+# Vercel containers have no persistent disk and requests spread across
+# instances, so a remote artifact store is required. The default is Vercel
+# Blob (auto-selected when the project has a connected Blob store) via the
+# official `vercel` SDK; boto3 covers the S3/R2 alternative. Neither ships
+# in the base image.
+RUN /opt/venv/bin/pip install --no-cache-dir 'vercel>=0.5,<1' 'boto3>=1.30,<2'
+
+# Vercel gives a container 15 s to accept TCP connections, but first-boot
+# migrations against a remote Postgres take ~1 minute — so swap in the
+# bind-first entrypoint, which serves 503s while migrating in the background.
+# The interpreter path is absolute: Vercel's runtime overrides PATH, so a bare
+# `python` resolves to the system interpreter instead of the image's venv.
+COPY deploy/vercel/entrypoint.py /app/vercel_entrypoint.py
+CMD ["/opt/venv/bin/python", "/app/vercel_entrypoint.py"]

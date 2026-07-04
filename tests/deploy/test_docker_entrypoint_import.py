@@ -105,6 +105,7 @@ def _entrypoint_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("ARTIFACT_DIR", str(tmp_path / "artifacts"))
     monkeypatch.setenv("OMNIGENT_AUTH_ENABLED", "0")
     monkeypatch.delenv("OMNIGENT_ARTIFACT_URI", raising=False)
+    monkeypatch.delenv("BLOB_READ_WRITE_TOKEN", raising=False)
 
 
 def test_resolve_config_captures_s3_artifact_uri(
@@ -132,6 +133,27 @@ def test_resolve_config_rejects_non_s3_artifact_uri(
         _resolve_config()
 
 
+def test_resolve_config_defaults_to_vercel_blob_on_token(
+    _entrypoint_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A BLOB_READ_WRITE_TOKEN (Vercel injects it when a Blob store is
+    connected) selects Vercel Blob with zero artifact config."""
+    from deploy.docker.entrypoint import _resolve_config
+
+    monkeypatch.setenv("BLOB_READ_WRITE_TOKEN", "vercel_blob_rw_x")
+    assert _resolve_config().artifact_store_uri == "vercel-blob://"
+
+
+def test_resolve_config_explicit_uri_beats_blob_token(
+    _entrypoint_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from deploy.docker.entrypoint import _resolve_config
+
+    monkeypatch.setenv("BLOB_READ_WRITE_TOKEN", "vercel_blob_rw_x")
+    monkeypatch.setenv("OMNIGENT_ARTIFACT_URI", "s3://my-bucket/artifacts")
+    assert _resolve_config().artifact_store_uri == "s3://my-bucket/artifacts"
+
+
 @pytest.mark.parametrize(
     ("artifact_store_uri", "expected_type"),
     [
@@ -153,3 +175,123 @@ def test_select_artifact_store(
         port=8000,
     )
     assert isinstance(_select_artifact_store(resolved), expected_type)
+
+
+def test_select_artifact_store_vercel_blob(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from tests.stores.test_vercel_blob_artifact_store import _install_fake_blob_sdk
+
+    _install_fake_blob_sdk(monkeypatch)
+    monkeypatch.setenv("BLOB_READ_WRITE_TOKEN", "vercel_blob_rw_x")
+
+    from deploy.docker.entrypoint import _ResolvedConfig, _select_artifact_store
+    from omnigent.stores.artifact_store.vercel_blob import VercelBlobArtifactStore
+
+    resolved = _ResolvedConfig(
+        cfg={},
+        database_url="postgresql://localhost/omnigent",
+        artifact_dir=tmp_path,
+        artifact_store_uri="vercel-blob://",
+        host="0.0.0.0",
+        port=8000,
+    )
+    assert isinstance(_select_artifact_store(resolved), VercelBlobArtifactStore)
+
+
+# ── Vercel bind-first entrypoint ─────────────────────────────────────────
+# deploy/vercel/entrypoint.py wraps the standard entrypoint for Vercel's 15 s
+# container-startup window: it must bind before booting, so importing it has
+# to stay as cheap as importing the standard entrypoint, and its deferring
+# shim must answer retryable statuses (503, not a bare WS close that clients
+# see as a fatal 403) until the real app is ready.
+
+_VERCEL_ENTRYPOINT_MODULE = "deploy.vercel.entrypoint"
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+@pytest.fixture
+def _vercel_entrypoint(monkeypatch: pytest.MonkeyPatch):
+    """Import the Vercel entrypoint the way the image lays it out.
+
+    In the image both files sit in /app, so the module does a top-level
+    ``import entrypoint``; in the repo that target lives at
+    deploy/docker/entrypoint.py, so put that directory on sys.path.
+    """
+    monkeypatch.syspath_prepend(str(_REPO_ROOT / "deploy" / "docker"))
+    monkeypatch.delitem(sys.modules, "entrypoint", raising=False)
+    monkeypatch.delitem(sys.modules, _VERCEL_ENTRYPOINT_MODULE, raising=False)
+    return importlib.import_module(_VERCEL_ENTRYPOINT_MODULE)
+
+
+def test_vercel_entrypoint_imports_without_side_effects(
+    _fresh_entrypoint_import: list[str],
+    _vercel_entrypoint,
+) -> None:
+    # Same inertness contract as the standard entrypoint: no engine, no app,
+    # and none of the heavy boot modules pulled in at import time — a heavy
+    # import here would eat into Vercel's 15 s accept-connections window.
+    assert callable(_vercel_entrypoint.main)
+    assert _fresh_entrypoint_import == []
+    for module_name in _BOOT_MODULES:
+        assert module_name not in sys.modules
+
+
+def _run_shim(app, scope: dict, received: list[dict]) -> list[dict]:
+    """Drive one ASGI exchange against the deferring shim."""
+    import asyncio
+
+    sent: list[dict] = []
+    inbox = list(received)
+
+    async def receive() -> dict:
+        return inbox.pop(0)
+
+    async def send(message: dict) -> None:
+        sent.append(message)
+
+    asyncio.run(app(scope, receive, send))
+    return sent
+
+
+def test_vercel_shim_serves_503_while_booting(_vercel_entrypoint) -> None:
+    app = _vercel_entrypoint._DeferredApp(resolved_config=None)
+    app._boot_failed = False  # still booting, not failed
+    sent = _run_shim(app, {"type": "http"}, [])
+    assert sent[0]["status"] == 503
+    assert (b"retry-after", b"5") in sent[0]["headers"]
+
+
+def test_vercel_shim_denies_websocket_with_retryable_503(_vercel_entrypoint) -> None:
+    # A bare pre-accept close surfaces to tunnel clients as a fatal 403; the
+    # shim must use the denial-response extension so hosts/runners retry.
+    app = _vercel_entrypoint._DeferredApp(resolved_config=None)
+    app._boot_failed = False
+    scope = {"type": "websocket", "extensions": {"websocket.http.response": {}}}
+    sent = _run_shim(app, scope, [{"type": "websocket.connect"}])
+    assert sent[0] == {
+        "type": "websocket.http.response.start",
+        "status": 503,
+        "headers": [(b"content-type", b"application/json"), (b"retry-after", b"5")],
+    }
+    assert sent[1]["type"] == "websocket.http.response.body"
+
+
+def test_vercel_shim_closes_websocket_without_denial_extension(_vercel_entrypoint) -> None:
+    app = _vercel_entrypoint._DeferredApp(resolved_config=None)
+    app._boot_failed = False
+    sent = _run_shim(app, {"type": "websocket"}, [{"type": "websocket.connect"}])
+    assert sent == [{"type": "websocket.close", "code": 1013}]
+
+
+def test_vercel_shim_delegates_once_ready(_vercel_entrypoint) -> None:
+    app = _vercel_entrypoint._DeferredApp(resolved_config=None)
+    delegated: list[dict] = []
+
+    async def real_app(scope, receive, send) -> None:
+        delegated.append(scope)
+
+    app._real_app = real_app
+    sent = _run_shim(app, {"type": "http", "path": "/health"}, [])
+    assert delegated == [{"type": "http", "path": "/health"}]
+    assert sent == []
