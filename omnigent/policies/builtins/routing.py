@@ -402,7 +402,8 @@ def intent_based_authorization() -> PolicyCallable:
         llm_client = event.get("llm_client")
         if llm_client is None:
             _log.warning(
-                "intent_based_authorization: event['llm_client'] is None — server has no llm: config. Abstaining."
+                "intent_based_authorization: no llm_client — "
+                "server has no llm: config. Abstaining."
             )
             return None
 
@@ -435,7 +436,7 @@ def intent_based_authorization() -> PolicyCallable:
 
         if verdict == "OFF_TASK":
             _log.info(
-                "intent_based_authorization: OFF_TASK — asking about tool_call %s (intent: %.80s…)",
+                "intent_based_authorization: OFF_TASK — ASK tool_call %s (intent: %.80s…)",
                 tool_name,
                 intent,
             )
