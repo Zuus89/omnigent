@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import shutil
 import subprocess
 import sys
@@ -1254,6 +1255,161 @@ def test_reap_orphaned_terminals_kills_server_for_dead_owner_socket(
     # kill-server targeted exactly this instance's socket; a missing
     # call means the tmux server (the real leak) survives dir removal.
     assert kill_calls == [["tmux", "-S", str(socket_path), "kill-server"]]
+
+
+# ---------------------------------------------------------------------------
+# RED spec tests for the "adopt, don't reap" sprint (durable in-flight turn
+# survival across a runner process restart). These pin the TARGET behavior:
+# a dead-owner instance whose tmux server is STILL ALIVE is the native agent
+# that outlived a SIGKILL'd/restarted runner, so the sweep must ADOPT it
+# (leave the server and dir intact for the successor runner to rebind),
+# NOT kill it. Today the reaper decides purely on owner-pid liveness and
+# unconditionally kills any dead-owner server, so both tests fail.
+#
+# They are marked xfail(strict=True) so CI stays green until the feature
+# lands; implementing adoption makes them XPASS, which strict mode turns
+# into a failure that forces removing the marker. To run them as a plain
+# red bar instead, delete the xfail decorator.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="adopt-don't-reap not yet implemented (durable-turn-survival sprint)",
+)
+def test_reap_adopts_dead_owner_with_live_server(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    A dead-owner instance whose tmux server is alive must be adopted.
+
+    When a runner is SIGKILL'd/restarted, its detached native tmux
+    server keeps running; the successor runner's startup sweep must
+    recognize the live server and leave it intact (adopt + rebind)
+    rather than killing it and losing the in-flight turn. Here the
+    stubbed ``tmux has-session`` reports the server alive, so the sweep
+    must issue NO ``kill-server`` and must leave the instance dir in
+    place.
+
+    Fails today: the reaper kills the server and removes the dir on the
+    strength of the dead owner pid alone, never probing liveness.
+
+    :param tmp_path: Fake temp root the sweep scans.
+    :param monkeypatch: Pytest monkeypatch fixture.
+    :returns: None.
+    """
+
+    kill_calls: list[list[str]] = []
+
+    def _run(argv: list[str], **kwargs: object) -> SimpleNamespace:
+        """Report the server alive for has-session; record kill-server."""
+        if "kill-server" in argv:
+            kill_calls.append(list(argv))
+        # returncode 0 == has-session success == server is alive.
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(terminal_mod, "_terminals_tmp_root", lambda: tmp_path)
+    monkeypatch.setattr(terminal_mod, "_tmux_available", lambda: True)
+    monkeypatch.setattr(
+        terminal_mod,
+        "subprocess",
+        SimpleNamespace(run=_run, TimeoutExpired=TimeoutError),
+    )
+    adopt_dir = _write_instance_dir(tmp_path, "omnigent-terminal-adopt1", _dead_pid())
+    (adopt_dir / "tmux.sock").touch()
+
+    terminal_mod.reap_orphaned_terminals()
+
+    # The live server was adopted: never killed, dir preserved so the
+    # successor runner can rebind to the surviving socket.
+    assert kill_calls == [], "a live native agent's server must not be killed on reap"
+    assert adopt_dir.exists(), "the surviving instance dir must be preserved for adoption"
+
+
+@pytest.mark.skipif(shutil.which("tmux") is None, reason="requires a real tmux binary")
+@pytest.mark.xfail(
+    strict=True,
+    reason="adopt-don't-reap not yet implemented (durable-turn-survival sprint)",
+)
+@pytest.mark.asyncio
+async def test_reap_adopts_real_surviving_tmux_server(tmp_path: Path) -> None:
+    """
+    A real tmux server that outlived its runner survives the sweep.
+
+    Launches a real long-lived tmux terminal, then marks its instance
+    dir with a DEAD owner pid (simulating the runner that started it
+    having exited) and runs the startup sweep. The server must still be
+    reachable (``has-session`` returns 0) afterwards — the successor
+    runner adopts it rather than killing the in-flight agent.
+
+    Fails today: the reaper kills the detached server on the dead owner
+    pid, so ``has-session`` reports "no server running".
+
+    :returns: None.
+    """
+    # Use a short /tmp-based root: a tmux control socket path over the
+    # AF_UNIX ~104-char limit fails to bind, which on macOS the default
+    # pytest tmp_path (/var/folders/...) blows past. This keeps the
+    # socket short enough to run wherever tmux exists, not just CI.
+    import tempfile
+
+    scan_root = Path(tempfile.mkdtemp(prefix="ot-", dir="/tmp"))
+    instance_dir = scan_root / "omnigent-terminal-adopt-real"
+    instance_dir.mkdir()
+    socket_path = instance_dir / "s.sock"
+    instance = TerminalInstance(
+        name="bash",
+        session_key="s1",
+        socket_path=socket_path,
+        private_dir=instance_dir,
+        command="sleep",
+        args=["300"],
+        keep_alive_after_exit=True,
+    )
+    try:
+        await instance.launch(cwd=instance_dir)
+
+        # Wait for the server to accept control commands.
+        for _ in range(250):
+            if await instance.is_alive():
+                break
+            await asyncio.sleep(0.02)
+        else:  # pragma: no cover - only on a hang/regression
+            raise AssertionError("tmux server never came up")
+
+        # The runner that owned this server has exited.
+        (instance_dir / "owner.pid").write_text(str(_dead_pid()), encoding="utf-8")
+        # The sweep keys the socket off "<entry>/tmux.sock"; point that
+        # at the real socket so the reaper acts on the live server.
+        (instance_dir / "tmux.sock").symlink_to(socket_path)
+
+        _tmod_root = terminal_mod._terminals_tmp_root
+        try:
+            terminal_mod._terminals_tmp_root = lambda: scan_root  # type: ignore[assignment]
+            terminal_mod.reap_orphaned_terminals()
+        finally:
+            terminal_mod._terminals_tmp_root = _tmod_root  # type: ignore[assignment]
+
+        probe = subprocess.run(
+            ["tmux", "-S", str(socket_path), "has-session", "-t", instance.tmux_target],
+            capture_output=True,
+            timeout=5,
+        )
+        assert probe.returncode == 0, (
+            "the sweep killed a surviving native agent's tmux server instead of "
+            f"adopting it: {probe.stderr.decode().strip()!r}"
+        )
+    finally:
+        with contextlib.suppress(Exception):
+            subprocess.run(
+                ["tmux", "-S", str(socket_path), "kill-server"],
+                capture_output=True,
+                timeout=5,
+            )
+        with contextlib.suppress(Exception):
+            await instance.close()
+        shutil.rmtree(scan_root, ignore_errors=True)
 
 
 @pytest.mark.skipif(
