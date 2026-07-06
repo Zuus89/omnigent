@@ -9888,6 +9888,34 @@ async def _relay_runner_stream(
                             conversation_store,
                         )
                         _usage_delta_accumulated = True
+                        # Broadcast live cost update to the web UI so the cost
+                        # indicator advances with each LLM call, not only at
+                        # turn-end. Mirrors the response.completed broadcast.
+                        _delta_subtree_usage = await asyncio.to_thread(
+                            load_session_usage,
+                            session_id,
+                            conversation_store,
+                        )
+                        _delta_cost = _priced_cost_for_display(_delta_subtree_usage)
+                        _delta_by_model = _usage_by_model_for_display(_delta_subtree_usage)
+                        if _delta_cost is not None or _delta_by_model is not None:
+                            _delta_payload: dict[str, Any] = {
+                                "type": "session.usage",
+                                "conversation_id": session_id,
+                            }
+                            if _delta_cost is not None:
+                                _delta_payload["total_cost_usd"] = _delta_cost
+                            if _delta_by_model is not None:
+                                _delta_payload["usage_by_model"] = _delta_by_model
+                            session_stream.publish(
+                                session_id,
+                                SessionUsageEvent(**_delta_payload).model_dump(exclude_none=True),
+                            )
+                            await asyncio.to_thread(
+                                _publish_subtree_cost_to_ancestors,
+                                conversation_store,
+                                session_id,
+                            )
                     elif evt_type == "response.completed":
                         # Persist the turn's usage (cost + token buckets) so
                         # policy callables can read
