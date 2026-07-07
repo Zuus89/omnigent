@@ -738,6 +738,15 @@
      * layers the user's Appearance choice on top. */
     font-size: calc(1em * var(--ui-font-scale));
   }
+  /* Code surfaces stay on the mono stack, immune to the UI --ui-font-family
+   * override above. The Appearance font-family setting is UI chrome only; the
+   * Monaco editor and xterm terminals are code fonts, owned by a separate
+   * (future) code-font setting. Monaco/xterm already pin their own font, so this
+   * is a guard against inheritance leaking in through any unpinned descendant. */
+  .monaco-editor,
+  .xterm {
+    font-family: var(--font-mono);
+  }
   /* Text selection — brand pink highlight. Light: gentle wash + dark pink
    * text. Dark: solid brand pink background + white text. */
   ::selection {
