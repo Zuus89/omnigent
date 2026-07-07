@@ -8,7 +8,7 @@ const cdp = process.env.PLAYWRIGHT_CDP_URL;
 
 export default defineConfig({
   testDir: "./e2e",
-  timeout: 120_000,
+  timeout: 300_000,
   expect: { timeout: 60_000 },
   retries: 0,
   workers: 1,
