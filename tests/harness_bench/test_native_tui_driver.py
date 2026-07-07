@@ -136,13 +136,14 @@ def test_tool_turn_deny_attaches_policy_and_observes_denied_event() -> None:
     result = driver._drive_tool_turn(deny=True)
 
     assert result.tool_call_denied
-    # The attached policy targets the provoked tool at the tool_call phase.
+    # The attached policy denies at the tool_call phase (name-agnostic, so it
+    # blocks whatever tool the vendor calls regardless of its wire name).
     assert len(client.attached_policies) == 1
     attached = client.attached_policies[0]
     assert attached["handler"] == "omnigent.policies.builtins.cel.cel_policy"
     expr = attached["factory_params"]["expression"]
     assert 'event.type == "tool_call"' in expr
-    assert 'event.data.name == "Bash"' in expr
+    assert '"result": "DENY"' in expr
 
 
 def test_tool_turn_deny_skips_when_policy_enforcement_inactive() -> None:

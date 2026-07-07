@@ -607,7 +607,7 @@ class NativeTuiDriver:
                     "cannot exercise tool-call DENY"
                 )
                 return result
-            attached = self._attach_tool_deny_policy(self._vendor.tool_name)
+            attached = self._attach_tool_deny_policy()
             if attached is not None:
                 result.error = attached  # e.g. CEL handler unavailable -> SKIP
                 return result
@@ -638,11 +638,17 @@ class NativeTuiDriver:
             except httpx.HTTPError as exc:
                 result.error = repr(exc)
 
+        # Vary the command per turn so a reused session can't treat the deny
+        # turn as already-satisfied by the allow turn's identical request (which
+        # would leave the model with nothing to call, and nothing to deny).
+        token = "deny" if deny else "allow"
+        prompt = self._vendor.tool_prompt.replace("omnigent-bench-ok", f"omnigent-bench-{token}")
+
         baseline = self._tool_item_count()
         reader = threading.Thread(target=_read)
         reader.start()
         ready.wait(timeout=10.0)  # subscribe before posting so no event is lost
-        self._post_message(self._vendor.tool_prompt)
+        self._post_message(prompt)
         self._poll_new_tool_calls(baseline, result)
         reader.join(timeout=10.0)
 
@@ -651,22 +657,30 @@ class NativeTuiDriver:
         result.completed = _OUTPUT_DONE_EVENT in events or bool(result.tool_calls)
         return result
 
-    def _attach_tool_deny_policy(self, tool_name: str) -> str | None:
-        """Attach a session policy that DENYs *tool_name* at the tool_call phase.
+    def _attach_tool_deny_policy(self) -> str | None:
+        """Attach a session policy that DENYs any tool call at the tool_call phase.
 
         Uses the registered CEL handler via ``POST /v1/sessions/{id}/policies``.
+        Denies on the *phase* alone rather than a specific tool name: the wire
+        ``event.data.name`` is the vendor's raw hook ``tool_name``, which varies
+        per vendor and is not always the item name the forwarder mirrors (codex
+        mirrors ``shell`` but its hook may report a different tool_name). Gating
+        on ``event.type == "tool_call"`` blocks whatever tool the model calls,
+        which is exactly what "is a tool-call DENY enforced?" asks. The session
+        is bench-owned, so denying every tool call in it is harmless.
+
         Returns ``None`` on success (200/201/409); a skip-reason string when the
         handler is unavailable (e.g. ``cel_expr_python`` not installed, so the
         server rejects it as unregistered) — an environment gap, not a
         capability gap.
         """
         assert self._client is not None
-        # Ternary so the expression returns a map (a bare `&&` returns a bool,
-        # which the CEL policy treats as abstain -> ALLOW).
+        # Ternary so the expression returns a map (a bare comparison returns a
+        # bool, which the CEL policy treats as abstain -> ALLOW).
         expression = (
-            f'event.type == "tool_call" && event.data.name == "{tool_name}" '
+            'event.type == "tool_call" '
             f'? {{"result": "DENY", "reason": "{_NATIVE_DENY_REASON}"}} '
-            f': {{"result": "ALLOW"}}'
+            ': {"result": "ALLOW"}'
         )
         resp = self._client.post(
             f"/v1/sessions/{self._session_id}/policies",
