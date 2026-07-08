@@ -197,7 +197,7 @@ async def validate_workspace(
     :param host_registry: Server-side host registry; used to
         find the live connection and send stat frames.
     :param host_id: Target host's stable id, e.g.
-        ``"host_a1b2c3d4..."``.
+        ``"a1b2c3d4..."``.
     :param workspace: User-supplied absolute path on the host, e.g.
         ``"/Users/corey/universe/src/foo"``. Tilde-prefixed and
         relative paths are rejected upstream by the request schema.

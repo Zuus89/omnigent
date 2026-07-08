@@ -372,7 +372,7 @@ class SubagentEntry:
         ``agent-<id>`` filename stem, e.g. ``"a5c7effac5a9a35ab"``.
     :param child_conversation_id: Omnigent child Conversation id minted
         by the server's ``external_subagent_start`` handler,
-        e.g. ``"conv_child456"``.
+        e.g. ``"child456"``.
     :param byte_offset: Bytes already forwarded from the sub-agent's
         ``.jsonl``. ``0`` means we haven't read anything yet (the
         common case when the sub-agent has just been created).
@@ -1113,7 +1113,7 @@ def _parse_json_response(resp: httpx.Response, *, context: str) -> Any:
 
     :param resp: HTTP response whose body is expected to be JSON.
     :param context: Short request description for the error message,
-        e.g. ``"session conv_abc123 snapshot"``.
+        e.g. ``"session abc123 snapshot"``.
     :returns: The parsed JSON value (object, array, or scalar).
     :raises RuntimeError: If the response body is not valid JSON.
     """
@@ -1145,7 +1145,7 @@ async def _post_external_subagent_start(
 
     :param client: Omnigent HTTP client.
     :param parent_session_id: Parent (claude-native) conversation id,
-        e.g. ``"conv_parent987"``.
+        e.g. ``"parent987"``.
     :param subagent_id: Stable Claude-side identifier read from
         ``agent-<id>.meta.json``'s filename, e.g.
         ``"a5c7effac5a9a35ab"``.
@@ -1155,7 +1155,7 @@ async def _post_external_subagent_start(
         e.g. ``"Investigate web UI session data flow"``.
     :param tool_use_id: Parent transcript's ``Task`` tool-use block
         id this sub-agent was spawned from, e.g. ``"toolu_..."``.
-    :returns: The Omnigent child conversation id, e.g. ``"conv_child456"``.
+    :returns: The Omnigent child conversation id, e.g. ``"child456"``.
     :raises httpx.HTTPError: If the Omnigent request fails or is rejected.
     :raises KeyError: If the server response is missing
         ``child_session_id`` — indicates a server/forwarder version
@@ -1750,7 +1750,7 @@ async def _forward_session_cost(
 
     :param client: Omnigent HTTP client.
     :param session_id: Parent (claude-native) conversation id the cost is
-        attributed to, e.g. ``"conv_abc123"``.
+        attributed to, e.g. ``"abc123"``.
     :param bridge_dir: Native Claude bridge directory (holds the
         statusLine snapshot read for ``S``).
     :param parent_transcript_path: Parent transcript JSONL path — used for
@@ -1901,7 +1901,7 @@ async def supervise_forwarder(
         is normally supplied via ``auth`` instead so OAuth tokens are
         refreshed per request.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_dir: Native Claude bridge directory.
     :param agent_name: Agent/model name to stamp on mirrored output.
     :param start_at_end: When ``True`` and no prior forward cursor
@@ -2352,7 +2352,7 @@ async def _fetch_session_snapshot(
     Fetch one Omnigent session snapshot.
 
     :param client: Omnigent HTTP client.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :returns: Parsed JSON snapshot.
     :raises httpx.HTTPError: If Omnigent returns a non-2xx status.
     :raises RuntimeError: If the response body is not a JSON object.
@@ -2468,7 +2468,7 @@ async def _ensure_hook_state(
         re-published on reattach while a partial trailing record can
         still complete and be read.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``. Used for stale-cursor diagnostics.
+        ``"abc123"``. Used for stale-cursor diagnostics.
     :returns: The cursor state to use for the next hook poll.
     """
     state = _read_hook_state(bridge_dir)
@@ -2804,7 +2804,7 @@ async def _ensure_state_for_transcript(
     :param start_at_end: Whether a missing cursor should skip the
         transcript's existing lines.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``. Used for stale-cursor diagnostics.
+        ``"abc123"``. Used for stale-cursor diagnostics.
     :returns: Cursor state for ``transcript_path``.
     """
     if state is not None and state.transcript_path == transcript_path:
@@ -3195,7 +3195,7 @@ def _validated_hook_state(
     :param bridge_dir: Native Claude bridge directory.
     :param state: Hook cursor loaded from memory or disk.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``. Used for diagnostics.
+        ``"abc123"``. Used for diagnostics.
     :returns: ``state`` when its byte cursor still matches the file,
         otherwise a fresh cursor at the beginning of ``hooks.jsonl``.
     """
@@ -3276,7 +3276,7 @@ def _validated_transcript_state(
     :param state: Transcript cursor loaded from memory or disk.
     :param bridge_dir: Native Claude bridge directory.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``. Used for diagnostics.
+        ``"abc123"``. Used for diagnostics.
     :returns: ``state`` unchanged when its byte cursor still matches
         the file; ``state`` with an adopted fingerprint (no reset)
         when the cursor is at byte 0 / line 0 and the file just
@@ -3689,7 +3689,7 @@ async def _post_external_model_change(
 
     :param client: Omnigent HTTP client.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param model: Tier alias the session is now on, e.g. ``"opus"``.
     :raises httpx.HTTPError: If the Omnigent request fails or is rejected.
     """
@@ -3922,7 +3922,7 @@ async def _patch_external_session_id(
 
     :param client: Omnigent HTTP client.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param external_session_id: Runtime-native session id captured
         from a Claude hook event,
         e.g. ``"a1b2c3d4-1234-5678-9abc-def012345678"``.
@@ -3950,7 +3950,7 @@ async def _maybe_sync_effort_from_slash_command(
     into the pane) so the pill tracks it. Best-effort — logged, not raised.
 
     :param client: Omnigent HTTP client.
-    :param session_id: Omnigent session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session/conversation id, e.g. ``"abc123"``.
     :param item: A just-forwarded item; only a ``slash_command`` named
         ``"effort"`` triggers a PATCH.
     :returns: None.
@@ -4031,7 +4031,7 @@ async def _post_external_session_todos(
     Post one ``external_session_todos`` event to the Sessions API.
 
     :param client: Omnigent HTTP client.
-    :param session_id: Omnigent session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session/conversation id, e.g. ``"abc123"``.
     :param todos: Current Claude todo list, e.g.
         ``[{"content": "Write tests", "status": "in_progress",
         "activeForm": "Writing tests"}]``.

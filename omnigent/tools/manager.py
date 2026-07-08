@@ -125,7 +125,7 @@ class ToolManager:
             ``None`` and ``[]`` are equivalent (no client tools).
         :param workdir: The extracted agent image directory on disk.
             Required for local tool loading. ``None`` skips local
-            tool registration, e.g. ``Path("/tmp/cache/ag_abc123")``.
+            tool registration, e.g. ``Path("/tmp/cache/abc123")``.
         :param sandbox_enabled: Runtime policy for ``srt`` sandboxing.
             ``True`` enables sandboxing when ``srt`` is on PATH.
             This is a deployment decision from ``RuntimeCaps``, not

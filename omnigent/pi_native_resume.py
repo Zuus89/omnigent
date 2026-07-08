@@ -108,7 +108,7 @@ def _synthetic_pi_entry_id(
     Deterministic so a re-synthesis of the same conversation yields a stable
     tree (matching how claude-native / codex-native derive synthetic ids).
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param external_session_id: Pi session id for the rebuilt file.
     :param item: Omnigent item dict. Its ``id`` is used when present.
     :param index: Zero-based fallback index in the item list.
@@ -225,7 +225,7 @@ def pi_session_records_from_session_items(
 
     :param items: Flat Omnigent item dicts in chronological order, e.g.
         ``{"type": "message", "role": "user", "content": [...]}``.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``. Used
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``. Used
         for deterministic synthetic entry ids.
     :param external_session_id: Pi session id for the rebuilt file's header.
     :param cwd: Working directory written into the session header.
@@ -470,7 +470,7 @@ async def fetch_all_session_items_for_pi_resume(
     """Fetch committed Omnigent session items in chronological order.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: Flat API item dicts from ``GET /v1/sessions/{id}/items``.
     :raises RuntimeError: If an item page cannot be fetched or parsed.
     """
@@ -556,7 +556,7 @@ async def ensure_local_pi_resume_session(
     filename.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param external_session_id: Pi session id for the rebuilt file.
     :param session_dir: Directory passed to ``pi --session-dir``.
     :param workspace: Resolved cwd Pi will run in (written into the header).

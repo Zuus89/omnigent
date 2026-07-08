@@ -38,7 +38,7 @@ class FilesNamespace:
         ``/v1/files`` has been removed; callers must scope uploads and
         downloads to the session/conversation that owns the file.
 
-        :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Session/conversation id, e.g. ``"abc123"``.
         :returns: A :class:`SessionFilesNamespace` bound to that session.
         """
         return SessionFilesNamespace(self._http, self._base, session_id)
@@ -87,7 +87,7 @@ class SessionFilesNamespace:
 
     :param http: Shared async HTTP client.
     :param base_url: Server base URL, e.g. ``"http://localhost:8080"``.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     """
 
     def __init__(self, http: httpx.AsyncClient, base_url: str, session_id: str) -> None:
@@ -96,7 +96,7 @@ class SessionFilesNamespace:
 
         :param http: Shared async HTTP client.
         :param base_url: Server base URL, e.g. ``"http://localhost:8080"``.
-        :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Session/conversation id, e.g. ``"abc123"``.
         :returns: None.
         """
         self._http = http
@@ -108,7 +108,7 @@ class SessionFilesNamespace:
         """
         The session/conversation id this namespace is bound to.
 
-        :returns: Session id, e.g. ``"conv_abc123"``.
+        :returns: Session id, e.g. ``"abc123"``.
         """
         return self._session_id
 
@@ -172,7 +172,7 @@ class SessionFilesNamespace:
 
         :param limit: Maximum number of files to return.
         :param after: Cursor for forward pagination,
-            e.g. ``"file_abc123"``.
+            e.g. ``"abc123"``.
         :param order: Sort order, e.g. ``"desc"``.
         :returns: File metadata entries.
         """
@@ -190,7 +190,7 @@ class SessionFilesNamespace:
         """
         Get session file metadata by ID.
 
-        :param file_id: Server-issued file id, e.g. ``"file_abc123"``.
+        :param file_id: Server-issued file id, e.g. ``"abc123"``.
         :returns: File metadata.
         """
         resp = await self._http.get(f"{self._path}/{quote(file_id, safe='')}")
@@ -203,7 +203,7 @@ class SessionFilesNamespace:
         """
         Download session file content.
 
-        :param file_id: Server-issued file id, e.g. ``"file_abc123"``.
+        :param file_id: Server-issued file id, e.g. ``"abc123"``.
         :returns: Raw file bytes.
         """
         resp = await self._http.get(
@@ -218,7 +218,7 @@ class SessionFilesNamespace:
         """
         Download file content and write it to disk.
 
-        :param file_id: Server-issued file id, e.g. ``"file_abc123"``.
+        :param file_id: Server-issued file id, e.g. ``"abc123"``.
         :param to_path: Local output path, e.g. ``"./out/report.pdf"``.
         :returns: The path that was written.
         """
@@ -232,7 +232,7 @@ class SessionFilesNamespace:
         """
         Delete a session-scoped file.
 
-        :param file_id: Server-issued file id, e.g. ``"file_abc123"``.
+        :param file_id: Server-issued file id, e.g. ``"abc123"``.
         :returns: None.
         """
         resp = await self._http.delete(f"{self._path}/{quote(file_id, safe='')}")

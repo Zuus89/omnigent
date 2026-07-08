@@ -176,7 +176,7 @@ def _evict_stale_locked(conversation_id: str, now: float) -> None:
     empty list cleanly.
 
     :param conversation_id: Conversation/session id to sweep,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param now: Current ``time.monotonic()`` value to compare against.
     """
     entries = _pending.get(conversation_id)
@@ -204,7 +204,7 @@ def record(
     if the forward fails.
 
     :param conversation_id: Conversation/session id the message was
-        posted to, e.g. ``"conv_abc123"``.
+        posted to, e.g. ``"abc123"``.
     :param content: Message content blocks as POSTed, e.g.
         ``[{"type": "input_text", "text": "hi"}]``.
     :param created_by: Authenticated identity of the posting actor,
@@ -230,7 +230,7 @@ def resolve(conversation_id: str, pending_id: str) -> None:
     Idempotent: dropping an unknown id is a no-op.
 
     :param conversation_id: Conversation/session id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param pending_id: The id returned by :func:`record`, e.g.
         ``"pending_a1b2c3"``.
     """
@@ -263,7 +263,7 @@ def resolve_oldest(conversation_id: str) -> DrainedInput | None:
     the caller then renders it as a plain committed item.
 
     :param conversation_id: Conversation/session id the message was
-        persisted on, e.g. ``"conv_abc123"``.
+        persisted on, e.g. ``"abc123"``.
     :returns: The drained :class:`DrainedInput`, or ``None`` when no
         entry was pending.
     """
@@ -295,7 +295,7 @@ def resolve_matching_text(conversation_id: str, text: str) -> MatchedDrain:
     Kiro match the accepted prompt text and returns any older skipped entries so
     the caller can surface them as failed web injections.
 
-    :param conversation_id: Conversation/session id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Conversation/session id, e.g. ``"abc123"``.
     :param text: Accepted prompt text mirrored from Kiro's structured JSONL.
     :returns: Matched entry plus older skipped entries, or no match with an
         empty skipped list when the text was typed directly in the TUI.
@@ -343,7 +343,7 @@ def snapshot_for(conversation_id: str) -> list[dict[str, Any]]:
     replayed entry cannot poison the index.
 
     :param conversation_id: Conversation/session id to query, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Insertion-ordered list of dicts, each with ``"pending_id"``
         and ``"content"`` keys, plus an optional ``"created_by"`` key
         when the sender identity was recorded at

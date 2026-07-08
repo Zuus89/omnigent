@@ -23,7 +23,7 @@ class NativeLaunchConfig:
     Inputs needed to start/resume a native server for one conversation.
 
     :param omnigent_session_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param workspace: Working directory the server runs in.
     :param model_override: Persisted model override, or ``None``.
     :param terminal_launch_args: Pass-through CLI args for the TUI/server.

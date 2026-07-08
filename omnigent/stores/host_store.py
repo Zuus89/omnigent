@@ -44,7 +44,7 @@ class Host:
     A registered host machine.
 
     :param host_id: Stable identifier from the host's local
-        ``~/.omnigent/config.yaml``, e.g. ``"host_a1b2c3d4..."``.
+        ``~/.omnigent/config.yaml``, e.g. ``"a1b2c3d4..."``.
     :param name: Human-readable name, e.g. ``"corey-laptop"``.
     :param owner: User ID from the Databricks auth Bearer token,
         e.g. ``"corey.zumar@databricks.com"``.
@@ -214,7 +214,7 @@ class HostStore:
         raises ``IntegrityError`` and fails the handshake closed).
 
         :param host_id: Stable host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :param name: Human-readable name from ``config.yaml``, e.g.
             ``"corey-laptop"``.
         :param owner: Authenticated user ID from the Bearer token,
@@ -420,7 +420,7 @@ class HostStore:
 
         :param session: The active SQLAlchemy session.
         :param host_id: Host identifier whose row should be re-owned,
-            e.g. ``"host_a1b2c3d4..."``.
+            e.g. ``"a1b2c3d4..."``.
         :param name: New host name to record, e.g. ``"corey-laptop"``.
         :param owner: New owner to record, e.g. ``"local"`` or
             ``"corey.zumar@databricks.com"``.
@@ -475,7 +475,7 @@ class HostStore:
         may fire after a failed registration).
 
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         """
         with self._session() as session:
             row = session.execute(
@@ -500,7 +500,7 @@ class HostStore:
         No-op if the host does not exist.
 
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         """
         # Single UPDATE rather than SELECT-then-mutate: this runs every
         # ping interval for every connected host, so the extra read is
@@ -528,7 +528,7 @@ class HostStore:
         timestamp is the only reliable signal that the host is gone.
 
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :returns: ``True`` when the host is online and its last-seen is
             fresh; ``False`` if unknown, offline, or stale.
         """
@@ -546,7 +546,7 @@ class HostStore:
         every row against one consistent clock.
 
         :param host_ids: Host identifiers to check, e.g.
-            ``["host_abc123", "host_def456"]``. Duplicates are
+            ``["abc123", "host_def456"]``. Duplicates are
             tolerated; empty input returns an empty set without
             touching the database.
         :returns: The set of ids whose host row is online and fresh.
@@ -598,7 +598,7 @@ class HostStore:
         Fetch a single host by ID.
 
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :returns: The :class:`Host` if found, otherwise ``None``.
         """
         with self._session() as session:
@@ -640,7 +640,7 @@ class HostStore:
         anything.
 
         :param host_id: Server-generated host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :param name: Display name for the host picker, e.g.
             ``"managed-a1b2c3d4"``. Part of the table's
             ``(owner, name)`` primary key.
@@ -740,7 +740,7 @@ class HostStore:
         this via FK. No-op when the row does not exist — deletion is
         invoked from best-effort cleanup paths that may race.
 
-        :param host_id: Host identifier, e.g. ``"host_a1b2c3d4..."``.
+        :param host_id: Host identifier, e.g. ``"a1b2c3d4..."``.
         """
         with self._session() as session:
             session.execute(
@@ -769,7 +769,7 @@ class HostStore:
         via :meth:`register_managed_host`. Contrast :meth:`delete_host`,
         which is full teardown. No-op when the row does not exist.
 
-        :param host_id: Host identifier, e.g. ``"host_a1b2c3d4..."``.
+        :param host_id: Host identifier, e.g. ``"a1b2c3d4..."``.
         """
         with self._session() as session:
             row = session.execute(

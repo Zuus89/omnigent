@@ -130,7 +130,7 @@ def _upload(resolved: Path, *, session_id: str | None) -> str:
 
     :param resolved: Absolute path to the file.
     :param session_id: Owning conversation/session id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: JSON result string with file_id.
     """
     from omnigent.runtime import get_artifact_store, get_file_store

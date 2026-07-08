@@ -31,7 +31,7 @@ class CommentStore(ABC):
 
         :param comment_id: The comment to fetch, e.g. ``"a1b2c3d4-..."``.
         :param conversation_id: The conversation the comment must belong to,
-            e.g. ``"conv_abc123"``. A comment owned by any other conversation
+            e.g. ``"abc123"``. A comment owned by any other conversation
             is reported as not found (``None``).
         :returns: The :class:`Comment`, or ``None`` if no comment with that
             id exists or it is not owned by ``conversation_id``.
@@ -52,7 +52,7 @@ class CommentStore(ABC):
         """Create and persist a new comment.
 
         :param conversation_id: The owning conversation,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param path: File path relative to workspace root,
             e.g. ``"src/App.tsx"``.
         :param body: The comment text.
@@ -78,7 +78,7 @@ class CommentStore(ABC):
         """Return all comments for a conversation, optionally filtered by file.
 
         :param conversation_id: The conversation to query,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param path: When provided, only return comments for this file,
             e.g. ``"src/App.tsx"``. ``None`` returns all files.
         :returns: List of matching :class:`Comment` objects ordered by
@@ -105,7 +105,7 @@ class CommentStore(ABC):
         :param comment_id: The comment to update,
             e.g. ``"a1b2c3d4-..."``.
         :param conversation_id: The conversation the comment must belong to,
-            e.g. ``"conv_abc123"``. A comment owned by any other conversation
+            e.g. ``"abc123"``. A comment owned by any other conversation
             is not modified and reported as not found (``None``).
         :param status: New status, e.g. ``"addressed"``. ``None`` leaves
             it unchanged.
@@ -126,7 +126,7 @@ class CommentStore(ABC):
 
         :param comment_id: The comment to delete, e.g. ``"a1b2c3d4-..."``.
         :param conversation_id: The conversation the comment must belong to,
-            e.g. ``"conv_abc123"``. A comment owned by any other conversation
+            e.g. ``"abc123"``. A comment owned by any other conversation
             is not deleted and reported as not found (``None``).
         :returns: The deleted :class:`Comment`, or ``None`` if no comment with
             that id exists or it is not owned by ``conversation_id``.
@@ -144,7 +144,7 @@ class CommentStore(ABC):
         ``GET /v1/sessions``, so it must not fan out per conversation.
 
         :param conversation_ids: The conversations to summarize,
-            e.g. ``["conv_abc123", "conv_def456"]``.
+            e.g. ``["abc123", "def456"]``.
         :returns: Map from conversation id to its
             :class:`CommentsFingerprint`. Conversations with no comments
             are absent from the map.
@@ -159,6 +159,6 @@ class CommentStore(ABC):
         does not hold orphaned comment rows indefinitely.
 
         :param conversation_id: The conversation whose comments to remove,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         ...

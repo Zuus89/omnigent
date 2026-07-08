@@ -368,7 +368,7 @@ async def maybe_run_advisor(
     :func:`parse_advisor_config`).
 
     :param spec: The resolved agent spec for the session.
-    :param conversation_id: Session id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session id, e.g. ``"abc123"``.
     :param turn_content: This turn's inbound message content blocks.
     :param server_client: HTTP client pointed at the Omnigent server,
         used for the one label-persist PATCH.
@@ -454,7 +454,7 @@ async def _finalize_advised_turn(
     :param harness: The session's brain harness, e.g. ``"claude-sdk"``.
     :param user_model_override: The session's persisted user model pin, or
         ``None``.
-    :param conversation_id: Session id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session id, e.g. ``"abc123"``.
     :param server_client: HTTP client for the label-persist PATCH.
     :returns: The turn result; the telemetry-label persist is best-effort
         (the chip + application carry the verdict even if it fails).
@@ -562,7 +562,7 @@ async def _persist_verdict_label(
     (see ``update_session`` in :mod:`omnigent.server.routes.sessions`).
 
     :param verdict: The verdict to persist.
-    :param conversation_id: Session id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session id, e.g. ``"abc123"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: ``True`` on success; ``False`` (with a warning logged) when
         the PATCH failed — the caller then applies nothing so the

@@ -149,7 +149,7 @@ async def test_create_policy(
     assert body["enabled"] is True
     assert body["source"] == "session"
     assert body["object"] == "session.policy"
-    assert body["id"].startswith("pol_")
+    assert len(body["id"]) == 32
     assert body["created_at"] > 0
     assert body["updated_at"] is None
 

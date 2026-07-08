@@ -191,9 +191,9 @@ class _AgentToolsGetter(Protocol):
         Fetch the tool list for an agent.
 
         :param agent_id: Durable agent identifier, e.g.
-            ``"ag_abc123"``.
+            ``"abc123"``.
         :param session_id: Session identifier for session-scoped
-            lookups, e.g. ``"conv_abc123"``. ``None`` for legacy
+            lookups, e.g. ``"abc123"``. ``None`` for legacy
             callers.
         :returns: The agent's tool entries from its spec, in
             declaration order. Empty list if the agent declares
@@ -426,7 +426,7 @@ class SessionsChat:
         """
         The durable session identifier this helper is bound to.
 
-        :returns: The session id, e.g. ``"conv_abc123"``.
+        :returns: The session id, e.g. ``"abc123"``.
         """
         return self._session.id
 
@@ -435,7 +435,7 @@ class SessionsChat:
         """
         The bound agent's durable identifier.
 
-        :returns: The agent id, e.g. ``"ag_abc123"``.
+        :returns: The agent id, e.g. ``"abc123"``.
         """
         return self._session.agent_id
 
@@ -1359,7 +1359,7 @@ class _FilesGetter(Protocol):
         Fetch a file's metadata by id.
 
         :param file_id: Server-issued file identifier, e.g.
-            ``"file_abc123"``.
+            ``"abc123"``.
         :returns: The :class:`File` metadata.
         """
         ...

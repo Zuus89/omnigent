@@ -635,7 +635,7 @@ async def _post_event(
     POST one mapped event with the shared bounded-retry delivery loop.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param event: The mapped event to deliver.
     :returns: None. Delivery failures are logged inside the retry loop; an
         ambiguous conversation-item failure is intentionally not retried (a
@@ -886,7 +886,7 @@ async def supervise_reader(
     :param bridge_dir: Native Antigravity bridge directory (identifies the
         session whose agy conversation to mirror).
     :param session_id: Omnigent conversation id to mirror into, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param client: HTTP client for Omnigent event posts.
     :param on_pending_interaction: Async callback handed each distinct WAITING
         interaction (the Task 8 interaction bridge), as
@@ -1963,7 +1963,7 @@ async def _post_external_elicitation_resolved(
     Mirrors cursor-native's ``_post_external_elicitation_resolved``.
 
     :param client: HTTP client for Omnigent event posts (the reader's client).
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param elicitation_id: The deterministic agy elicitation id to withdraw.
     :returns: None.
     """
@@ -2200,7 +2200,7 @@ async def _post_agy_elicitation_request(
     ``_AGY_ELICITATION_REQUEST_TIMEOUT_SECONDS`` budget; 2xx and 4xx are final.
 
     :param client: HTTP client for Omnigent hook posts (the reader's client).
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param elicitation_id: Deterministic agy elicitation id, e.g.
         ``"elicit_agy_<digest>"``.
     :param params: The web-renderable elicitation params.
@@ -2272,7 +2272,7 @@ async def _request_agy_elicitation(
       body → ``None`` (logged; no verdict delivered).
 
     :param client: HTTP client for Omnigent hook posts (the reader's client).
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param elicitation_id: Deterministic agy elicitation id.
     :param params: The web-renderable elicitation params.
     :returns: The parsed :class:`ElicitationResult`, or ``None`` on
@@ -2361,7 +2361,7 @@ async def _fetch_session_snapshot(client: httpx.AsyncClient, session_id: str) ->
     (to inherit the bridge-id so the new session resolves to the same bridge_dir).
 
     :param client: Omnigent HTTP client (the reader's client).
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :returns: Decoded JSON session snapshot.
     :raises httpx.HTTPStatusError: If Omnigent rejects the request.
     :raises RuntimeError: If the response body is not a JSON object.
@@ -2660,7 +2660,7 @@ async def run_reader_with_bridge(
         (the local-server runner path and the CLI attach fallback, which have no
         token to refresh — the bearer in ``headers``, if any, is used as-is).
     :param session_id: Omnigent conversation id to mirror into, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_dir: Native Antigravity bridge directory for this session.
     :returns: None. Runs until cancelled.
     """

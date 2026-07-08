@@ -170,7 +170,7 @@ def _request_session_id_from_env() -> str | None:
     """
     Resolve the Omnigent session id that requested this harness process.
 
-    :returns: Omnigent session id, e.g. ``"conv_abc123"``, or ``None`` when
+    :returns: Omnigent session id, e.g. ``"abc123"``, or ``None`` when
         the spawn env predates active-session validation.
     """
     raw = os.environ.get(REQUEST_SESSION_ID_ENV_VAR, "").strip()
@@ -183,7 +183,7 @@ def _session_is_active(bridge_dir: Path, request_session_id: str | None) -> bool
 
     :param bridge_dir: Native bridge directory.
     :param request_session_id: Omnigent session id from
-        :data:`REQUEST_SESSION_ID_ENV_VAR`, e.g. ``"conv_abc123"``.
+        :data:`REQUEST_SESSION_ID_ENV_VAR`, e.g. ``"abc123"``.
         ``None`` preserves old harness spawns that lack the guard env.
     :returns: ``True`` when injection is allowed.
     """

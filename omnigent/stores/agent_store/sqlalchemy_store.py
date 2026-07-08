@@ -57,7 +57,7 @@ class SqlAlchemyAgentStore(AgentStore):
         :param name: Human-readable agent name. Must be unique,
             e.g. ``"code-assistant"``.
         :param bundle_location: Artifact store key for the bundle,
-            e.g. ``"ag_abc123/a1b2c3d4e5f6..."``.
+            e.g. ``"abc123/a1b2c3d4e5f6..."``.
         :param description: Optional free-text description.
         :returns: The newly created :class:`Agent`.
         """
@@ -190,7 +190,7 @@ class SqlAlchemyAgentStore(AgentStore):
         are omitted from the result.
 
         :param agent_ids: List of agent identifiers to look up,
-            e.g. ``["ag_abc123", "ag_def456"]``.
+            e.g. ``["abc123", "def456"]``.
         :returns: Mapping of ``{agent_id: agent_name}`` for found
             agents.
         """
@@ -217,7 +217,7 @@ class SqlAlchemyAgentStore(AgentStore):
         :param agent_id: Unique agent identifier,
             e.g. ``"agent_abc123"``.
         :param bundle_location: New artifact store key for the
-            bundle, e.g. ``"ag_abc123/a1b2c3d4e5f6..."``.
+            bundle, e.g. ``"abc123/a1b2c3d4e5f6..."``.
         :returns: The updated :class:`Agent`, or ``None`` if not
             found.
         """

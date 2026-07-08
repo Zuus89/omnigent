@@ -367,8 +367,8 @@ async def test_switch_same_family_native_carries_history(
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["status"] == "idle"
-    # Bound to a freshly cloned session-scoped agent, not the built-in itself.
-    assert body["agent_id"].startswith("ag_") and body["agent_id"] != "ag_builtin_claude"
+    # Bound to a freshly cloned session-scoped agent (bare 32-char hex id).
+    assert len(body["agent_id"]) == 32
     # 1 item returned — the in-place transcript is preserved (not copied/empty).
     assert len(body["items"]) == 1
 

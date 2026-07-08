@@ -14,7 +14,7 @@ The process is launched by the runner-side popup helper (e.g.
 
     python -I -m omnigent.native_cost_popup \
         --config-file <bridge_dir>/cost_popup.json \
-        --session-id conv_abc123 \
+        --session-id abc123 \
         --elicitation-id elicit_deadbeef \
         --message "Session cost $0.12 crossed the $0.10 checkpoint. Continue?"
 
@@ -154,7 +154,7 @@ def launch_cost_popup(
         ``cost_popup.json`` snapshot per launch so the verdict POST carries a
         live bearer rather than the stale launch token.
     :param session_id: Omnigent session id that owns the elicitation, e.g.
-        ``"conv_abc123"``. Used in the resolve URL the popup POSTs to.
+        ``"abc123"``. Used in the resolve URL the popup POSTs to.
     :param elicitation_id: Outstanding elicitation correlation id, e.g.
         ``"elicit_deadbeef"``.
     :param message: Approval reason shown in the popup.
@@ -392,7 +392,7 @@ def _post_verdict(
         e.g. ``{"Authorization": "Bearer ..."}``. May be empty in
         single-user / local setups.
     :param session_id: Omnigent session id that owns the elicitation, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param elicitation_id: Correlation id of the outstanding
         elicitation, e.g. ``"elicit_deadbeef"``.
     :param action: MCP action verb — ``"accept"`` or ``"decline"``.
@@ -438,7 +438,7 @@ def _start_resolution_watcher(
     :param ap_server_url: Omnigent server base URL, e.g.
         ``"http://127.0.0.1:8787"``.
     :param auth_headers: Outbound auth headers for the session's owner.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param elicitation_id: Elicitation id to watch, e.g. ``"elicit_x"``.
     :returns: None.
     """

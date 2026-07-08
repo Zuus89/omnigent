@@ -50,7 +50,7 @@ def publish(user_key: str, event: dict[str, Any]) -> None:
         id (e.g. ``"alice@example.com"``) in multi-user mode, or the shared
         single-user sentinel the updates route also subscribes under.
     :param event: The event dict to deliver, e.g.
-        ``{"type": "session_added", "session_id": "conv_abc123"}``.
+        ``{"type": "session_added", "session_id": "abc123"}``.
     """
     with _lock:
         subs = list(_subscribers.get(user_key, ()))

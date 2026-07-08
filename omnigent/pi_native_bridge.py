@@ -36,7 +36,7 @@ def bridge_dir_for_session_id(session_id: str) -> Path:
     """
     Return the bridge directory for a native Pi session.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: Absolute bridge directory under ``~/.omnigent/pi-native``.
     """
     digest = hashlib.sha256(session_id.encode("utf-8")).hexdigest()[:32]

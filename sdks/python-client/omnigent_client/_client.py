@@ -290,7 +290,7 @@ class OmnigentClient:
         broken setup.
 
         :param agent_id: The agent's durable identifier, e.g.
-            ``"ag_abc123"``.
+            ``"abc123"``.
         :returns: List of tool-entry dicts with at least ``name``
             and (post-F1) ``runtime`` keys. Empty if the agent
             declares no tools or the server response shape

@@ -1190,7 +1190,7 @@ class OpenAIAgentsSDKExecutor(Executor):
         documented contract for "really" stopping a stream.
 
         :param session_key: Key for the per-session state, e.g.
-            ``"conv_abc123"``. ``"default"`` for un-keyed turns.
+            ``"abc123"``. ``"default"`` for un-keyed turns.
         :returns: ``True`` if a turn was in flight and the
             cancel was issued; ``False`` if no active result
             exists for this session.

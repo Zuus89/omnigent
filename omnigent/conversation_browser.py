@@ -70,8 +70,8 @@ def conversation_url(base_url: str, conversation_id: str) -> str:
     org id.
 
     :param base_url: Omnigent server base URL, e.g. ``"http://127.0.0.1:6767"``.
-    :param conversation_id: Conversation id, e.g. ``"conv_abc123"``.
-    :returns: Browser URL, e.g. ``"http://127.0.0.1:6767/c/conv_abc123"``.
+    :param conversation_id: Conversation id, e.g. ``"abc123"``.
+    :returns: Browser URL, e.g. ``"http://127.0.0.1:6767/c/abc123"``.
     """
     encoded_id = urllib.parse.quote(conversation_id, safe="")
     parsed = urllib.parse.urlsplit(base_url.rstrip("/"))
@@ -101,7 +101,7 @@ def open_conversation_url(url: str) -> bool:
     abstraction.
 
     :param url: Absolute browser URL, e.g.
-        ``"http://127.0.0.1:6767/c/conv_abc123"``.
+        ``"http://127.0.0.1:6767/c/abc123"``.
     :returns: ``True`` when an opener accepted the URL, otherwise
         ``False``.
     :raises OSError: If the platform opener cannot be executed.
@@ -128,7 +128,7 @@ def open_conversation_link_if_enabled(
     Open a conversation link when the CLI config enables it.
 
     :param base_url: Omnigent server base URL, e.g. ``"http://127.0.0.1:6767"``.
-    :param conversation_id: Conversation id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Conversation id, e.g. ``"abc123"``.
     :param enabled: ``True`` when the user opted into automatic browser opens.
     :param warn: Optional warning sink. Receives a complete warning
         message when the opener fails.

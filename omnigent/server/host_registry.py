@@ -138,7 +138,7 @@ class HostConnection:
     """Per-host state while the tunnel is open.
 
     :param host_id: Stable host identifier, e.g.
-        ``"host_a1b2c3d4..."``.
+        ``"a1b2c3d4..."``.
     :param ws: The live WebSocket to this host.
     :param hello: The hello frame the host sent on connect.
     :param owner: Authenticated user who established the tunnel,
@@ -247,7 +247,7 @@ class HostRegistry:
         poisoned with ``None`` so the sender loop exits.
 
         :param host_id: Stable host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :param ws: The live WebSocket.
         :param hello: The hello frame from the host.
         :param owner: Authenticated user ID, or ``None``.
@@ -288,7 +288,7 @@ class HostRegistry:
         """Look up a live host connection.
 
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :returns: The :class:`HostConnection` if online,
             otherwise ``None``.
         """

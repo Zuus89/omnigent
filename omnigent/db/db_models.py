@@ -94,14 +94,15 @@ class SqlAgent(Base):
 
     Each row represents a registered agent in the system.
 
-    :param id: Unique agent identifier, e.g. ``"ag_0f1a2b3c..."``.
+    :param id: Unique agent identifier (bare 32-char hex), e.g.
+        ``"0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c"``.
     :param created_at: Unix epoch seconds when the agent was created.
     :param name: Human-readable agent name. Registered template
         agents require unique names; session-scoped copies may reuse
         the same name across different sessions.
     :param bundle_location: Artifact store key for the current bundle.
         Content-addressed (SHA-256 hex), e.g.
-        ``"ag_abc123/a1b2c3d4e5f6..."``.
+        ``"abc123/a1b2c3d4e5f6..."``.
     :param version: Monotonic version counter. Starts at 1, incremented
         on each update via ``PUT /api/agents/{id}``.
     :param kind: ``"template"`` for server-wide registered agents;
@@ -156,7 +157,8 @@ class SqlFile(Base):
 
     Each row represents an uploaded file tracked by the system.
 
-    :param id: Unique file identifier, e.g. ``"file_a1b2c3d4..."``.
+    :param id: Unique file identifier (bare 32-char hex), e.g.
+        ``"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"``.
     :param created_at: Unix epoch seconds when the file record was
         created.
     :param filename: Original filename as provided by the uploader,
@@ -346,8 +348,8 @@ class SqlConversation(Base):
     Each row represents a conversation thread that contains one or
     more conversation items.
 
-    :param id: Unique conversation identifier, e.g.
-        ``"conv_e4f5a6b7..."``.
+    :param id: Unique conversation identifier (bare 32-char hex), e.g.
+        ``"e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9"``.
     :param created_at: Unix epoch seconds when the conversation was
         created.
     :param updated_at: Unix epoch seconds when the conversation was
@@ -567,8 +569,9 @@ class SqlConversationItem(Base):
     Each row represents a single item (message, function call,
     function call output, or reasoning block) within a conversation.
 
-    :param id: Unique item identifier with a type-based prefix,
-        e.g. ``"msg_a1b2c3..."``, ``"fc_d4e5f6..."``.
+    :param id: Unique item identifier (bare 32-char hex); the item's
+        type lives in the ``type`` column, not the id. E.g.
+        ``"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"``.
     :param conversation_id: Foreign key to
         :class:`SqlConversation.id`. Cascades on delete.
     :param response_id: The task/response ID this item belongs to,
@@ -700,7 +703,8 @@ class SqlComment(Base):
     as absolute document-level offsets. Comments survive server restarts
     and are cleaned up when the owning conversation is deleted.
 
-    :param id: UUID primary key, e.g. ``"a1b2c3d4-..."``.
+    :param id: Bare 32-char hex uuid primary key, e.g.
+        ``"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"``.
     :param conversation_id: The conversation this comment belongs to.
     :param path: File path relative to the workspace root,
         e.g. ``"src/App.tsx"``.
@@ -791,7 +795,8 @@ class SqlPolicy(Base):
     ``POST /v1/sessions/{session_id}/policies``. Default policies
     are created via ``POST /v1/policies``.
 
-    :param id: Opaque PK, e.g. ``"pol_a1b2c3..."``.
+    :param id: Opaque PK (bare 32-char hex), e.g.
+        ``"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"``.
     :param name: Human-readable name. UNIQUE per session for
         session policies; globally unique for default policies
         (``session_id IS NULL``). Uniqueness is enforced on
@@ -897,7 +902,8 @@ class SqlHost(Base):
     and updated on subsequent reconnects (name, status, timestamps).
 
     :param host_id: Stable host identifier from the host's local
-        ``~/.omnigent/config.yaml``, e.g. ``"host_a1b2c3d4e5f6..."``.
+        ``~/.omnigent/config.yaml`` (bare 32-char hex), e.g.
+        ``"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"``.
     :param name: Human-readable name from ``config.yaml``, e.g.
         ``"corey-laptop"``. Displayed in the Web UI host picker. Max 64
         characters.

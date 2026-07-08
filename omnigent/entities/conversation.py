@@ -28,7 +28,7 @@ class Conversation:
     A conversation grouping related turns.
 
     :param id: Unique conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param created_at: Unix epoch timestamp of creation.
     :param updated_at: Unix epoch timestamp of the last
         update (item append, title change, etc.).
@@ -378,6 +378,44 @@ class ReasoningData(BaseModel):
     encrypted_content: str | None = None
 
 
+# Prefixes that conversation-item ids carried before they became bare
+# 32-char hex. Item ids are now prefix-less (the type lives in the
+# ``conversation_items.type`` column), but ``compaction.last_item_id`` is
+# the one blob field compared against a live item id, so a legacy prefixed
+# value persisted in an old blob must be normalized on read to match the
+# migrated, prefix-less column. Synthetic sentinels (``compact_boundary_``,
+# ``synthetic_``) share no prefix here and are left intact.
+_LEGACY_ITEM_ID_PREFIXES: tuple[str, ...] = (
+    "msg_",
+    "fc_",
+    "fco_",
+    "err_",
+    "rs_",
+    "cmp_",
+    "nt_",
+    "rse_",
+    "sc_",
+    "tc_",
+    "rd_",
+)
+
+
+def _strip_legacy_item_id_prefix(item_id: str) -> str:
+    """Strip a legacy conversation-item id prefix if present.
+
+    Removes only a known item-type prefix (see
+    :data:`_LEGACY_ITEM_ID_PREFIXES`); already-bare ids and synthetic
+    sentinels are returned unchanged. Idempotent.
+
+    :param item_id: An item id, e.g. ``"msg_ab12..."`` or ``"ab12..."``.
+    :returns: The prefix-less id, e.g. ``"ab12..."``.
+    """
+    for prefix in _LEGACY_ITEM_ID_PREFIXES:
+        if item_id.startswith(prefix):
+            return item_id[len(prefix) :]
+    return item_id
+
+
 class CompactionData(BaseModel):
     """
     Data payload for a compaction summary item.
@@ -408,6 +446,19 @@ class CompactionData(BaseModel):
     token_count: int
     compacted_messages: list[dict[str, Any]] | None = None
     window_id: int | None = None
+
+    @field_validator("last_item_id")
+    @classmethod
+    def _normalize_last_item_id(cls, value: str) -> str:
+        """Strip a legacy item-id prefix so an old blob's ``last_item_id``
+        matches the migrated, prefix-less ``conversation_items.id`` it
+        points at. Fires on both read (``parse_item_data``) and write, and
+        is idempotent on already-bare ids.
+
+        :param value: The stored last-item id, e.g. ``"msg_ab12..."``.
+        :returns: The prefix-less id, e.g. ``"ab12..."``.
+        """
+        return _strip_legacy_item_id_prefix(value)
 
 
 class NativeToolData(BaseModel):
@@ -440,7 +491,7 @@ class ResourceEventData(BaseModel):
         ``"session.resource.created"`` or
         ``"session.resource.deleted"``.
     :param resource_id: Opaque id of the affected resource,
-        e.g. ``"terminal_bash_s1"`` or ``"file_abc123"``.
+        e.g. ``"terminal_bash_s1"`` or ``"abc123"`` (a file id).
     :param resource_type: Kind of resource, e.g.
         ``"terminal"``, ``"file"``, ``"environment"``.
     :param resource: Full resource object dict for ``created``

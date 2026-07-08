@@ -313,7 +313,7 @@ def _build_sys_session_send_schema(
                         "description": (
                             "By-session-id mode: post to an existing "
                             "child session (e.g. one returned by "
-                            "sys_session_create), e.g. 'conv_abc123'. "
+                            "sys_session_create), e.g. 'abc123'. "
                             "Must be a direct child of the calling "
                             "session. Use instead of agent + title."
                         ),
@@ -650,7 +650,7 @@ class SysSessionGetInfoTool(Tool):
                             "type": "string",
                             "description": (
                                 "The session (conversation_id) to "
-                                "describe, e.g. 'conv_abc123'. Get this "
+                                "describe, e.g. 'abc123'. Get this "
                                 "from sys_session_list or a prior "
                                 "sys_session_send handle. Omit to "
                                 "describe the calling session itself."
@@ -771,7 +771,7 @@ class SysSessionShareTool(Tool):
                             "type": "string",
                             "description": (
                                 "The session (conversation_id) to share, "
-                                "e.g. 'conv_abc123'. Omit to share the "
+                                "e.g. 'abc123'. Omit to share the "
                                 "calling session itself."
                             ),
                         },
@@ -883,7 +883,7 @@ class SysSessionCreateTool(Tool):
                             "type": "string",
                             "description": (
                                 "Existing-agent mode: the agent to "
-                                "launch, e.g. 'ag_abc123'. Get it from "
+                                "launch, e.g. 'abc123'. Get it from "
                                 "sys_agent_list (both builtins and "
                                 "session_agents rows carry it) or "
                                 "sys_agent_get (a session's agent). "
@@ -1019,7 +1019,7 @@ def _find_open_child_by_title(
     no longer matches. Returns ``None`` when no open child matches.
 
     :param parent_conversation_id: The parent's conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param sa_agent: The sub-agent type (e.g. ``"researcher"``) — the
         ``agent`` argument on the LLM-facing surface.
     :param sa_title: The session title (e.g. ``"auth-flow"``) — the
@@ -1261,7 +1261,7 @@ def _busy_check_or_none(
     lives in the sessions route's ``_session_status_cache``); it is
     retained to preserve the call-site contract for tools that invoke it.
 
-    :param child_conv_id: The child conversation id, e.g. ``"conv_abc123"``.
+    :param child_conv_id: The child conversation id, e.g. ``"abc123"``.
     :returns: Always ``None`` — busy detection based on the tasks table is
         no longer available at the tool layer.
     """
@@ -1387,7 +1387,7 @@ class SysSessionGetHistoryTool(Tool):
         Look up the target sub-agent and return its recent items.
 
         :param arguments: JSON-encoded arguments string, e.g.
-            ``'{"conversation_id": "conv_abc123", "tail_items": 5}'``.
+            ``'{"conversation_id": "abc123", "tail_items": 5}'``.
         :param ctx: Server-side execution context.
         :returns: JSON ``{"conversation_id": ..., "agent": ...,
             "title": ..., "items": [...]}`` on success;
@@ -1521,7 +1521,7 @@ class SysSessionCloseTool(Tool):
         Look up the target sub-agent and tombstone it.
 
         :param arguments: JSON-encoded arguments string, e.g.
-            ``'{"conversation_id": "conv_abc123"}'``.
+            ``'{"conversation_id": "abc123"}'``.
         :param ctx: Server-side execution context.
         :returns: JSON ``{"closed": true, "conversation_id": ...,
             "agent": ..., "title": ...}`` on success;

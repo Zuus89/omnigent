@@ -158,7 +158,7 @@ class AntigravityNativeBridgeState:
     Runtime state shared by the native Antigravity wrapper and harness.
 
     :param session_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conversation_id: agy's real conversation id, e.g.
         ``"68caaeac-2eaf-4e2c-9b95-721b022f4903"``. Discovered by the forwarder
         via by-pid ownership of this session's agy process (agy mints its own
@@ -218,7 +218,7 @@ def build_antigravity_native_spawn_env(
     Build spawn env for the ``antigravity-native`` harness process.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_id: Opaque bridge id from
         :data:`ANTIGRAVITY_NATIVE_BRIDGE_ID_LABEL_KEY`, e.g.
         ``"bridge_abc123"``. ``None`` uses *conversation_id*.
@@ -793,7 +793,7 @@ def update_conversation_id(
 
     :param bridge_dir: Native Antigravity bridge directory.
     :param conversation_id: New agy conversation id, e.g.
-        ``"agy_conv_abc123"``.
+        ``"agy_abc123"``.
     :param active_turn_id: Active turn id for the new conversation, e.g.
         ``"turn_abc123"``, or ``None`` when no turn is running yet.
     :returns: ``True`` when the new id was written, ``False`` when there was no

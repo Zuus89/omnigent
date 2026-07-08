@@ -130,7 +130,7 @@ class DispatchCapability:
         action_required path; currently held for forward
         compatibility.
     :param conversation_id: The conversation the parent runs under,
-        e.g. ``"conv_abc123"``. Used by children when they need to
+        e.g. ``"abc123"``. Used by children when they need to
         look up the harness UDS socket via
         :class:`HarnessProcessManager`.
     :param root_task_id: The root task id when the parent is itself

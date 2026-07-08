@@ -1534,7 +1534,7 @@ def create_app(
         registry when ``host_store`` is not wired.
 
         :param host_ids: Host identifiers to check, e.g.
-            ``["host_abc123", "host_def456"]``. Empty input returns
+            ``["abc123", "host_def456"]``. Empty input returns
             an empty set.
         :returns: The set of ids whose host is online and fresh.
         """
@@ -1558,7 +1558,7 @@ def create_app(
         DB hot path the surrounding bulk liveness query optimizes.
 
         :param host_ids: Bound host identifiers to resolve, e.g.
-            ``["host_abc123"]``. Empty input returns an empty map.
+            ``["abc123"]``. Empty input returns an empty map.
         :returns: ``{host_id: version}`` for every id with a live local
             tunnel; ids without one are absent.
         """
@@ -1576,7 +1576,7 @@ def create_app(
         Single-id wrapper around :func:`_bulk_session_liveness`. See
         that function for the full liveness semantics.
 
-        :param sid: Session/conversation id, e.g. ``"conv_abc123"``.
+        :param sid: Session/conversation id, e.g. ``"abc123"``.
         :returns: The :class:`SessionLiveness` pair for ``sid``. An id
             with no conversation row resolves to
             ``runner_online=True`` (no runner ⇒ reachable) and
@@ -1622,7 +1622,7 @@ def create_app(
         a live host).
 
         :param ids: Session/conversation ids to check, e.g.
-            ``["conv_abc123", "conv_def456"]``.
+            ``["abc123", "def456"]``.
         :returns: Mapping ``session_id -> SessionLiveness``. Ids with
             no conversation row default to
             ``SessionLiveness(runner_online=True, host_online=None)``
@@ -1697,10 +1697,10 @@ def create_app(
         :class:`~omnigent.server.routes.sessions.SessionLiveness`.
 
         :param session_id: Optional single session id, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param session_ids: Optional comma-separated session ids
             for batch lookup, e.g.
-            ``"conv_abc,conv_def,conv_ghi"``.
+            ``"abc,def,ghi"``.
         :returns: ``{"status": "ok"}`` with optional ``session``
             and/or ``sessions`` fields. Each session object has shape
             ``{"runner_online": bool, "host_online": bool | None,

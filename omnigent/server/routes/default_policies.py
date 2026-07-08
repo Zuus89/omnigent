@@ -39,10 +39,10 @@ from omnigent.stores.policy_store import PolicyStore
 def _generate_default_policy_id() -> str:
     """Generate a unique default policy identifier.
 
-    :returns: A string of the form ``"pol_<32-char hex>"``,
-        e.g. ``"pol_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"``.
+    :returns: A bare 32-char hex uuid,
+        e.g. ``"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"``.
     """
-    return f"pol_{uuid.uuid4().hex}"
+    return uuid.uuid4().hex
 
 
 def _entity_to_response(policy: Policy) -> dict[str, Any]:
@@ -215,7 +215,7 @@ def create_default_policies_router(
         :param request: The incoming request, used to extract the
             user identity.
         :param policy_id: The policy to retrieve, e.g.
-            ``"pol_abc123"``.
+            ``"abc123"``.
         :returns: The policy as a serialized dict.
         :raises OmnigentError: 401 if unauthenticated, or
             404 if the policy is not found.
@@ -245,7 +245,7 @@ def create_default_policies_router(
         :param request: The incoming request, used to extract the
             user identity.
         :param policy_id: The policy to update, e.g.
-            ``"pol_abc123"``.
+            ``"abc123"``.
         :param body: Fields to update; ``None`` fields are left
             unchanged.
         :returns: The updated policy as a serialized dict.
@@ -306,7 +306,7 @@ def create_default_policies_router(
         :param request: The incoming request, used to extract the
             user identity.
         :param policy_id: The policy to delete, e.g.
-            ``"pol_abc123"``.
+            ``"abc123"``.
         :returns: ``{"deleted": true}``.
         :raises OmnigentError: 401/403 if the user lacks admin
             privileges.

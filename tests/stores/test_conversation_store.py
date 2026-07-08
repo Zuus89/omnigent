@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from sqlalchemy import text
 
@@ -26,7 +28,7 @@ from omnigent.stores.host_store import HostStore
 
 def test_create_and_get(conversation_store: SqlAlchemyConversationStore) -> None:
     conv = conversation_store.create_conversation()
-    assert conv.id.startswith("conv_")
+    assert re.fullmatch(r"[0-9a-f]{32}", conv.id)
 
     fetched = conversation_store.get_conversation(conv.id)
     assert fetched is not None
@@ -299,8 +301,8 @@ def test_append_and_list_items(conversation_store: SqlAlchemyConversationStore) 
         ],
     )
     assert len(items) == 2
-    assert items[0].id.startswith("msg_")
-    assert items[1].id.startswith("msg_")
+    assert items[0].type == "message"
+    assert items[1].type == "message"
 
     page = conversation_store.list_items(conv.id)
     assert len(page.data) == 2
@@ -393,8 +395,8 @@ def test_append_function_call_items(
             ),
         ],
     )
-    assert items[0].id.startswith("fc_")
-    assert items[1].id.startswith("fco_")
+    assert items[0].type == "function_call"
+    assert items[1].type == "function_call_output"
 
 
 def test_append_tool_output_with_nul_bytes(
@@ -432,7 +434,7 @@ def test_append_tool_output_with_nul_bytes(
     # append() returning normally (not raising DataError) is the
     # primary reproduction: pre-fix this INSERT aborted on Postgres.
     item_id = items[0].id
-    assert item_id.startswith("fco_")
+    assert items[0].type == "function_call_output"
 
     # The payload round-trips faithfully: NUL is preserved in the data
     # column (json.dumps escapes it to the literal 6-char
@@ -477,7 +479,7 @@ def test_append_reasoning_item(conversation_store: SqlAlchemyConversationStore) 
             ),
         ],
     )
-    assert items[0].id.startswith("rs_")
+    assert items[0].type == "reasoning"
 
 
 def test_append_error_item_round_trips_for_history(
@@ -511,7 +513,7 @@ def test_append_error_item_round_trips_for_history(
         ],
     )
 
-    assert persisted.id.startswith("err_")
+    assert persisted.type == "error"
     [read_back] = conversation_store.list_items(conv.id).data
     assert read_back.id == persisted.id
     assert read_back.response_id == "resp_failed"
@@ -2864,7 +2866,7 @@ def test_fork_conversation_copies_items(
 
     # The fork is a new conversation with a different ID.
     assert fork.id != source.id
-    assert fork.id.startswith("conv_")
+    assert re.fullmatch(r"[0-9a-f]{32}", fork.id)
     assert fork.title == "My Fork"
     # Agent binding is copied from the source.
     assert fork.agent_id == "ag_fork_test"

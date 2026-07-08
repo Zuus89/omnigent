@@ -443,7 +443,7 @@ def _record_launch_for_fresh_session(session_id: str) -> None:
     Persist the wrapper's current cwd as the OpenCode session launch state.
 
     :param session_id: Newly created Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: None.
     """
     try:
@@ -466,7 +466,7 @@ def _align_working_directory_with_session(session_id: str) -> None:
     state points at a different existing directory, prompt whether to
     switch there before the runner and ``opencode serve`` sample cwd.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: None. Side-effect-only; may change process cwd.
     :raises click.ClickException: If recorded state exists but the
         recorded directory no longer exists, or if the user cancels.

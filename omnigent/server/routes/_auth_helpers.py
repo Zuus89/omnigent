@@ -272,7 +272,7 @@ def _require_access_and_level_sync(
     parents and yields 403 vs 404 the same way.
 
     :param user_id: The authenticated user, or ``None`` to skip.
-    :param conversation_id: The session to check, e.g. ``"conv_abc123"``.
+    :param conversation_id: The session to check, e.g. ``"abc123"``.
     :param required_level: Minimum numeric level needed (1=read, 2=edit,
         3=manage, 4=owner).
     :param permission_store: Permission store, or ``None`` to skip auth.
@@ -366,7 +366,7 @@ async def require_access_and_level(
     routed through :func:`asyncio.to_thread` to keep the event loop unblocked.
 
     :param user_id: The authenticated user, or ``None`` to skip.
-    :param conversation_id: The session to check, e.g. ``"conv_abc123"``.
+    :param conversation_id: The session to check, e.g. ``"abc123"``.
     :param required_level: Minimum numeric level needed (1=read, 2=edit,
         3=manage, 4=owner).
     :param permission_store: Permission store, or ``None`` to skip auth.

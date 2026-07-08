@@ -124,7 +124,7 @@ def _load_harness_app(harness: str, module_path: str, conversation_id: str) -> F
         export ``create_app() -> FastAPI``.
     :param conversation_id: AP-allocated conversation identifier
         for the subprocess to scope its in-memory state by, e.g.
-        ``"conv_abc123"``. Stashed on ``app.state.conversation_id``.
+        ``"abc123"``. Stashed on ``app.state.conversation_id``.
     :returns: The harness's :class:`FastAPI` app, ready to serve.
     :raises SystemExit: If the module fails to import or doesn't
         export ``create_app``. Both are operator-fixable
@@ -291,7 +291,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         e.g. ``["--harness", "claude-sdk", "--module",
         "omnigent.inner.claude_sdk_harness", "--socket",
         "/tmp/omnigent/<id>/conv-abc.sock", "--conversation-id",
-        "conv_abc123", "--parent-pid", "12345"]``.
+        "abc123", "--parent-pid", "12345"]``.
     :returns: Parsed namespace with ``harness``, ``module``,
         ``socket``, ``conversation_id``, and ``parent_pid``
         attributes.
@@ -330,7 +330,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--conversation-id",
         required=True,
-        help="AP-allocated conversation id (e.g. 'conv_abc123').",
+        help="AP-allocated conversation id (e.g. 'abc123').",
     )
     parser.add_argument(
         "--parent-pid",

@@ -50,7 +50,7 @@ class CodexNativeBridgeState:
     Runtime state shared by the native Codex wrapper and harness.
 
     :param session_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param socket_path: Unix socket path for the Codex app-server,
         e.g. ``"/home/user/.omnigent/codex-native/x/app-server.sock"``.
     :param thread_id: Codex app-server thread id, e.g.
@@ -89,7 +89,7 @@ def build_codex_native_spawn_env(
     Build spawn env for the ``codex-native`` harness process.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_id: Opaque bridge id from
         :data:`CODEX_NATIVE_BRIDGE_ID_LABEL_KEY`, e.g.
         ``"bridge_abc123"``. ``None`` uses *conversation_id*.

@@ -198,7 +198,7 @@ interface SidebarProps {
  * behind its back), so `useMatch` / `NavLink` can't be used without knowing the
  * mount path. Instead compare the active route's last non-empty path segment,
  * which is `inbox` in both standalone and embedded modes. Conversation ids are
- * `conv_…`-prefixed, so a chat route's leaf can never collide with `inbox`.
+ * 32-char hex uuids, so a chat route's leaf can never collide with `inbox`.
  */
 function useActiveNavItem(): { isNewChatPage: boolean; isInboxPage: boolean } {
   const { conversationId: activeConversationId } = useParams<{ conversationId: string }>();
@@ -1145,8 +1145,7 @@ function ConversationList({
   );
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const data = event.active.data.current as
-      | { label?: string; project?: string | null; isPinned?: boolean }
-      | undefined;
+      { label?: string; project?: string | null; isPinned?: boolean } | undefined;
     setActiveDrag({
       id: String(event.active.id),
       label: data?.label ?? String(event.active.id),

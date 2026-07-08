@@ -12,7 +12,7 @@ class SessionPermission:
     :param user_id: The grantee, e.g. ``"alice@example.com"``
         or ``"__public__"`` for public access.
     :param conversation_id: The session this grant applies to,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param level: Numeric permission level: ``1`` = read,
         ``2`` = edit, ``3`` = manage. Comparison is ``>=``.
     """

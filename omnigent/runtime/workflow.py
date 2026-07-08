@@ -2107,7 +2107,7 @@ def fetch_all_items(
 
     :param conv_store: The ConversationStore to query.
     :param conversation_id: The conversation to fetch items
-        from, e.g. ``"conv_abc123"``.
+        from, e.g. ``"abc123"``.
     :param after: Cursor item ID to start after, or ``None``
         to fetch from the beginning.
     :returns: All items in chronological order after the
@@ -2241,7 +2241,7 @@ def _find_latest_compaction_item(
 
     :param conv_store: The ConversationStore to query.
     :param conversation_id: The conversation to search,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: The latest compaction item, or ``None``.
     """
     page = conv_store.list_items(
@@ -2292,7 +2292,7 @@ def _load_initial_history(
 
     :param conv_store: The ConversationStore to query.
     :param conversation_id: The conversation to load,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: A :class:`_LoadedHistory` with items ready for
         prompt construction and the latest compaction timestamp.
     """
@@ -2506,7 +2506,7 @@ def _maybe_persist_compaction_item(
     :param task_id: The task identifier used as the item's
         ``response_id``, e.g. ``"task_abc123"``.
     :param conversation_id: The conversation to append to,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv_store: The ConversationStore to append to.
     """
     # Guard: never persist a broken compaction item. An empty summary

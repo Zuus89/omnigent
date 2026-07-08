@@ -375,7 +375,7 @@ async def summarize_history(
         the runner's ``POST /v1/summarize`` endpoint. ``None`` falls
         back to *llm_client*.
     :param conversation_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``. Forwarded to the runner so it can look up
+        ``"abc123"``. Forwarded to the runner so it can look up
         the spec's auth credentials for the LLM call.
     :returns: A dict with ``"text"`` (the summary) and
         ``"token_count"`` (approximate token count).
@@ -444,7 +444,7 @@ async def _summarize_via_runner_uncached(
     :param connection: Per-provider connection overrides forwarded to
         the runner verbatim. ``None`` omits the field.
     :param conversation_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``. Sent in the payload so the runner can
+        ``"abc123"``. Sent in the payload so the runner can
         look up the spec's auth credentials for the LLM call.
     :returns: Dict with ``"text"`` (summary) and ``"token_count"``
         (approximate tiktoken estimate) keys.
@@ -605,7 +605,7 @@ async def compact(
         and ``response.compaction.completed`` are published to the session
         stream so the REPL and web UI show the compaction indicator.
         ``None`` for explicit ``/compact`` — sessions.py handles those
-        events directly, e.g. ``"conv_abc123"``.
+        events directly, e.g. ``"abc123"``.
     :returns: A :class:`CompactionResult` with the compacted messages
         and optional summary metadata.
     """
@@ -816,7 +816,7 @@ async def _run_layer2(
         runner's ``POST /v1/summarize`` endpoint. ``None`` uses
         *llm_client* directly.
     :param conversation_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``. Forwarded to the runner so it can look up
+        ``"abc123"``. Forwarded to the runner so it can look up
         the spec's auth credentials for the LLM call.
     :returns: :class:`SummaryMetadata` on success, ``None`` on failure.
     """

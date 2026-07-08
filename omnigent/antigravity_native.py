@@ -212,7 +212,7 @@ def run_antigravity_native(
         ``"http://127.0.0.1:8123"``. ``None`` starts a local Omnigent
         server using the existing chat-server machinery.
     :param session_id: Optional existing Omnigent conversation id to
-        resume, e.g. ``"conv_abc123"``. ``None`` creates a new bundled
+        resume, e.g. ``"abc123"``. ``None`` creates a new bundled
         session.
     :param antigravity_args: Raw pass-through args appended to the ``agy``
         command line after the generated flags.
@@ -706,7 +706,7 @@ async def _await_runner_antigravity_terminal(
     web-turn injection). Uses ``time.monotonic`` for the deadline.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param timeout_s: Max seconds to wait for the runner-owned terminal.
     :returns: The runner-owned terminal details, or ``None`` if none appeared
         within *timeout_s* (the caller then launches one itself).
@@ -758,7 +758,7 @@ async def _prepare_antigravity_terminal_via_daemon(
         agy argv assembly.
     :param headless: ``True`` when no interactive client will attach (forces
         the agy permission-bypass flag).
-    :param host_id: Local host daemon id, e.g. ``"host_abc123"``.
+    :param host_id: Local host daemon id, e.g. ``"abc123"``.
     :param workspace: Absolute workspace path for the runner cwd.
     :param startup_progress: Optional user-visible progress renderer.
     :returns: Prepared terminal details for attaching.
@@ -933,7 +933,7 @@ async def _launch_and_record(
     seen-set only.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param bridge_id: Opaque bridge id keying the bridge directory.
     :param conversation_id: On resume, agy's real (discovered) conversation id
         to pass as ``--conversation``. On a fresh launch, the minted
@@ -1374,7 +1374,7 @@ async def _create_antigravity_session(
     :param client: HTTP client pointed at the Omnigent server.
     :param bundle: Gzipped Antigravity wrapper agent bundle.
     :param bridge_id: Opaque bridge id to write on the session labels.
-    :returns: New Omnigent session id, e.g. ``"conv_abc123"``.
+    :returns: New Omnigent session id, e.g. ``"abc123"``.
     :raises click.ClickException: If creation fails.
     """
     labels = dict(_SESSION_LABELS)
@@ -1406,7 +1406,7 @@ async def _fetch_antigravity_session(
     Fetch an existing Omnigent session snapshot.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :returns: Decoded session payload.
     :raises click.ClickException: If the lookup fails or returns non-object JSON.
     """
@@ -1537,7 +1537,7 @@ async def _find_running_antigravity_terminal(
     Return the existing running agy terminal id if present.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :returns: Terminal details, or ``None`` when the wrapper should launch
         a new terminal (missing, stopped, or runner unavailable).
     :raises click.ClickException: If the server rejects the lookup for a
@@ -1618,7 +1618,7 @@ def _resolve_session_id_for_resume(
 
     :param base_url: Omnigent server base URL.
     :param headers: HTTP auth headers; ``{}`` for the local server.
-    :param session_id: Explicit session id, e.g. ``"conv_abc123"``.
+    :param session_id: Explicit session id, e.g. ``"abc123"``.
     :param resume_picker: ``True`` for bare ``--resume``.
     :returns: Session id, or ``None`` for a fresh session / cancelled picker.
     """

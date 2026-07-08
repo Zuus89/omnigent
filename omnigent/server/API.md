@@ -34,7 +34,7 @@ description are derived from the spec — no separate form fields.
 
 201 Created
 {
-  "id": "ag_abc123",
+  "id": "abc123",
   "object": "agent",
   "name": "my-agent",
   "description": "...",
@@ -70,11 +70,11 @@ Query parameters:
 {
   "object": "list",
   "data": [
-    {"id": "ag_abc123", "object": "agent", "name": "my-agent", ...},
-    {"id": "ag_def456", "object": "agent", "name": "other-agent", ...}
+    {"id": "abc123", "object": "agent", "name": "my-agent", ...},
+    {"id": "def456", "object": "agent", "name": "other-agent", ...}
   ],
-  "first_id": "ag_abc123",
-  "last_id": "ag_def456",
+  "first_id": "abc123",
+  "last_id": "def456",
   "has_more": false
 }
 ```
@@ -96,7 +96,7 @@ GET /api/agents/{id}
 DELETE /api/agents/{id}
 
 200 OK
-{"id": "ag_abc123", "object": "agent.deleted", "deleted": true}
+{"id": "abc123", "object": "agent.deleted", "deleted": true}
 
 404 Not Found
 ```
@@ -123,10 +123,10 @@ Parts:
 
 201 Created
 {
-  "id": "file_abc123",
+  "id": "abc123",
   "object": "session.resource",
   "type": "file",
-  "session_id": "conv_abc123",
+  "session_id": "abc123",
   "name": "report.pdf",
   "metadata": {
     "filename": "report.pdf",
@@ -155,11 +155,11 @@ Query parameters:
 {
   "object": "list",
   "data": [
-    {"id": "file_abc123", "object": "session.resource", "type": "file", ...},
-    {"id": "file_def456", "object": "session.resource", "type": "file", ...}
+    {"id": "abc123", "object": "session.resource", "type": "file", ...},
+    {"id": "def456", "object": "session.resource", "type": "file", ...}
   ],
-  "first_id": "file_abc123",
-  "last_id": "file_def456",
+  "first_id": "abc123",
+  "last_id": "def456",
   "has_more": false
 }
 ```
@@ -179,7 +179,7 @@ GET /v1/sessions/{session_id}/resources/files/{id}
 DELETE /v1/sessions/{session_id}/resources/files/{id}
 
 200 OK
-{"id": "file_abc123", "object": "session.resource.deleted", "deleted": true}
+{"id": "abc123", "object": "session.resource.deleted", "deleted": true}
 
 404 Not Found
 ```
@@ -242,11 +242,11 @@ Query parameters:
 {
   "object": "list",
   "data": [
-    {"id": "conv_abc123", "object": "conversation", "title": null, "created_at": ..., "updated_at": ...},
-    {"id": "conv_def456", "object": "conversation", "title": "Weather chat", "created_at": ..., "updated_at": ...}
+    {"id": "abc123", "object": "conversation", "title": null, "created_at": ..., "updated_at": ...},
+    {"id": "def456", "object": "conversation", "title": "Weather chat", "created_at": ..., "updated_at": ...}
   ],
-  "first_id": "conv_abc123",
-  "last_id": "conv_def456",
+  "first_id": "abc123",
+  "last_id": "def456",
   "has_more": false
 }
 ```
@@ -260,7 +260,7 @@ GET /v1/conversations/{id}
 
 200 OK
 {
-  "id": "conv_abc123",
+  "id": "abc123",
   "object": "conversation",
   "title": null,
   "created_at": 1774118382,
@@ -286,27 +286,27 @@ Query parameters:
 {
   "object": "list",
   "data": [
-    {"id": "msg_aaa", "response_id": "resp_001", "type": "message",
+    {"id": "aaa", "response_id": "resp_001", "type": "message",
      "role": "user", "status": "completed",
      "content": [{"type": "input_text", "text": "What's the weather?"}]},
-    {"id": "msg_bbb", "response_id": "resp_001", "model": "my-agent", "type": "message",
+    {"id": "bbb", "response_id": "resp_001", "model": "my-agent", "type": "message",
      "role": "assistant", "status": "completed",
      "content": [{"type": "output_text", "text": "It's sunny in SF.", "annotations": []}]},
-    {"id": "msg_ccc", "response_id": "resp_002", "type": "message",
+    {"id": "ccc", "response_id": "resp_002", "type": "message",
      "role": "user", "status": "completed",
      "content": [{"type": "input_text", "text": "And tomorrow?"}]},
-    {"id": "fc_ddd", "response_id": "resp_002", "model": "my-agent", "type": "function_call",
+    {"id": "ddd", "response_id": "resp_002", "model": "my-agent", "type": "function_call",
      "status": "completed", "name": "get_weather",
      "arguments": "{\"location\": \"SF\", \"date\": \"tomorrow\"}", "call_id": "call_001"},
-    {"id": "fco_eee", "response_id": "resp_002", "type": "function_call_output",
+    {"id": "eee", "response_id": "resp_002", "type": "function_call_output",
      "status": "completed",
      "call_id": "call_001", "output": "{\"forecast\": \"rain\", \"high\": 58}"},
-    {"id": "msg_fff", "response_id": "resp_002", "model": "my-agent", "type": "message",
+    {"id": "fff", "response_id": "resp_002", "model": "my-agent", "type": "message",
      "role": "assistant", "status": "completed",
      "content": [{"type": "output_text", "text": "Rain expected, high of 58°F.", "annotations": []}]}
   ],
-  "first_id": "msg_aaa",
-  "last_id": "msg_fff",
+  "first_id": "aaa",
+  "last_id": "fff",
   "has_more": false
 }
 
@@ -331,7 +331,7 @@ Content-Type: application/json
 
 200 OK
 {
-  "id": "conv_abc123",
+  "id": "abc123",
   "object": "conversation",
   "title": "Weather chat",
   "created_at": 1774118382,
@@ -350,7 +350,7 @@ Currently only `title` (string | null) is updatable.
 DELETE /v1/conversations/{id}
 
 200 OK
-{"id": "conv_abc123", "object": "conversation.deleted", "deleted": true}
+{"id": "abc123", "object": "conversation.deleted", "deleted": true}
 
 404 Not Found
 ```
@@ -415,13 +415,13 @@ is returned by JSON `POST /v1/sessions`, `GET /v1/sessions/{id}`, and
 
 ```json
 {
-  "id": "conv_abc123",
-  "agent_id": "ag_abc123",
+  "id": "abc123",
+  "agent_id": "abc123",
   "status": "running",
   "created_at": 1234567890,
   "runner_id": "runner_abc123",
   "items": [
-    {"id": "msg_aaa", "type": "message", "role": "user", "status": "completed",
+    {"id": "aaa", "type": "message", "role": "user", "status": "completed",
      "content": [{"type": "input_text", "text": "Plan my trip"}]}
   ]
 }
@@ -431,10 +431,10 @@ Fields:
 
   id (string, required)
     Unique session identifier; also the underlying conversation ID.
-    Prefixed with `conv_`.
+    A bare 32-char hex uuid.
 
   agent_id (string, required)
-    Durable identifier of the bound agent (e.g. `"ag_abc123"`). Stable
+    Durable identifier of the bound agent (e.g. `"abc123"`). Stable
     across renames of the agent. The session is bound by ID, not name -
     name lookups are not supported.
 
@@ -565,7 +565,7 @@ Request parts:
 201 Created:
 
 ```json
-{"session_id": "conv_abc123"}
+{"session_id": "abc123"}
 ```
 
 The server stores the bundle, then creates the `conversations` row
@@ -586,11 +586,11 @@ POST /v1/sessions
 Content-Type: application/json
 
 {
-  "agent_id": "ag_abc123",
+  "agent_id": "abc123",
   "initial_items": [],
   "title": "debug auth flow",
   "labels": {"env": "test"},
-  "host_id": "host_abc123",
+  "host_id": "abc123",
   "workspace": "/Users/alice/myrepo",
   "git": {"branch_name": "feature/login", "base_branch": "main"},
   "terminal_launch_args": ["--permission-mode", "bypassPermissions"]
@@ -737,7 +737,7 @@ When runner liveness is wired (and not skipped via
 ```
 DELETE /v1/sessions/{session_id}[?delete_branch=true]
 
-200 OK — {"id": "conv_abc123", "deleted": true}
+200 OK — {"id": "abc123", "deleted": true}
 404 Not Found — no session with that id
 403 Forbidden — caller is not the session owner
 ```
@@ -1241,7 +1241,7 @@ against the snapshot to reconcile accepted inputs.
 ```
 1. Client creates a session with an uploaded agent bundle
    -> POST /v1/sessions multipart {metadata, bundle}
-   -> 201 {"session_id": "conv_abc123"}
+   -> 201 {"session_id": "abc123"}
 
 2. Client binds the registered runner
    -> PATCH /v1/sessions/{id} {"runner_id":"runner_abc123"}

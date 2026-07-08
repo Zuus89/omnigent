@@ -170,7 +170,7 @@ def bundle_location(agent_id: str, bundle_bytes: bytes) -> str:
     Compute a content-addressed artifact key for a bundle.
 
     :param agent_id: The agent's unique identifier,
-        e.g. ``"ag_abc123"``.
+        e.g. ``"abc123"``.
     :param bundle_bytes: Raw bytes of the bundle.
     :returns: Artifact store key in the form
         ``"{agent_id}/{sha256_hex}"``.

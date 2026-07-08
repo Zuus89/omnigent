@@ -141,7 +141,7 @@ class SessionConnectivity:
         when no runner has claimed it yet (in-process executor),
         e.g. ``"runner_token_abc123"``.
     :param host_id: Host the session is bound to, or ``None`` for
-        CLI-launched / runner-only sessions, e.g. ``"host_abc123"``.
+        CLI-launched / runner-only sessions, e.g. ``"abc123"``.
     :param needs_workspace: ``True`` when this is an unbound fork of a
         session that had a working directory (the
         ``omnigent.fork.source_id`` label is set). Forces the online
@@ -255,7 +255,7 @@ class ConversationStore(ABC):
             sub-agent conversations, the owning parent's id.
             ``None`` for top-level conversations.
         :param agent_id: Agent to bind at creation time, e.g.
-            ``"ag_abc123"``. ``None`` only for legacy rows or
+            ``"abc123"``. ``None`` only for legacy rows or
             callers that cannot bind a conversation.
         :param runner_id: Optional runner binding to persist at
             creation time, e.g. ``"runner_abc123"``. Used when
@@ -265,7 +265,7 @@ class ConversationStore(ABC):
             sub-agent type name within the parent's spec tree,
             e.g. ``"summarizer"``. ``None`` for top-level.
         :param host_id: Host that should launch the runner for
-            this session, e.g. ``"host_a1b2c3d4..."``. ``None``
+            this session, e.g. ``"a1b2c3d4..."``. ``None``
             for CLI-initiated sessions.
         :param workspace: Absolute path on disk where the runner
             should start, e.g. ``"/Users/corey/universe/src/foo"``.
@@ -301,7 +301,7 @@ class ConversationStore(ABC):
         Return the conversation, or ``None`` if it does not exist.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The :class:`Conversation` if found, otherwise
             ``None``.
         """
@@ -332,7 +332,7 @@ class ConversationStore(ABC):
         are omitted from the result.
 
         :param conversation_ids: Session/conversation IDs to look up,
-            e.g. ``["conv_abc123", "conv_def456"]``. Duplicates are
+            e.g. ``["abc123", "def456"]``. Duplicates are
             tolerated.
         :returns: Mapping ``conversation_id -> SessionConnectivity``.
             Ids with no conversation row are absent (callers treat a
@@ -353,7 +353,7 @@ class ConversationStore(ABC):
         count.
 
         :param conversation_ids: Conversation ids to fetch,
-            e.g. ``["conv_abc123", "conv_def456"]``. Duplicates are
+            e.g. ``["abc123", "def456"]``. Duplicates are
             tolerated. Empty input returns an empty map without
             touching the database.
         :returns: Mapping ``{conversation_id: Conversation}``. Ids that
@@ -407,7 +407,7 @@ class ConversationStore(ABC):
         (``after=last_seen``) to poll for steering items.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param limit: Maximum number of items to return.
         :param after: Cursor item ID; only return items after
             this item in sort order, e.g. ``"msg_xyz789"``.
@@ -457,7 +457,7 @@ class ConversationStore(ABC):
         ID and timestamp to each item.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param items: List of :class:`NewConversationItem` objects
             to persist.
         :returns: The persisted :class:`ConversationItem` list
@@ -495,7 +495,7 @@ class ConversationStore(ABC):
         :param limit: Maximum number of conversations to return.
         :param after: Cursor conversation ID; return conversations
             appearing after this one in sort order,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param before: Cursor conversation ID; return conversations
             appearing before this one in sort order.
         :param kind: Filter to conversations of this kind. Exact
@@ -600,7 +600,7 @@ class ConversationStore(ABC):
         :param query: The search query string,
             e.g. ``"deployment error"``.
         :param conversation_id: Optional conversation to scope
-            the search to, e.g. ``"conv_abc123"``.
+            the search to, e.g. ``"abc123"``.
         :param limit: Maximum number of results to return.
         :returns: A list of matching :class:`ConversationItem`
             objects ranked by relevance.
@@ -631,7 +631,7 @@ class ConversationStore(ABC):
         the matching ``_unset_*`` flag.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param title: New title for the conversation, or ``None``
             to leave unchanged.
         :param reasoning_effort: Per-session reasoning effort hint,
@@ -694,7 +694,7 @@ class ConversationStore(ABC):
         overwrites.
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``. If the conversation does
+            e.g. ``"abc123"``. If the conversation does
             not exist, behavior is implementation-defined
             (typically raises via the FK constraint).
         :param updates: Mapping from label key to new value.
@@ -728,7 +728,7 @@ class ConversationStore(ABC):
         ``omni_project`` label).
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param key: The label key to remove, e.g. ``"omni_project"``.
         """
         ...
@@ -773,7 +773,7 @@ class ConversationStore(ABC):
         cache.
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param state: The complete session-state dict to persist.
             Serialized as JSON. Empty dict is stored as ``"{}"``.
         """
@@ -794,7 +794,7 @@ class ConversationStore(ABC):
         in-memory counters.
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param usage: The complete usage dict to persist, e.g.
             ``{"input_tokens": 1500, "output_tokens": 350,
             "total_tokens": 1850}``. May carry a nested ``"by_model"``
@@ -830,7 +830,7 @@ class ConversationStore(ABC):
           use.
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param delta: Usage increments to apply, e.g.
             ``{"input_tokens": 1000, "total_cost_usd": 0.05,
             "by_model": {"claude-sonnet-4-6": {"input_tokens": 1000,
@@ -927,7 +927,7 @@ class ConversationStore(ABC):
         spend to a single user for per-user daily cost rollups.
 
         :param conversation_id: The session to look up, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: The owner's user id, e.g. ``"alice@example.com"``,
             or ``None`` when the session has no permission grants
             (e.g. single-user mode, where access is not tracked).
@@ -946,7 +946,7 @@ class ConversationStore(ABC):
         host-launch binding (see ``resolve_host_launch``).
 
         :param conversation_id: Conversation to pin, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param runner_id: Runner id to bind to, e.g.
             ``"runner_abc123"``.
         :returns: ``True`` if this call won the bind (NULL → runner_id);
@@ -965,7 +965,7 @@ class ConversationStore(ABC):
         conversations on the parent's current runner.
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param runner_id: Runner identifier to bind to,
             e.g. ``"runner_abc123"``. Online-ness is validated
             by the route before calling the store.
@@ -985,7 +985,7 @@ class ConversationStore(ABC):
         session before binding the runner to the new one.
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The updated :class:`Conversation`.
         :raises ConversationNotFoundError: If no conversation row
             with ``conversation_id`` exists.
@@ -1013,7 +1013,7 @@ class ConversationStore(ABC):
         is only required while ``host_id`` is set).
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The updated :class:`Conversation`.
         :raises ConversationNotFoundError: If no conversation row
             with ``conversation_id`` exists.
@@ -1059,9 +1059,9 @@ class ConversationStore(ABC):
         :meth:`replace_runner_id`).
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :param workspace: Optional canonical absolute workspace
             path to set together with ``host_id``, e.g.
             ``"/Users/corey/projects/myapp"``. Required when the
@@ -1102,7 +1102,7 @@ class ConversationStore(ABC):
         worth surfacing loudly rather than silently overwriting.
 
         :param conversation_id: Conversation to update, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param value: Runtime-native session id captured by the
             wrapper bridge, e.g. a Claude Code session uuid
             ``"a1b2c3d4-..."``.
@@ -1139,11 +1139,11 @@ class ConversationStore(ABC):
         fails, none of the database rows are committed.
 
         :param agent_id: Pre-generated agent id, e.g.
-            ``"ag_abc123"``.
+            ``"abc123"``.
         :param agent_name: Human-readable agent name from the
             uploaded spec, e.g. ``"code-assistant"``.
         :param agent_bundle_location: Artifact-store key for the
-            uploaded bundle, e.g. ``"ag_abc123/a1b2c3d4"``.
+            uploaded bundle, e.g. ``"abc123/a1b2c3d4"``.
         :param agent_description: Optional spec description.
             ``None`` when the spec omits it.
         :param title: Optional session title, e.g.
@@ -1204,7 +1204,7 @@ class ConversationStore(ABC):
         operation runs in a single transaction for atomicity.
 
         :param source_conversation_id: ID of the conversation to
-            fork, e.g. ``"conv_abc123"``.
+            fork, e.g. ``"abc123"``.
         :param title: Title for the new conversation. When
             ``None``, defaults to ``"Fork of <source_title>"``
             (or ``"Fork of <source_id>"`` when the source has no
@@ -1299,11 +1299,11 @@ class ConversationStore(ABC):
         current agent.
 
         :param conversation_id: Session to switch, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param new_agent_id: Pre-generated id for the new
-            session-scoped agent, e.g. ``"ag_def456"``.
+            session-scoped agent, e.g. ``"def456"``.
         :param new_agent_name: Name for the new agent row, e.g.
-            ``"Codex (switch ag_def456)"``.
+            ``"Codex (switch def456)"``.
         :param new_agent_bundle_location: Artifact-store key of the
             target built-in's bundle to clone, e.g.
             ``"ag_builtin/abcd1234"``.
@@ -1342,7 +1342,7 @@ class ConversationStore(ABC):
         in the conversation first.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: ``True`` if the conversation existed,
             ``False`` otherwise.
         """

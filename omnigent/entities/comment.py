@@ -11,7 +11,7 @@ class Comment:
 
     :param id: UUID for this comment, e.g. ``"a1b2c3d4-..."``.
     :param conversation_id: The conversation this comment belongs to,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param path: File path relative to the workspace root,
         e.g. ``"src/App.tsx"``.
     :param start_index: 0-based absolute character offset (inclusive)

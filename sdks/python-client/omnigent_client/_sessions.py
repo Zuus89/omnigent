@@ -121,9 +121,9 @@ class Session:
     publicly.
 
     :param id: Unique session identifier (also the underlying
-        conversation id), e.g. ``"conv_abc123"``.
+        conversation id), e.g. ``"abc123"``.
     :param agent_id: Durable identifier of the bound agent, e.g.
-        ``"ag_abc123"``. Stable across renames of the agent.
+        ``"abc123"``. Stable across renames of the agent.
     :param agent_name: Human-readable name of the bound agent, e.g.
         ``"polly"``. Changes when the session is switched to a
         different agent in place (``POST .../switch-agent``), so
@@ -239,7 +239,7 @@ class SessionListItem:
     REPL's ``/switch`` command and similar list views.
 
     :param id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_id: Durable identifier of the bound agent.
     :param status: Derived session lifecycle status.
     :param created_at: Unix epoch seconds of creation.
@@ -414,7 +414,7 @@ class SessionsNamespace:
         :param after: Cursor — return sessions after this session ID.
         :param before: Cursor — return sessions before this session ID.
         :param agent_id: Filter to sessions bound to this agent,
-            e.g. ``"ag_abc123"``. ``None`` returns all agents.
+            e.g. ``"abc123"``. ``None`` returns all agents.
         :param agent_name: Filter to sessions whose bound agent row
             has this name, including distinct session-scoped agents
             that share the name. ``None`` returns all names.
@@ -461,7 +461,7 @@ class SessionsNamespace:
         replaces any prior binding.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param runner_id: Registered runner id, e.g.
             ``"runner_abc123"``.
         :returns: The updated :class:`Session` snapshot.
@@ -487,7 +487,7 @@ class SessionsNamespace:
         :meth:`bind_runner` for the 1:1 session↔runner invariant.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The updated :class:`Session` snapshot.
         :raises OmnigentError: On non-2xx status (404 when the
             session does not exist).
@@ -516,7 +516,7 @@ class SessionsNamespace:
         fields leave the current value unchanged.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param reasoning_effort: New effort, e.g. ``"high"``, or
             ``None`` to clear to the agent default.
         :returns: The updated :class:`Session` snapshot.
@@ -548,7 +548,7 @@ class SessionsNamespace:
         fields leave the current value unchanged.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param model_override: New model identifier, e.g.
             ``"claude-opus-4-7"``, or ``None`` to clear to the
             agent default.
@@ -595,7 +595,7 @@ class SessionsNamespace:
         archived flag — it does not stop the session.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param archived: ``True`` to archive, ``False`` to unarchive.
         :returns: The updated :class:`Session` snapshot.
         :raises OmnigentError: On non-2xx status (403 without owner
@@ -627,7 +627,7 @@ class SessionsNamespace:
         a different existing value.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param external_session_id: Runtime-native session id,
             e.g. a Claude Code session uuid
             ``"a1b2c3d4-1234-5678-9abc-def012345678"``.
@@ -660,7 +660,7 @@ class SessionsNamespace:
         pagination contract as ``GET /v1/conversations/{id}/items``.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param limit: Maximum number of items to return
             (1-1000, default 100).
         :param after: Cursor — return items after this item ID.
@@ -698,7 +698,7 @@ class SessionsNamespace:
         node to assemble the sub-agent tree shown on the main interface.
 
         :param session_id: Parent session/conversation identifier,
-            e.g. ``"conv_parent123"``.
+            e.g. ``"parent123"``.
         :param limit: Maximum number of children to return
             (1-1000, default 100).
         :returns: List of child-session summary dicts (empty when the
@@ -800,7 +800,7 @@ class SessionsNamespace:
         state observed via :meth:`stream`.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The current :class:`Session` snapshot.
         :raises OmnigentError: If the server returns a non-2xx
             status (404 when the session does not exist).
@@ -826,7 +826,7 @@ class SessionsNamespace:
         item events; ``{"queued": false}`` for interrupt / approval).
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param event: The event payload, e.g.
             ``{"type": "message", "data": {"role": "user",
             "content": [{"type": "input_text",
@@ -863,7 +863,7 @@ class SessionsNamespace:
         owner-gated path rather than an in-band session event.
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param elicitation_id: Correlation id of the elicitation to
             resolve, e.g. ``"elicit_abc123"``.
         :param result: MCP ``ElicitationResult`` body, e.g.
@@ -899,7 +899,7 @@ class SessionsNamespace:
         with the same agent binding.
 
         :param source_session_id: ID of the session to fork, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param title: Optional title for the forked session. When
             ``None``, the server derives one from the source.
         :param up_to_response_id: Optional truncation point, e.g.
@@ -939,7 +939,7 @@ class SessionsNamespace:
         normal agent turn.
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :raises OmnigentError: If the server returns a non-2xx status.
         """
         await self.post_event(
@@ -959,7 +959,7 @@ class SessionsNamespace:
         stream.
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :raises OmnigentError: If the server returns a non-2xx
             status (404 when the session does not exist).
         """
@@ -986,7 +986,7 @@ class SessionsNamespace:
         because the snapshot/dedupe step is application-specific.
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :yields: :class:`ServerStreamEvent` envelopes whose ``type`` is a
             :class:`omnigent.server.schemas.ServerStreamEvent`
             member and whose ``data`` is the event-specific payload
@@ -1023,7 +1023,7 @@ async def _stream_session_events(
     :param base_url: Server base URL, e.g.
         ``"http://localhost:8000"``.
     :param session_id: Session/conversation identifier whose stream
-        to subscribe to, e.g. ``"conv_abc123"``.
+        to subscribe to, e.g. ``"abc123"``.
     :yields: :class:`ServerStreamEvent` envelopes parsed from the SSE
         ``data:`` payload.
     """

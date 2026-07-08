@@ -7,6 +7,7 @@ supply one, so these tests provide their own app/client that include it.
 
 from __future__ import annotations
 
+import re
 from collections.abc import AsyncIterator
 from pathlib import Path
 
@@ -79,7 +80,7 @@ async def test_create_default_policy(policy_client: httpx.AsyncClient) -> None:
     assert body["handler"] == "https://example.com/policies/eval"
     assert body["object"] == "default_policy"
     assert body["enabled"] is True
-    assert body["id"].startswith("pol_")
+    assert re.fullmatch(r"[0-9a-f]{32}", body["id"])
 
 
 async def test_create_duplicate_policy_name(policy_client: httpx.AsyncClient) -> None:

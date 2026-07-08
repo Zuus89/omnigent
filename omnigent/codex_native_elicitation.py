@@ -33,7 +33,7 @@ def codex_elicitation_id(
     notification can clear the exact web card even when another client
     answered the original JSON-RPC request.
 
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param method: Codex app-server method, e.g.
         ``"item/tool/requestUserInput"``.
     :param request_id: Codex JSON-RPC request id, e.g. ``12``.

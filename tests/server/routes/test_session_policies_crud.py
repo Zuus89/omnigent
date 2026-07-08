@@ -8,6 +8,7 @@ a ``policy_store``. These tests provide their own app/client that include it.
 
 from __future__ import annotations
 
+import re
 from collections.abc import AsyncIterator
 from pathlib import Path
 
@@ -92,7 +93,7 @@ async def test_create_session_policy(client: httpx.AsyncClient, session_id: str)
     assert body["type"] == "url"
     assert body["object"] == "session.policy"
     assert body["source"] == "session"
-    assert body["id"].startswith("pol_")
+    assert re.fullmatch(r"[0-9a-f]{32}", body["id"])
 
 
 async def test_create_session_policy_duplicate_name(

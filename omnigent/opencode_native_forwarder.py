@@ -117,7 +117,7 @@ class OpenCodeNativeForwarder:
     """
     Translate one OpenCode session's SSE stream into Omnigent events.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param opencode_session_id: OpenCode session id to filter on.
     :param opencode_client: Client connected to the ``opencode serve``
         server (for SSE + permission replies).

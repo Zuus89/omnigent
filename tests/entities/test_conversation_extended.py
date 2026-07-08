@@ -78,14 +78,28 @@ def test_error_data_all_valid_sources() -> None:
 def test_compaction_data_valid() -> None:
     cd = CompactionData(
         summary="User asked to analyze data. Agent loaded CSV.",
-        last_item_id="msg_abc123",
+        last_item_id="abc123def456abc123def456abc12300",
         model="openai/gpt-4o",
         token_count=342,
     )
     assert cd.summary.startswith("User asked")
-    assert cd.last_item_id == "msg_abc123"
+    assert cd.last_item_id == "abc123def456abc123def456abc12300"
     assert cd.model == "openai/gpt-4o"
     assert cd.token_count == 342
+
+
+def test_compaction_data_normalizes_legacy_item_id_prefix() -> None:
+    """A legacy prefixed ``last_item_id`` from an old blob is stripped so it
+    matches the migrated, prefix-less ``conversation_items.id`` it points at.
+    Synthetic sentinels and already-bare ids are left intact."""
+    cd = CompactionData(summary="s", last_item_id="msg_abc123", token_count=1)
+    assert cd.last_item_id == "abc123"
+    fco = CompactionData(summary="s", last_item_id="fco_deadbeef", token_count=1)
+    assert fco.last_item_id == "deadbeef"
+    sentinel = CompactionData(summary="s", last_item_id="compact_boundary_conv1", token_count=1)
+    assert sentinel.last_item_id == "compact_boundary_conv1"
+    bare = CompactionData(summary="s", last_item_id="abc123", token_count=1)
+    assert bare.last_item_id == "abc123"
 
 
 def test_compaction_data_missing_field() -> None:

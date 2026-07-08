@@ -138,7 +138,7 @@ def snapshot(root_id: str, conversation_id: str) -> dict[str, Any]:
     their viewer list wholesale on every ``session.presence``.
 
     :param root_id: Root conversation of the session tree whose
-        viewers to report, e.g. ``"conv_root123"``.
+        viewers to report, e.g. ``"root123"``.
     :param conversation_id: The conversation whose stream this event
         is addressed to — the root itself or a sub-agent
         conversation, e.g. ``"conv_child1"``. Clients drop events
@@ -182,7 +182,7 @@ def _broadcast(root_id: str) -> None:
     event instead.
 
     :param root_id: Root conversation of the session tree to publish
-        for, e.g. ``"conv_root123"``.
+        for, e.g. ``"root123"``.
     """
     with _lock:
         users = _viewers.get(root_id, {})
@@ -208,7 +208,7 @@ def connect(root_id: str, conversation_id: str, user_id: str, idle: bool) -> str
     or their idle aggregate changes.
 
     :param root_id: Root conversation of the session tree being
-        viewed, e.g. ``"conv_root123"`` — the
+        viewed, e.g. ``"root123"`` — the
         ``root_conversation_id`` of the streamed conversation, so
         viewers of different agents/sub-agents in one session share
         a single presence scope.
@@ -305,7 +305,7 @@ def _expire_leave(root_id: str, user_id: str) -> None:
     remaining viewed streams.
 
     :param root_id: Root conversation of the session tree the user
-        was viewing, e.g. ``"conv_root123"``.
+        was viewing, e.g. ``"root123"``.
     :param user_id: The departing viewer identity.
     """
     with _lock:

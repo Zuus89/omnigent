@@ -522,7 +522,7 @@ def record_publish(conversation_id: str, event: dict[str, Any]) -> bool:
     terminal event is a no-op.
 
     :param conversation_id: Conversation/session id the event was
-        published on, e.g. ``"conv_abc123"``.
+        published on, e.g. ``"abc123"``.
     :param event: The event dict as passed to
         :func:`omnigent.runtime.session_stream.publish`. Reads
         ``event["type"]`` to dispatch, the nested ``event["response"]``
@@ -734,7 +734,7 @@ def snapshot_for(conversation_id: str) -> list[dict[str, Any]]:
     mutating the replayed event cannot poison the index.
 
     :param conversation_id: Conversation/session id to query,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: An ordered list of SSE event dicts to yield ahead of the
         live tail, e.g.
         ``[{"type": "response.created", "response": {...}},
@@ -802,7 +802,7 @@ def discard(conversation_id: str) -> None:
     ``session.status``) cover the normal turn-end paths.
 
     :param conversation_id: Conversation/session id to drop,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
     with _lock:
         _inflight.pop(conversation_id, None)
@@ -823,7 +823,7 @@ def reset_text(conversation_id: str) -> None:
     ``response.created`` header. The native (message-scoped) buffer is
     untouched — it has its own per-message commit eviction.
 
-    :param conversation_id: Conversation/session id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Conversation/session id, e.g. ``"abc123"``.
     """
     with _lock:
         entry = _inflight.get(conversation_id)

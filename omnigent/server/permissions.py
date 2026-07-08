@@ -33,7 +33,7 @@ def check_session_access(
     :param user_id: The authenticated user, e.g.
         ``"alice@example.com"``. ``None`` if unauthenticated.
     :param conversation_id: The session to check, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param required_level: Minimum numeric level needed
         (1=read, 2=edit, 3=manage).
     :param permission_store: Store for permission lookups.
@@ -115,7 +115,7 @@ def check_is_manager(
 
     :param user_id: The authenticated user, or ``None``.
     :param conversation_id: The session to check, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param permission_store: Store for permission lookups.
     :param conversation_store: Store for conversation lookups.
     :returns: ``True`` if the user has manage access.

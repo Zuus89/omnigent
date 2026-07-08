@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from omnigent.stores.file_store.sqlalchemy_store import SqlAlchemyFileStore
@@ -14,7 +16,7 @@ def file_store(db_uri: str) -> SqlAlchemyFileStore:
 
 def test_create_and_get(file_store: SqlAlchemyFileStore) -> None:
     f = file_store.create(filename="data.csv", bytes=1024)
-    assert f.id.startswith("file_")
+    assert re.fullmatch(r"[0-9a-f]{32}", f.id)
     assert f.filename == "data.csv"
     assert f.bytes == 1024
 
@@ -88,7 +90,7 @@ def test_create_for_session(file_store: SqlAlchemyFileStore) -> None:
         bytes=5000,
         content_type="application/pdf",
     )
-    assert f.id.startswith("file_")
+    assert re.fullmatch(r"[0-9a-f]{32}", f.id)
     assert f.session_id == "conv_abc"
     assert f.filename == "report.pdf"
     assert f.bytes == 5000

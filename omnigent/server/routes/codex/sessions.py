@@ -88,7 +88,7 @@ def _require_codex_goal_runner_payload(
     and surface an error.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param action: Human-readable goal operation, e.g. ``"read"``.
     :param runner_result: HTTP result returned by the runner, or ``None``
         when no runner could be reached.
@@ -147,7 +147,7 @@ async def _post_codex_goal_event_to_runner(
     helper keeps the retry attached to the runner that just connected.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param runner_client: Runner client resolved for the session.
     :param event: Goal control event, e.g. ``{"type": "goal_get"}``.
     :returns: Runner status/body, or ``None`` if the runner disappeared
@@ -186,7 +186,7 @@ async def _wait_for_existing_codex_goal_runner(
     duplicate runner in that normal startup gap.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row carrying the current ``runner_id``.
     :param runner_router: Runner router for resolving a connected runner.
     :param tunnel_registry: Runner tunnel registry, or ``None`` in tests.
@@ -222,7 +222,7 @@ async def _start_codex_goal_runner_on_bound_host(
     tunnel is gone.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Host-bound conversation row.
     :param app_state: FastAPI app state carrying host registries and managed
         launch trackers.
@@ -281,7 +281,7 @@ async def _initialize_codex_goal_runner(
     relaunch path's ordering.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param runner_client: Connected runner client to initialize.
     :param conversation_store: Store used to reload the post-relaunch
         conversation row.
@@ -317,7 +317,7 @@ async def _launch_runner_for_codex_goal(
     workspace: it only wakes the session's existing binding.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Codex-native conversation row.
     :param request: Incoming FastAPI request; ``request.app.state`` carries
         host and tunnel registries.
@@ -393,7 +393,7 @@ async def _forward_codex_goal_event(
     session on the new runner, then retries the goal event.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Codex-native conversation row.
     :param event: Goal control event, e.g. ``{"type": "goal_get"}``.
     :param request: Incoming FastAPI request.
@@ -437,7 +437,7 @@ async def _require_codex_native_goal_session(
     Resolve and validate the Codex-native session targeted by a goal route.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conversation_store: Store used to load the session row.
     :returns: The validated conversation.
     :raises OmnigentError: 404 when the session is missing, or 400 when it is
@@ -484,7 +484,7 @@ def register_codex_session_routes(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: Current Codex goal state, or ``goal=None`` when no goal is
             set.
         :raises OmnigentError: 400 for non-Codex sessions, 404 for missing
@@ -542,7 +542,7 @@ def register_codex_session_routes(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param body: Goal objective, optional token budget, and optional
             user-selected status.
         :returns: Current Codex goal state after the update.
@@ -618,7 +618,7 @@ def register_codex_session_routes(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param body: Target status. ``"paused"`` pauses the goal and
             ``"active"`` resumes it.
         :returns: Current Codex goal state after the status update.
@@ -673,7 +673,7 @@ def register_codex_session_routes(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: Whether Codex removed an existing goal.
         :raises OmnigentError: 400 for non-Codex sessions, 404 for missing
             sessions, or 503 when no live Codex runner can clear the goal.

@@ -46,7 +46,7 @@ class ToolContext:
         precedence). ``None`` when no workspace is available (e.g.
         tests).
     :param conversation_id: The current conversation's ID,
-        e.g. ``"conv_abc123"``. Used by conversation-scoped
+        e.g. ``"abc123"``. Used by conversation-scoped
         tools (the ``sys_terminal_*`` family looks up its
         :class:`TerminalRegistry` entries by this id; the
         ``sys_session_*`` family uses it for sub-agent

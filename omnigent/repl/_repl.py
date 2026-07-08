@@ -139,7 +139,7 @@ class _SessionSnapshot(Protocol):
     """
     Minimal snapshot shape returned by ``client.sessions``.
 
-    :param agent_id: Durable agent id, e.g. ``"ag_abc123"``.
+    :param agent_id: Durable agent id, e.g. ``"abc123"``.
     :param agent_name: Human-readable name of the bound agent,
         e.g. ``"polly"``. Changes when the session is switched
         in place to a different agent; ``None`` when the server
@@ -1112,9 +1112,9 @@ def _elicitation_resolve_session_id(sdk_event: object, fallback_session_id: str)
         :class:`omnigent_client._events.ElicitationRequest`; its
         ``target_session_id`` is read when set.
     :param fallback_session_id: The session the event was received on,
-        e.g. ``"conv_parent123"``. Used when the elicitation is not a
+        e.g. ``"parent123"``. Used when the elicitation is not a
         mirrored child prompt.
-    :returns: The session id to resolve against, e.g. ``"conv_child123"``
+    :returns: The session id to resolve against, e.g. ``"child123"``
         for a mirrored prompt or ``fallback_session_id`` otherwise.
     """
     return getattr(sdk_event, "target_session_id", None) or fallback_session_id
@@ -1444,7 +1444,7 @@ class _SessionsChatReplAdapter:
         fetchers can look up the session_id directly from the
         adapter without round-tripping through ``responses.get``.
 
-        :returns: The session id, e.g. ``"conv_abc123"``, or
+        :returns: The session id, e.g. ``"abc123"``, or
             ``None`` if no send has happened yet.
         """
         return self._session_id
@@ -1658,7 +1658,7 @@ class _SessionsChatReplAdapter:
         Set ``OMNIGENT_SESSIONS_ADAPTER_DEBUG=1`` to trace
         construction + per-event flow on stderr.
 
-        :returns: The durable session id, e.g. ``"conv_abc123"``.
+        :returns: The durable session id, e.g. ``"abc123"``.
         """
         _dbg = bool(os.environ.get("OMNIGENT_SESSIONS_ADAPTER_DEBUG"))
         await self._recover_runner_if_needed()
@@ -1906,7 +1906,7 @@ class _SessionsChatReplAdapter:
         pump. Called by ``/switch``.
 
         :param new_session_id: Conversation/session id to attach to,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The new session id (echoed back).
         :raises Exception: SDK errors from ``sessions.get`` or the
             bind PATCH propagate; ``/switch`` renders them inline.
@@ -1955,7 +1955,7 @@ class _SessionsChatReplAdapter:
         wake to collect the result) and hijack the child's runner, leaving the
         sub-agent stuck "still running" with nothing delivered.
 
-        :param new_session_id: Session to observe, e.g. ``"conv_child123"``.
+        :param new_session_id: Session to observe, e.g. ``"child123"``.
         :param read_only: ``True`` while observing a sub-agent (suppresses
             all runner-bind PATCHes via ``_readonly_view``); ``False`` when
             returning to the owned top-level session so its runner-affinity
@@ -6207,7 +6207,7 @@ async def _list_all_conversation_items(
 
     :param client: Agent-plane HTTP client.
     :param conv_id: Session to enumerate, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: All items in chronological order. Empty when the
         session has no items or every page errored.
     """

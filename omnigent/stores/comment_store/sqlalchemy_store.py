@@ -81,7 +81,7 @@ class SqlAlchemyCommentStore(CommentStore):
         # backfill (created_at * 1e6) and docs rely on.
         created_us = now_epoch_us()
         row = SqlComment(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4().hex,
             conversation_id=conversation_id,
             path=path,
             start_index=start_index,

@@ -368,7 +368,7 @@ def run_claude_native(
     :param server: Optional remote Omnigent server URL. ``None`` starts a
         local Omnigent server using the existing chat server machinery.
     :param session_id: Optional existing session to bind and reuse,
-        e.g. ``"conv_abc123"``. ``None`` creates a new bundled
+        e.g. ``"abc123"``. ``None`` creates a new bundled
         session.
     :param claude_args: Args after ``claude``, e.g.
         ``("--dangerously-skip-permissions",)``. Stray ``--resume`` /
@@ -531,7 +531,7 @@ def _align_working_directory_with_session(
       otherwise fail loud with a :class:`click.ClickException`.
 
     :param session_id: Resolved Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param base_url: Omnigent server base URL used to look up Claude's
         external session id for redirect, e.g. ``"http://127.0.0.1:6767"``.
         ``None`` means redirect is unavailable.
@@ -1073,7 +1073,7 @@ def _fetch_external_session_id_for_redirect(
 
     :param base_url: Omnigent server base URL, or ``None`` when unavailable.
     :param headers: HTTP headers for the Omnigent request.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: Claude session id, e.g.
         ``"02857840-6362-408f-b41f-309e396ed7c6"``, or ``None``.
     """
@@ -1125,7 +1125,7 @@ def _redirect_claude_transcript_to_current_project(
     new file is safely in place; a Claude session id has exactly one
     local project owner.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param external_session_id: Claude session id / transcript stem,
         e.g. ``"02857840-6362-408f-b41f-309e396ed7c6"``.
     :param current: Current cwd, already resolved.
@@ -1338,7 +1338,7 @@ def _record_launch_for_fresh_session(session_id: str) -> None:
     the same as a legacy session.
 
     :param session_id: Newly created Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: None.
     """
     try:
@@ -2322,7 +2322,7 @@ async def _attach_with_reconnect(
                     Check whether the terminal resource is gone.
 
                     :param probe_session_id: Session id captured for
-                        this attach attempt, e.g. ``"conv_abc123"``.
+                        this attach attempt, e.g. ``"abc123"``.
                     :returns: ``True`` when the Omnigent terminal resource
                         is definitively stopped.
                     """
@@ -2419,7 +2419,7 @@ async def _is_terminal_resource_gone(
     :param headers: HTTP auth headers for the Omnigent server. Mutated in
         place by the recover callback in remote mode; passing the
         same dict reference picks up the current bearer.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param terminal_id: Terminal resource id, e.g.
         ``"terminal_claude_main"``.
     :param timeout_s: HTTP timeout in seconds for the probe,
@@ -2568,7 +2568,7 @@ async def _wait_for_claude_terminal_ready(
     creating it.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Session id, e.g. ``"conv_abc123"``.
+    :param session_id: Session id, e.g. ``"abc123"``.
     :param timeout_s: Max seconds to wait, e.g. ``60.0``.
     :returns: The terminal resource id, e.g. ``"terminal_claude_main"``.
     :raises click.ClickException: If no terminal appears in time.
@@ -2607,7 +2607,7 @@ async def _ensure_claude_terminal_on_runner(
     if the terminal still never appears.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Session id, e.g. ``"conv_abc123"``.
+    :param session_id: Session id, e.g. ``"abc123"``.
     :returns: None.
     """
     with contextlib.suppress(httpx.HTTPError):
@@ -2659,7 +2659,7 @@ async def _prepare_claude_terminal_via_daemon(
         session's ``terminal_launch_args`` so the runner launches with
         them. On resume, non-empty args replace the stored set
         (last-write-wins); empty reuses the stored set.
-    :param host_id: This machine's host id, e.g. ``"host_abc123"``.
+    :param host_id: This machine's host id, e.g. ``"abc123"``.
     :param workspace: Absolute host path for the runner cwd, e.g.
         ``"/Users/me/proj"``.
     :param startup_profiler: Optional startup profiler for timing
@@ -3245,7 +3245,7 @@ async def _fetch_claude_session_labels(
     Fetch labels for an existing Claude-native Omnigent session.
 
     :param client: HTTP client for the Omnigent server.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: Session labels as a string dictionary. Empty when the
         session has no labels.
     :raises click.ClickException: If the session lookup fails.
@@ -3289,7 +3289,7 @@ async def _resolve_cold_resume_args(
     would make ``claude --resume`` exit instead of start).
 
     :param client: HTTP client for the Omnigent server.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: ``("--resume", "<claude_sid>")`` or ``()`` when no id is
         mapped or there is no resumable history.
     :raises click.ClickException: Conversation missing or not claude-native.
@@ -3371,7 +3371,7 @@ async def _ensure_local_claude_resume_transcript(
 
     :param client: HTTP client pointed at the Omnigent server.
     :param session_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param external_session_id: Claude-native session id, e.g.
         ``"02857840-6362-408f-b41f-309e396ed7c6"``.
     :param workspace: Resolved directory Claude will run in — its
@@ -3433,7 +3433,7 @@ async def _fetch_all_session_items_for_claude_resume(
 
     :param client: HTTP client pointed at the Omnigent server.
     :param session_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Flat API item dicts from
         ``GET /v1/sessions/{id}/items``.
     :raises click.ClickException: If an item page cannot be fetched or
@@ -3491,7 +3491,7 @@ def _claude_transcript_records_from_session_items(
     :param items: Flat Omnigent item dicts in chronological order, e.g.
         ``{"type": "message", "role": "user", "content": [...]}``.
     :param session_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``. Used as part of deterministic synthetic
+        ``"abc123"``. Used as part of deterministic synthetic
         UUID generation.
     :param external_session_id: Claude-native session id, e.g.
         ``"02857840-6362-408f-b41f-309e396ed7c6"``.
@@ -3699,7 +3699,7 @@ def _synthetic_claude_transcript_uuid(
     Build a stable UUID for one synthesized transcript record.
 
     :param session_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param external_session_id: Claude-native session id, e.g.
         ``"02857840-6362-408f-b41f-309e396ed7c6"``.
     :param item: Omnigent item dict. ``id`` is used when present.
@@ -3844,7 +3844,7 @@ async def _create_claude_session(
         and applies them when it auto-launches the terminal. ``None``
         (the CLI-direct path, which passes args via the live terminal
         POST instead) persists nothing.
-    :returns: New session id, e.g. ``"conv_abc123"``.
+    :returns: New session id, e.g. ``"abc123"``.
     :raises click.ClickException: If creation fails.
     """
     labels = dict(_SESSION_LABELS)
@@ -3940,7 +3940,7 @@ async def _find_running_claude_terminal(
 
     :param client: HTTP client pointed at the Omnigent server.
     :param session_id: Session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: The deterministic Claude terminal id, or ``None`` when
         the wrapper should launch a new terminal.
     :raises click.ClickException: If the server rejects the lookup for
@@ -4004,7 +4004,7 @@ async def _read_claude_terminal_tmux(
     "not locally attachable" and fall back to the WebSocket path.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :returns: The tmux coordinates, or ``_ClaudeTerminalTmux(None,
         None)`` when unavailable.
     """

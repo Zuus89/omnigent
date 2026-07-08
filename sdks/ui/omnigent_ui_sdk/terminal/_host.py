@@ -329,7 +329,7 @@ class OverlayTarget:
     reflects the selection.
 
     :param key: Stable identifier, e.g. ``"main"`` or
-        ``"conv_abc123"``. Opaque to the host — the builder uses
+        ``"abc123"``. Opaque to the host — the builder uses
         it to decide which data to fetch.
     :param label: Short display label rendered in the sidebar,
         e.g. ``"main"`` or ``"coder:auth"``. Wrap-to-width is

@@ -1089,7 +1089,7 @@ class HarnessApp:
         fail-loud.
 
         :param conversation_id: AP-allocated conversation id from
-            the URL, e.g. ``"conv_abc123"``. Must match
+            the URL, e.g. ``"abc123"``. Must match
             ``app.state.conversation_id``.
         :param body: Decoded discriminated-union event body.
         :param request: The FastAPI request, used to validate

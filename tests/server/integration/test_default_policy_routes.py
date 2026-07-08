@@ -146,7 +146,7 @@ async def test_create_default_policy(
     assert body["type"] == "python"
     assert body["handler"] == "omnigent.policies.builtins.safety.ask_on_os_tools"
     assert body["enabled"] is True
-    assert body["id"].startswith("pol_")
+    assert len(body["id"]) == 32
     assert body["created_by"] == "admin@example.com"
 
 

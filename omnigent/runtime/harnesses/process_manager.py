@@ -654,7 +654,7 @@ class HarnessProcessManager:
         rationale.
 
         :param conversation_id: AP-allocated conversation id, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param harness: Registry key in
             :data:`omnigent.runtime.harnesses._HARNESS_MODULES`,
             e.g. ``"claude-sdk"``.
@@ -844,7 +844,7 @@ class HarnessProcessManager:
         the given conversation.
 
         :param conversation_id: AP-allocated conversation id,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: ``True`` if a subprocess entry exists.
         """
         return conversation_id in self._entries
@@ -855,7 +855,7 @@ class HarnessProcessManager:
         harness response (i.e. a turn is currently streaming).
 
         :param conversation_id: AP-allocated conversation id,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: ``True`` if an in-flight response id is
             registered.
         """
@@ -874,7 +874,7 @@ class HarnessProcessManager:
         :meth:`clear_in_flight`.
 
         :param conversation_id: AP-allocated conversation id,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param response_id: The harness-side ``resp_<uuid>`` from the
             ``response.created`` event.
         """
@@ -891,7 +891,7 @@ class HarnessProcessManager:
         reaped. No-op if no marker is set.
 
         :param conversation_id: AP-allocated conversation id,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         self._in_flight_response_ids.pop(conversation_id, None)
 

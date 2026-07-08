@@ -217,7 +217,7 @@ def _sanitize_session_id(session_id: str) -> str:
     """Sanitize a session id for safe use as a filesystem path component.
 
     :param session_id: Raw session/conversation identifier,
-        e.g. ``"conv_abc123"`` or ``"user/session"``.
+        e.g. ``"abc123"`` or ``"user/session"``.
     :returns: Sanitized string safe for directory names.
     """
     return session_id.replace("/", "_").replace("..", "_")
@@ -227,7 +227,7 @@ def _session_workspace(session_id: str) -> str:
     """Compute the workspace root for a session.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: Absolute path to the session workspace directory.
     """
     root = os.environ.get(
@@ -417,7 +417,7 @@ class SessionResourceRegistry:
         metadata.
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param terminal_id: Opaque terminal resource id, e.g.
             ``"terminal_codex_main"``.
         :returns: Role marker such as ``"codex-native"``, or ``None``.

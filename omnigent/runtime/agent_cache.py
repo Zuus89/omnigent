@@ -62,9 +62,9 @@ class AgentCache:
         ArtifactStore. Raises ValueError if the spec is invalid.
 
         :param agent_id: Unique agent identifier,
-            e.g. ``"ag_abc123"``.
+            e.g. ``"abc123"``.
         :param bundle_location: Artifact store key for the bundle,
-            e.g. ``"ag_abc123/a1b2c3d4e5f6..."``.
+            e.g. ``"abc123/a1b2c3d4e5f6..."``.
         :param expand_env: Whether to expand ``${VAR}`` references in
             the spec against the server process environment. Defaults
             to ``False`` and MUST stay ``False`` for tenant-supplied
@@ -116,10 +116,10 @@ class AgentCache:
         the old spec or the new spec, never an empty cache.
 
         :param agent_id: Unique agent identifier,
-            e.g. ``"ag_abc123"``.
+            e.g. ``"abc123"``.
         :param bundle_location: New artifact store key (unused
             during extraction but passed for consistency),
-            e.g. ``"ag_abc123/a1b2c3d4e5f6..."``.
+            e.g. ``"abc123/a1b2c3d4e5f6..."``.
         :param bundle_bytes: Raw bytes of the new ``.tar.gz``
             bundle.
         :param expand_env: Whether to expand ``${VAR}`` references
@@ -164,7 +164,7 @@ class AgentCache:
         agent is deleted. No-op if the agent is not cached.
 
         :param agent_id: Unique agent identifier,
-            e.g. ``"ag_abc123"``.
+            e.g. ``"abc123"``.
         """
         self._specs.pop(agent_id, None)
         workdir = self._cache_dir / agent_id

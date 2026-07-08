@@ -534,13 +534,13 @@ def run_attach(
     :param base_url: Omnigent server hosting the session, e.g.
         ``"http://127.0.0.1:6767"``.
     :param conversation_id: Live conversation/session id to join, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param client_tools: Optional client-side tool set name, e.g. ``"coding"``.
     :param debug_events: When ``True``, enable the SSE debug pipeline overlay.
     :param auto_open_conversation: When ``True``, open the browser conversation
         URL once attached.
     :param resume_parts: Argument-list prefix for the on-exit resume hint, e.g.
-        ``["cli", "attach", "conv_abc123", "--server", "http://..."]``.
+        ``["cli", "attach", "abc123", "--server", "http://..."]``.
     :raises click.ClickException: If the session has no online runner (its host
         is offline) — ``attach`` never starts one.
     """
@@ -1037,7 +1037,7 @@ def _redirect_native_resume_if_needed(
     Redirect a terminal-native resume before Omnigent attach liveness runs.
 
     :param base_url: Omnigent server base URL, e.g. ``"https://example.com"``.
-    :param conversation_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param auto_open_conversation: Browser-open preference for the wrapper.
     :param progress: Optional startup spinner to finish before redirect.
     :returns: ``True`` when a native wrapper handled the resume.
@@ -1111,7 +1111,7 @@ def _finish_native_redirect_progress(
 
     :param progress: Optional startup spinner to finish before writing.
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param wrapper_name: Wrapper label for display, e.g. ``"codex-native"``.
     :param native_command: Native command to show, e.g. ``"codex"``.
     :returns: None.
@@ -1140,7 +1140,7 @@ def _run_claude_native_resume_redirect(
     :param base_url: Omnigent server base URL, e.g.
         ``"https://example.databricksapps.com"``.
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param auto_open_conversation: Browser-open preference for the wrapper.
     :param progress: Optional Omnigent startup spinner to finish before redirect.
     :returns: None.
@@ -1174,7 +1174,7 @@ def _run_codex_native_resume_redirect(
     :param base_url: Omnigent server base URL, e.g.
         ``"https://example.databricksapps.com"``.
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param auto_open_conversation: Browser-open preference for the wrapper.
     :param progress: Optional Omnigent startup spinner to finish before redirect.
     :returns: None.
@@ -1345,7 +1345,7 @@ def _wrapper_label_for_conversation(
 
     :param base_url: Omnigent server base URL, e.g. ``"http://127.0.0.1:6767"``.
     :param conversation_id: Omnigent conversation id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: Wrapper label value, or ``None``.
     """
     try:
@@ -1433,7 +1433,7 @@ def _attach_session_info(
     loud.
 
     :param base_url: Omnigent server base URL, e.g. ``"http://127.0.0.1:6767"``.
-    :param conversation_id: Conversation/session id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Conversation/session id, e.g. ``"abc123"``.
     :returns: The session facts; ``runner_online=False`` on any failure.
     """
     empty = _AttachSessionInfo(runner_online=False, agent_name=None, harness=None)
@@ -1544,7 +1544,7 @@ class _DaemonChatSession:
     """A chat session bound to a daemon-spawned runner.
 
     :param session_id: The created/resolved conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param runner_id: The daemon-spawned runner bound to the session, e.g.
         ``"runner_abc123"``.
     """
@@ -1651,7 +1651,7 @@ async def _prepare_chat_session_via_daemon(
     :param headers: Static HTTP auth headers (empty for a loopback server).
     :param auth: Per-request ``httpx.Auth`` for token refresh on the SDK
         client, or ``None`` for a loopback server.
-    :param host_id: This machine's host id, e.g. ``"host_abc123"``.
+    :param host_id: This machine's host id, e.g. ``"abc123"``.
     :param bundle: Gzipped agent bundle for a fresh session create.
     :param resume_conversation_id: Existing conversation id to attach to,
         or ``None`` to create a fresh session.
@@ -2335,7 +2335,7 @@ async def _query_sessions_once(
         ``"runner_0123456789abcdef"``.
     :param resume_conversation_id: When set, resumes an existing
         session instead of creating a new one, e.g.
-        ``"conv_abc123"``. ``None`` creates a fresh session.
+        ``"abc123"``. ``None`` creates a fresh session.
     :param on_session_ready: Optional callback invoked after the
         session has been created/resumed and bound to the runner.
     :returns: Final assistant text, or ``None`` when no text was
@@ -2574,7 +2574,7 @@ async def _persisted_turn_text(
 
     :param client: Connected SDK client bound to the session's server.
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: The current turn's assistant text, or ``None`` when this
         turn persisted no ``completed`` assistant text (a genuine
         failure the caller should surface).
@@ -2631,7 +2631,7 @@ async def _persisted_turn_error(
     attributed to this turn.
 
     :param client: Connected SDK client bound to the session's server.
-    :param session_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation identifier, e.g. ``"abc123"``.
     :returns: The current turn's terminal error message, or ``None``.
     """
     try:
@@ -4042,7 +4042,7 @@ def _run_one_shot(
         ``"agent.tar.gz"``.
     :param resume_conversation_id: When set, resumes an existing
         session instead of creating a new one, e.g.
-        ``"conv_abc123"``. ``None`` creates a fresh session.
+        ``"abc123"``. ``None`` creates a fresh session.
     :param auto_open_conversation: When ``True``, open the
         browser conversation URL after the session is created or resumed.
     :returns: None.

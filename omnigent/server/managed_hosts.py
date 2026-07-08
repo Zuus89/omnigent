@@ -281,7 +281,7 @@ class ManagedLaunchTracker:
         earlier attempt).
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         self._by_session[session_id] = ManagedLaunch(settled=asyncio.Event())
 
@@ -381,7 +381,7 @@ class ManagedHostLaunch:
     Result of a successful managed host launch.
 
     :param host_id: The registered host's identifier, e.g.
-        ``"host_a1b2c3d4..."`` — feed this to the same launch-runner
+        ``"a1b2c3d4..."`` — feed this to the same launch-runner
         path an external ``host_id`` takes.
     :param workspace: Absolute workspace path created inside the
         sandbox, e.g. ``"/root/workspace"`` — or the cloned repository
@@ -1734,11 +1734,11 @@ async def launch_managed_host(
         startup, or registration fails.
     """
     launcher = config.launcher_factory()
-    host_id = f"host_{uuid.uuid4().hex}"
+    host_id = uuid.uuid4().hex
     # Visible label in the host picker; (owner, name) is the hosts
     # table PK, so embed the host_id's leading hex for uniqueness
     # across a user's managed sandboxes.
-    host_name = f"managed-{host_id[len('host_') : len('host_') + 8]}"
+    host_name = f"managed-{host_id[:8]}"
     try:
         await asyncio.to_thread(launcher.prepare)
         sandbox_id = await asyncio.to_thread(launcher.provision, host_name)
@@ -1867,7 +1867,7 @@ async def _arm_and_start_host(
     :param config: The deployment's sandbox config.
     :param host_store: Persistent host registrations.
     :param host_id: Server-chosen host identity, e.g.
-        ``"host_a1b2c3d4..."``.
+        ``"a1b2c3d4..."``.
     :param host_name: Server-chosen host display name, e.g.
         ``"managed-a1b2c3d4"``.
     :param owner: User the managed host acts for, e.g.
@@ -2054,7 +2054,7 @@ async def resume_managed_host(
     Unlike a launch, a failed wake does NOT tear the sandbox down — the volume
     + workspace are the user's and must survive for a retry.
 
-    :param host_id: The session's bound host id, e.g. ``"host_a1b2c3d4..."``.
+    :param host_id: The session's bound host id, e.g. ``"a1b2c3d4..."``.
     :param host_store: Persistent host registrations (cross-replica liveness).
     :param config: The deployment's managed-sandbox config, or ``None`` when
         the ``sandbox:`` section has been removed since launch.

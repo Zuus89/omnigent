@@ -634,7 +634,7 @@ def load_local_python_tools(
     :param local_tools: Discovered :class:`LocalToolInfo` entries
         from the agent spec parser (one per file).
     :param workdir: The agent image's extracted directory on disk,
-        e.g. ``Path("/tmp/agent-cache/ag_abc123")``.
+        e.g. ``Path("/tmp/agent-cache/abc123")``.
     :param sandbox_config: Sandbox settings. ``None`` uses defaults.
     :param srt_available: Whether ``srt`` is on PATH. ``None``
         auto-detects.

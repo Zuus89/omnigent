@@ -324,7 +324,7 @@ async def _cancel_auto_forwarder_task(session_id: str) -> None:
     every post-recovery record is persisted twice (the server has no dedup
     for external conversation items).
 
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :returns: None.
     """
     task = _AUTO_FORWARDER_TASKS.pop(session_id, None)
@@ -350,7 +350,7 @@ def _register_auto_forwarder_task(session_id: str, task: asyncio.Task[Any]) -> N
     create that slipped past :func:`_cancel_auto_forwarder_task`), it is
     cancelled so a session never runs two forwarders at once.
 
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param task: Freshly created forwarder task for this session.
     :returns: None.
     """
@@ -402,7 +402,7 @@ def _terminal_lookup_miss_reason(
     registered but are now marked stopped.
 
     :param resource_registry: Runner resource registry for the session.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param terminal_id: Terminal resource id, e.g.
         ``"terminal_claude_main"``.
     :returns: Short reason string for logs.
@@ -447,7 +447,7 @@ def _log_terminal_lookup_miss(
     reason and then at most once per interval while the reason persists.
 
     :param resource_registry: Runner resource registry for the session.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param terminal_id: Terminal resource id, e.g.
         ``"terminal_claude_main"``.
     :returns: None.
@@ -802,7 +802,7 @@ async def _codex_native_launch_config(
     """
     Fetch and validate persisted Codex launch config for a session.
 
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param server_client: Runner Omnigent server client.
     :returns: Parsed launch config.
     :raises RuntimeError: If the session snapshot or required runner env is
@@ -939,7 +939,7 @@ async def _opencode_native_launch_config(
     """
     Fetch and validate persisted OpenCode launch config for a session.
 
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param server_client: Runner Omnigent server client.
     :returns: Parsed launch config.
     :raises RuntimeError: If the snapshot or required runner env is missing.
@@ -1033,7 +1033,7 @@ async def _auto_create_opencode_terminal(
     starts the SSE forwarder, then registers the ``opencode attach`` TUI as
     a streamable terminal resource attached to that server.
 
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param resource_registry: Registry used to launch the terminal.
     :param publish_event: Per-session SSE emitter for the new terminal.
     :param agent_spec: Optional resolved agent spec (os_env + model).
@@ -1343,7 +1343,7 @@ async def _supervise_opencode_forwarder(
     teardown) the per-session ``opencode serve`` subprocess is ours to
     stop, else it orphans one process per session.
 
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :param server: The :class:`OpenCodeNativeServer` to close on exit.
     :param forwarder: The :class:`OpenCodeNativeForwarder` to run.
     :returns: None.
@@ -1749,7 +1749,7 @@ async def _resolve_pi_resume_session(
     so Pi launches fresh rather than pointing ``--session`` at a file that does
     not exist.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param launch_config: Resolved Pi launch config (carries the captured id
         and fork directives).
     :param session_dir: Directory passed to ``pi --session-dir``.
@@ -3417,7 +3417,7 @@ async def _auto_create_codex_terminal(
     thread with no rollout yet exits the TUI (leaving a dead pane).
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param resource_registry: Session resource registry used to launch
         the Codex terminal resource.
     :param publish_event: The runner's per-session SSE emitter, used to
@@ -3869,7 +3869,7 @@ async def _codex_discover_thread_and_forward(
     executor's bridge-state retry can inject web-UI turns into that same
     thread), then runs the transcript forwarder for the session's lifetime.
 
-    :param session_id: Omnigent session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session/conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory for this session.
     :param codex_ws_url: App-server loopback ws URL the TUI and forwarder
         attach to, e.g. ``"ws://127.0.0.1:9876"``. Persisted as the bridge
@@ -4009,7 +4009,7 @@ async def _codex_forward_known_thread(
     """
     Forward a runner-owned Codex terminal that resumes an existing thread.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory for this session.
     :param codex_ws_url: App-server loopback URL, e.g.
         ``"ws://127.0.0.1:9876"``.
@@ -4072,7 +4072,7 @@ async def _run_antigravity_reader(
         bearer; ``auth`` carries the refresh-capable flow).
     :param auth: Refresh-capable httpx auth flow, or ``None`` when unauthenticated.
     :param session_id: Omnigent conversation id to mirror into, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_dir: Native Antigravity bridge directory for this session.
     :returns: None. Runs until cancelled.
     """
@@ -4134,7 +4134,7 @@ async def _auto_create_antigravity_terminal(
     (agy's real id, persisted by a prior run).
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param resource_registry: Session resource registry used to launch the
         agy terminal resource.
     :param publish_event: The runner's per-session SSE emitter, used to
@@ -4712,7 +4712,7 @@ async def _session_payload_for_host_spawn_check(
     :param server_client: The runner's Omnigent server HTTP client, or
         ``None`` in embedded/test setups.
     :param session_id: Session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Parsed session JSON object, or ``None`` when the
         snapshot cannot be retrieved.
     """
@@ -4755,7 +4755,7 @@ async def _fetch_cost_control_mode_override(
 
     :param server_client: The runner's Omnigent server HTTP client, or
         ``None`` in embedded / test setups.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :returns: ``"on"`` / ``"off"`` when the session set the toggle, or
         ``None`` (unset, or unreadable for any reason).
     """
@@ -4798,7 +4798,7 @@ async def _codex_session_needs_runner_terminal(
 
     :param server_client: The runner's Omnigent server HTTP client, or ``None`` in
         embedded/test setups.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :returns: ``True`` when the session snapshot exists; ``False`` on
         lookup failure.
     """
@@ -5123,7 +5123,7 @@ def _publish_terminal_pending(
     :param publish_event: The runner's per-session SSE emitter,
         ``(session_id, event_dict) -> None``.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param pending: ``True`` when a terminal is being created (show the
         spinner); ``False`` to clear it (terminal landed, or
         auto-create raised).
@@ -5179,7 +5179,7 @@ def _publish_native_terminal_start_error(
     :param publish_event: The runner's per-session SSE emitter,
         ``(session_id, event_dict) -> None``.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param runtime_name: Human-readable runtime name, e.g. ``"Claude"``.
     :param exc: The startup exception whose text should be surfaced.
     :returns: The structured error payload that was published on the
@@ -5231,7 +5231,7 @@ def _codex_ensure_response_with_policy_notice(
     serializes concurrent ensures for the same session.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param terminal_view: The runner-owned codex terminal resource view
         to return.
     :returns: A 200 JSON response, optionally carrying
@@ -5310,7 +5310,7 @@ async def _auto_create_claude_terminal(
     create the terminal.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param resource_registry: Session resource registry for
         launching the terminal.
     :param publish_event: The runner's per-session SSE emitter, used to
@@ -5932,7 +5932,7 @@ async def _auto_create_repl_terminal(
     holds because the runner lives on the user's machine.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param resource_registry: Session resource registry for launching the
         terminal.
     :param publish_event: The runner's per-session SSE emitter,
@@ -6049,7 +6049,7 @@ async def _delete_native_bridge_dirs(
 
     :param server_client: Omnigent server client used to resolve rotated bridge
         id labels. ``None`` skips label resolution (session_id keys only).
-    :param session_id: Omnigent session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session/conversation id, e.g. ``"abc123"``.
     """
     from omnigent.antigravity_native_bridge import (
         ANTIGRAVITY_NATIVE_BRIDGE_ID_LABEL_KEY,
@@ -6145,7 +6145,7 @@ async def _claude_native_bridge_id_for_session(
     :param server_client: Omnigent server client used to fetch the session
         snapshot.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Opaque bridge id from
         ``omnigent.claude_native.bridge_id`` when present, otherwise
         *session_id* for legacy single-session bridges.
@@ -6182,7 +6182,7 @@ async def _claude_native_session_wants_rebuild(
     left untouched.
 
     :param server_client: AP client; ``None`` can't confirm, returns ``False``.
-    :param session_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation id, e.g. ``"abc123"``.
     :returns: ``True`` when ``external_session_id`` is unset AND the
         carry-history label is set (a pending rebuild), else ``False``.
     """
@@ -6318,7 +6318,7 @@ async def _session_labels_for_runner_spawn(
     :param server_client: Omnigent server client used to fetch the session
         labels endpoint.
     :param session_id: Omnigent session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: String label mapping. Empty on lookup failure.
     """
     path = f"/v1/sessions/{urllib.parse.quote(session_id, safe='')}/labels"
@@ -6417,7 +6417,7 @@ async def _evaluate_policy_via_omnigent(
     :param server_client: HTTP client pointed at the Omnigent server.
     :param harness_client: HTTP client pointed at the harness subprocess.
     :param conversation_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param evaluation_id: Unique correlation id from the harness,
         e.g. ``"poleval_abc123"``.
     :param phase: Proto-style phase string, e.g.
@@ -6618,7 +6618,7 @@ class _SessionSnapshot:
         runner's wall clock when the fetch failed / omitted it.
     :param workspace: Server-stored workspace path, or ``None``.
     :param agent_id: Bound agent id, or ``None`` when not yet bound /
-        the fetch failed, e.g. ``"ag_abc123"``.
+        the fetch failed, e.g. ``"abc123"``.
     :param sub_agent_name: For sub-agent sessions, the dispatched
         sub-agent's name, e.g. ``"claude_code"`` — used to swap the
         parent spec to the child's sub-spec so the child's harness
@@ -6627,7 +6627,7 @@ class _SessionSnapshot:
         snapshot so the identity survives a runner reconnect / spec-cache
         eviction (the in-memory ``_session_sub_agent_names`` map does not).
     :param parent_session_id: For sub-agent sessions, the parent
-        conversation's id, e.g. ``"conv_parent987"``. ``None`` for
+        conversation's id, e.g. ``"parent987"``. ``None`` for
         top-level sessions. Lets ``_ensure_subagent_work_entry`` rebuild a lost
         work entry when the in-memory map was wiped (reconnect / restart) or
         never populated (a ``sys_session_create`` child).
@@ -6714,7 +6714,7 @@ class TurnDispatch:
     the harness message body so no field-stripping is needed.
 
     :param agent_id: Agent identifier for spec resolution,
-        e.g. ``"ag_abc123"``.
+        e.g. ``"abc123"``.
     :param harness: Harness type, e.g. ``"openai-agents"``.
     :param has_mcp_servers: Whether to inject MCP tool schemas.
     :param instructions: System prompt for the LLM.
@@ -7122,9 +7122,9 @@ class _SubagentWorkEntry:
     Runner-local state for one asynchronous ``sys_session_send`` dispatch.
 
     :param parent_session_id: Parent session id that invoked
-        ``sys_session_send``, e.g. ``"conv_parent123"``.
+        ``sys_session_send``, e.g. ``"parent123"``.
     :param child_session_id: Child session id used as the work handle,
-        e.g. ``"conv_child456"``.
+        e.g. ``"child456"``.
     :param work_id: Unique id for this dispatch to the child session,
         e.g. ``"subagent_a1b2c3"``.
     :param agent: Sub-agent name from the parent spec, e.g.
@@ -7199,9 +7199,9 @@ def register_subagent_work(
     repeated send to an existing child represents the latest turn.
 
     :param parent_session_id: Parent session id, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :param child_session_id: Child session id, e.g.
-        ``"conv_child456"``.
+        ``"child456"``.
     :param agent: Sub-agent name, e.g. ``"researcher"``.
     :param title: Sub-agent instance title, e.g. ``"auth"``.
     :param wrapper_label: Optional child ``omnigent.wrapper``
@@ -7234,7 +7234,7 @@ def get_subagent_work(child_session_id: str) -> _SubagentWorkEntry | None:
     """
     Return registered sub-agent work by child session id.
 
-    :param child_session_id: Child session id, e.g. ``"conv_child456"``.
+    :param child_session_id: Child session id, e.g. ``"child456"``.
     :returns: The work entry, or ``None`` if the child is not tracked.
     """
     return _subagent_work_by_child.get(child_session_id)
@@ -7248,7 +7248,7 @@ def mark_subagent_work_started(child_session_id: str) -> _SubagentWorkEntry | No
     the child harness has proven it started. The first child
     ``session.status:running`` / ``waiting`` edge is that proof.
 
-    :param child_session_id: Child session id, e.g. ``"conv_child456"``.
+    :param child_session_id: Child session id, e.g. ``"child456"``.
     :returns: The updated work entry, or ``None`` if the child is untracked.
     """
     entry = _subagent_work_by_child.get(child_session_id)
@@ -7271,7 +7271,7 @@ def unregister_subagent_work(
     Used when the child-message POST fails before a handle has been
     returned to the LLM.
 
-    :param child_session_id: Child session id, e.g. ``"conv_child456"``.
+    :param child_session_id: Child session id, e.g. ``"child456"``.
     :param work_id: Optional dispatch id guard. When provided, the
         current registry entry is removed only if it still belongs to
         that dispatch.
@@ -7305,7 +7305,7 @@ def unregister_subagent_work_for_session(session_id: str) -> None:
     cleaned so runner-local state cannot outlive the session tree.
 
     :param session_id: Session id being deleted, e.g.
-        ``"conv_parent123"`` or ``"conv_child456"``.
+        ``"parent123"`` or ``"child456"``.
     :returns: None.
     """
     unregister_subagent_work(session_id)
@@ -7321,7 +7321,7 @@ def list_subagent_work(parent_session_id: str) -> list[_SubagentWorkEntry]:
     List sub-agent work registered by a parent session.
 
     :param parent_session_id: Parent session id, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :returns: Work entries ordered by creation time.
     """
     child_ids = _subagent_work_by_parent.get(parent_session_id, set())
@@ -7342,7 +7342,7 @@ def mark_subagent_work_terminal(
     """
     Mark a sub-agent dispatch terminal and notify the parent inbox.
 
-    :param child_session_id: Child session id, e.g. ``"conv_child456"``.
+    :param child_session_id: Child session id, e.g. ``"child456"``.
     :param status: Terminal status: ``"completed"``, ``"failed"``, or
         ``"cancelled"``.
     :param output: Child output or error text. ``None`` means the
@@ -7500,7 +7500,7 @@ async def _deliver_subagent_wake_post(
     the last child of a fan-out. Permanent 4xx rejections stop immediately.
 
     :param server_client: Omnigent HTTP client for the runner subprocess.
-    :param parent_id: Parent session to wake, e.g. ``"conv_parent123"``.
+    :param parent_id: Parent session to wake, e.g. ``"parent123"``.
     :param notice: The ``[System: ...]`` notice text to inject.
     :returns: ``True`` if a 2xx was confirmed, ``False`` if every attempt
         failed (transport error, timeout, or non-2xx response).
@@ -7673,9 +7673,9 @@ def register_child_session(
     """
     Record a child→parent mapping for SSE status/preview fan-out.
 
-    :param child_session_id: Child session id, e.g. ``"conv_child123"``.
+    :param child_session_id: Child session id, e.g. ``"child123"``.
     :param parent_session_id: Parent session id whose stream should
-        receive the child's deltas, e.g. ``"conv_parent987"``.
+        receive the child's deltas, e.g. ``"parent987"``.
     :param title: Child title, ``"{tool}:{session_name}"``.
     :param tool: Sub-agent type, e.g. ``"researcher"``.
     :param session_name: Sub-agent instance name, e.g. ``"auth"``.
@@ -7843,7 +7843,7 @@ def get_session_agent_id(session_id: str) -> str | None:
     Return the durable agent_id for a session.
 
     :param session_id: Session/conversation ID, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: The agent_id, or ``None`` if not found.
     """
     return _session_agent_ids_ref.get(session_id)
@@ -8169,7 +8169,7 @@ def create_runner_app(
         fallback remains for in-process harnesses whose assistant text is
         accumulated only in runner-local history.
 
-        :param session_id: Child session id, e.g. ``"conv_child123"``.
+        :param session_id: Child session id, e.g. ``"child123"``.
         :param latest_assistant_text: Authoritative assistant text forwarded
             with an external status event, e.g. ``"done"``.
         :param allow_history_preview_fallback: Whether to read runner-local
@@ -8199,7 +8199,7 @@ def create_runner_app(
         """
         Build the ``child`` object for a parent-stream status update.
 
-        :param session_id: Child session id, e.g. ``"conv_child123"``.
+        :param session_id: Child session id, e.g. ``"child123"``.
         :param meta: Registered child-to-parent fan-out metadata.
         :param status: Child session status, e.g. ``"running"``.
         :param error: Failure detail from the ``session.status`` event.
@@ -8258,7 +8258,7 @@ def create_runner_app(
         """
         Build a parent-stream child update for one status edge.
 
-        :param session_id: Child session id, e.g. ``"conv_child123"``.
+        :param session_id: Child session id, e.g. ``"child123"``.
         :param meta: Registered child-to-parent fan-out metadata.
         :param status: Child session status, e.g. ``"running"``.
         :param error: Failure detail from a failed ``session.status`` edge.
@@ -8383,7 +8383,7 @@ def create_runner_app(
         only fires on a real running⇄idle transition.
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param status: New working status, ``"running"`` or ``"idle"``.
         """
         # (The native-pane reaper's status mirror is recorded centrally in
@@ -8571,7 +8571,7 @@ def create_runner_app(
         ``workspace`` in their own projection caches on first read.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The session snapshot. Always returns a value; failure
             is signaled via ``ok=False`` rather than raising, so
             best-effort callers can use the fallback fields directly.
@@ -8660,7 +8660,7 @@ def create_runner_app(
         ``GET /v1/sessions/{id}``.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The raw workspace string (an absolute path on this
             runner), or ``None`` when the session has no explicit
             workspace or the lookup fails.
@@ -8698,7 +8698,7 @@ def create_runner_app(
         ``workspace``, so the runner must ask the server).
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The appropriate :class:`FilesystemRegistry`, or
             ``None`` when no registry can be created.
         """
@@ -9757,7 +9757,7 @@ def create_runner_app(
         the queue after reading.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: Long-lived ``text/event-stream`` response.
         """
 
@@ -9824,7 +9824,7 @@ def create_runner_app(
         Per ``designs/SESSION_REARCHITECTURE.md`` §4 step 3.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: :class:`SessionResponse`-shaped JSON; 404 if
             no harness subprocess is registered.
         """
@@ -9896,7 +9896,7 @@ def create_runner_app(
         Per ``designs/SESSION_REARCHITECTURE.md`` §4 step 3.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: Deletion confirmation JSON.
         """
         # Cancel active turn before releasing harness.
@@ -10011,7 +10011,7 @@ def create_runner_app(
         adapter's ``_translate_input_to_messages`` understands.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param drop_item_id: When set, the raw store item with this
             id is excluded before conversion, e.g.
             ``"item_abc123"``. Used by the cold-cache rehydration
@@ -10211,7 +10211,7 @@ def create_runner_app(
         output when the Future is resolved.
 
         :param session_id: Session/conversation ID whose history
-            to search, e.g. ``"conv_child123"``.
+            to search, e.g. ``"child123"``.
         :returns: The assistant message text, or an empty string
             if no assistant message is found.
         """
@@ -10471,7 +10471,7 @@ def create_runner_app(
         lookup returns ``None`` (a top-level session, or the snapshot is
         unavailable), preserving the prior behavior.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :returns: The sub-agent name, or ``None`` for a top-level session
             (or when it cannot be resolved).
         """
@@ -10502,7 +10502,7 @@ def create_runner_app(
         snapshot, preserving the prior no-op for non-sub-agent senders.
 
         :param conv_id: Child session id whose terminal status just arrived,
-            e.g. ``"conv_child456"``.
+            e.g. ``"child456"``.
         :returns: The existing or reconstructed work entry, or ``None`` when the
             session has no recoverable parent.
         """
@@ -10540,7 +10540,7 @@ def create_runner_app(
         :func:`canonicalize_harness`.
 
         :param conv_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The canonical harness name (e.g. ``"claude-native"``)
             or ``None`` if no spec is cached for this session.
         """
@@ -10581,7 +10581,7 @@ def create_runner_app(
         from terminal activity and must surface regardless of harness.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param status: The status edge, ``"running"`` / ``"idle"`` /
             ``"failed"``.
         :param error: Failure detail dict for a ``"failed"`` edge, carried
@@ -10638,7 +10638,7 @@ def create_runner_app(
         ``designs/RUNNER_MESSAGE_INGEST.md`` Part C.
 
         :param conv_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: ``True`` for native terminal sessions.
         """
         return is_native_harness(_session_harness_name(conv_id))
@@ -10649,7 +10649,7 @@ def create_runner_app(
         Shared by the claude/codex native interrupt handlers; a no-op when
         *conv_id* is a top-level session (no one's tracked sub-agent).
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         """
         delivery_ack = _mark_subagent_terminal_and_wake(
             conv_id,
@@ -10701,7 +10701,7 @@ def create_runner_app(
         strand the UI on ``idle`` while Claude kept working.
 
         :param conv_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: 204 on success. 503 if the tmux target is not yet
             advertised (caller treats this as a best-effort failure).
         """
@@ -10757,7 +10757,7 @@ def create_runner_app(
         session labels and falls back to ``conv_id`` for legacy states.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param action: Human-readable control action for logs, e.g.
             ``"interrupt"``.
         :param missing_state_log_level: Log level used when bridge state has
@@ -10822,7 +10822,7 @@ def create_runner_app(
         *own* ``[Request interrupted by user]`` record, which is real.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: 204 when no active turn is recorded or the interrupt lands;
             503 when Codex rejects the active-turn interrupt.
         """
@@ -10884,7 +10884,7 @@ def create_runner_app(
         the terminal.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param settings: Flat Codex app-server settings fields to update,
             excluding ``threadId``; e.g. ``{"model": "gpt-5.4"}``.
         :returns: 204 when no bridge is loaded or the update lands; 503 when
@@ -10945,7 +10945,7 @@ def create_runner_app(
         ``reasoning_effort`` mirrors, and fall back to the cached agent spec.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: ``(model, effort)`` where effort may be ``None``.
         """
         model: str | None = None
@@ -10985,7 +10985,7 @@ def create_runner_app(
         Queue Codex app-server collaboration-mode settings for a loaded thread.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param enabled: ``True`` enters Plan mode; ``False`` returns to
             Default mode.
         :returns: 204 when the update lands; 503 when no bridge is loaded,
@@ -11032,7 +11032,7 @@ def create_runner_app(
         Query Codex app-server ``model/list`` for a loaded codex-native session.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: Raw Codex ``model/list`` model objects.
         :raises _CodexNativeModelOptionsNotReady: If Codex has not written
             bridge state for this session yet.
@@ -11095,7 +11095,7 @@ def create_runner_app(
         ``ExtensionContext.abort()``.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: 204 when the interrupt payload was queued; 503 if the
             bridge inbox could not be written.
         """
@@ -11141,7 +11141,7 @@ def create_runner_app(
         not fail the caller.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: None.
         """
         from omnigent.entities.session_resources import terminal_resource_id
@@ -11195,7 +11195,7 @@ def create_runner_app(
         hook never fires on a hard kill.
 
         :param conv_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: 204 on success. 503 if the tmux target is not yet
             advertised (caller treats this as a best-effort failure —
             a missing target means there is no live session to kill).
@@ -11712,7 +11712,7 @@ def create_runner_app(
           TUI rejects.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param effort: New persisted effort level, e.g. ``"high"``;
             ``None`` when the user cleared the override.
         :returns: 204 on success or skip (caller treats both the
@@ -11781,7 +11781,7 @@ def create_runner_app(
         default", so a clear only takes effect on the next spawn.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param model: New persisted model identifier, e.g.
             ``"claude-opus-4-7"``; ``None`` when the user cleared the
             override.
@@ -11847,7 +11847,7 @@ def create_runner_app(
         slash form for "use the spawn default", so a clear only takes effect on
         the next spawn.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :param model: New persisted cursor-agent model id, e.g. ``"gpt-5.2"``;
             ``None`` when the user cleared the override.
         :returns: 204 on success or skip; 503 if the tmux pane isn't advertised
@@ -11900,7 +11900,7 @@ def create_runner_app(
         form for "use the spawn default", so a clear only takes effect on the
         next spawn.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :param model: New persisted kiro model id, e.g. ``"claude-haiku-4.5"``;
             ``None`` when the user cleared the override.
         :returns: 204 on success or skip; 503 if the tmux pane isn't advertised
@@ -11952,7 +11952,7 @@ def create_runner_app(
         in-process compaction instead.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: 200 once ``/compact`` has been typed into the pane.
             503 if the tmux target isn't yet advertised (the pane is
             not attached, so there is nothing to compact).
@@ -12012,7 +12012,7 @@ def create_runner_app(
         registered (the server falls back to in-process compaction).
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: 200 once ``/compact`` has been typed into the pane.
             204 if no live codex terminal is registered for the session.
             503 if the tmux send-keys invocation fails.
@@ -12056,7 +12056,7 @@ def create_runner_app(
         ``session.compacted`` event the forwarder surfaces as the web
         compaction marker.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :returns: 200 once opencode accepted the compaction; 204 when no live
             opencode server/session is registered or no compaction model can be
             resolved (the server falls back to in-process compaction); 503 if
@@ -12106,7 +12106,7 @@ def create_runner_app(
         is mirrored the other way by the forwarder's ``session.next.model.switched``
         handler.) A blank/null model clears the override.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :param model: New qualified model id, or ``None`` / blank to clear.
         :returns: 200 once the override is persisted; 204 when no bridge state
             exists yet (server not launched — the next launch reads the spec).
@@ -12133,7 +12133,7 @@ def create_runner_app(
         terminal, which cancels the old forwarder/server and creates a brand-new
         opencode session — the cleanest reset available without an opencode API.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :returns: 200 once the fresh session is launched; 204 when the session is
             not an opencode-native session with a resolvable spec; 503 on
             relaunch failure.
@@ -12272,7 +12272,7 @@ def create_runner_app(
         running its own wrong compaction).
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: 200 once the compact payload is queued; 503 if the bridge
             inbox could not be written.
         """
@@ -12418,7 +12418,7 @@ def create_runner_app(
         ``display-popup`` simply leaves the web card as the only surface.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param elicitation_id: Outstanding elicitation correlation id,
             e.g. ``"elicit_deadbeef"``.
         :param message: Approval reason to display, e.g.
@@ -12494,7 +12494,7 @@ def create_runner_app(
         for the session, so the web ApprovalCard remains the surface.
 
         :param conv_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param elicitation_id: Outstanding elicitation correlation id,
             e.g. ``"elicit_deadbeef"``.
         :param message: Approval reason to display.
@@ -12557,7 +12557,7 @@ def create_runner_app(
         Best-effort: 204 when no live opencode terminal is registered (the web
         card stays the only surface).
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :param elicitation_id: Outstanding elicitation correlation id.
         :param message: Approval reason to display.
         :param policy_name: Deciding policy name (modal header); ``None`` →
@@ -12610,7 +12610,7 @@ def create_runner_app(
 
         Best-effort: 204 when no live opencode terminal is registered.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :param message: The block reason to display.
         :param policy_name: Deciding policy name (popup header); ``None`` →
             generic header.
@@ -12657,7 +12657,7 @@ def create_runner_app(
         header — bearer alone misroutes the POST to the account — for every
         harness uniformly.
 
-        :param conv_id: Session/conversation id, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation id, e.g. ``"abc123"``.
         :param harness: ``"claude-native"``, ``"codex-native"``, or
             ``"opencode-native"``.
         :returns: Path to the freshly-written popup config file.
@@ -12714,7 +12714,7 @@ def create_runner_app(
         the ASK-time forward (which covers clients attached *before* the
         ASK). Best-effort: any miss leaves the web card.
 
-        :param conv_id: Session/conversation id, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation id, e.g. ``"abc123"``.
         :param socket_path: tmux socket of the attaching pane.
         :param tmux_target: tmux target of the attaching pane, e.g. ``"main"``.
         :returns: None.
@@ -12800,7 +12800,7 @@ def create_runner_app(
         — those are genuine terminal outcomes, not intermediate narration.
 
         :param conv_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param error: If the turn ended due to an error, a dict
             with at least a ``"message"`` key. ``None`` for
             successful completion.
@@ -12911,7 +12911,7 @@ def create_runner_app(
         after the await; we run the full terminal bookkeeping via
         ``_on_proxy_stream_end`` to recover.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         :param expected_task: If given, only cancel when this exact task is
             still the live turn. Guards against cancelling a continuation turn
             that replaced the original (the original completed naturally while
@@ -12958,7 +12958,7 @@ def create_runner_app(
         session is never dropped — the next message then resumes the abandoned
         turn and the agent runs one message behind.
 
-        :param conv_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv_id: Session/conversation identifier, e.g. ``"abc123"``.
         """
         target = _active_turns.get(conv_id)
         if not isinstance(target, asyncio.Task) or target.done():
@@ -12994,7 +12994,7 @@ def create_runner_app(
         recursively call this function.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
 
         # Serialize the drain + turn-start against a concurrent
@@ -13087,10 +13087,10 @@ def create_runner_app(
         later completion can retry — no parent turn will run to clear it
         otherwise — and a warning is logged.
 
-        :param parent_id: Parent session to wake, e.g. ``"conv_parent123"``.
+        :param parent_id: Parent session to wake, e.g. ``"parent123"``.
         :param notice: The ``[System: ...]`` notice text to inject.
         :param child_id: Completing child session id, included only for log
-            context, e.g. ``"conv_child456"``.
+            context, e.g. ``"child456"``.
         :returns: None.
         """
         delivered = await _deliver_subagent_wake_post(server_client, parent_id, notice)
@@ -13170,7 +13170,7 @@ def create_runner_app(
         its single outstanding wake still starts the draining turn.)
 
         :param parent_session_id: Parent whose turn just ended, e.g.
-            ``"conv_parent123"``.
+            ``"parent123"``.
         :returns: None.
         """
         if parent_session_id not in _subagent_wake_pending:
@@ -13206,7 +13206,7 @@ def create_runner_app(
         untracked session (e.g. the orchestrator's own turn ending) never
         fires a spurious or looping wake.
 
-        :param child_session_id: Child session id, e.g. ``"conv_child456"``.
+        :param child_session_id: Child session id, e.g. ``"child456"``.
         :param status: Terminal status: ``"completed"``, ``"failed"``, or
             ``"cancelled"``.
         :param output: Child output or error text. ``None`` means the
@@ -13259,7 +13259,7 @@ def create_runner_app(
         launch or the turn that triggered it.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param bridge_id: Opaque bridge id resolved by the caller, e.g.
             ``"bridge_abc123"``. ``None`` resolves it from the session labels
             via :func:`_claude_native_bridge_id_for_session`.
@@ -13449,7 +13449,7 @@ def create_runner_app(
             read from ``msg_body["content"]`` and the user model pin from
             ``msg_body["model_override"]``.
         :param conv: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param spec: The resolved agent spec for the session, or ``None``
             (advisor skipped).
         :returns: The verdict + apply_model + note, or ``None`` when the
@@ -13500,7 +13500,7 @@ def create_runner_app(
         output) and forwards it live. No-op when no verdict was produced
         (advisor off, conversational turn, or judge/persist failure).
 
-        :param conv: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv: Session/conversation identifier, e.g. ``"abc123"``.
         :param result: The advisor turn result, or ``None`` (no verdict —
             nothing to announce).
         """
@@ -13568,7 +13568,7 @@ def create_runner_app(
         for a feature that is dark by default.
 
         :param conv: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The resolved spec, or ``None``.
         """
         try:
@@ -13611,7 +13611,7 @@ def create_runner_app(
             doesn't (a message racing ahead of session assignment), the
             agent is resolved on demand from the server snapshot.
         :param conv: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         # This turn is consuming any previously-posted sub-agent wake notice.
         # Clear the debounce at turn start rather than turn end so a child
@@ -13666,7 +13666,7 @@ def create_runner_app(
         the client never hangs on a stale "running" turn.
 
         :param msg_body: The forwarded message body from the server.
-        :param conv: Session/conversation identifier, e.g. ``"conv_abc123"``.
+        :param conv: Session/conversation identifier, e.g. ``"abc123"``.
         """
         # In-place agent switch (POST /v1/sessions/{id}/switch-agent) rebinds
         # the session to a different agent mid-session. The server forwards the
@@ -14094,7 +14094,7 @@ def create_runner_app(
         :param response: The ``StreamingResponse`` wrapping
             ``proxy_stream()``.
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         try:
             async for _chunk in response.body_iterator:
@@ -14933,7 +14933,7 @@ def create_runner_app(
           is ignored for these types.
 
         :param conversation_id: AP-allocated conversation id from
-            the URL path, e.g. ``"conv_abc123"``.
+            the URL path, e.g. ``"abc123"``.
         :param request: The FastAPI request; we read its JSON body
             for type-discriminated dispatch.
         :param stream: When ``True`` and ``type == "message"``,
@@ -16753,7 +16753,7 @@ def create_runner_app(
         terminal is reused rather than killed.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param terminal_id: The REPL terminal's resource id
             (``"terminal_tui_main"``), passed through for the stale
             close + final resolve.
@@ -16816,7 +16816,7 @@ def create_runner_app(
         terminal is reused rather than killed.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param terminal_id: The qwen terminal's resource id
             (``"terminal_qwen_main"``), passed through for the stale
             close + final resolve.
@@ -16968,7 +16968,7 @@ def create_runner_app(
         ``_resolve_session_agent_spec`` returns ``None``).
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :raises HTTPException: HTTP 404 when the resolved spec is not
             ``None`` and its ``os_env`` attribute is ``None``.
         :returns: The resolved agent spec, or ``None`` in dev/standalone
@@ -17033,7 +17033,7 @@ def create_runner_app(
         ``limit``.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param environment_id: Environment resource id,
             e.g. ``"default"``.
         :param q: Case-insensitive search substring, e.g. ``"test.md"``.
@@ -17098,7 +17098,7 @@ def create_runner_app(
         directory listing endpoints for hierarchical browsing.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param environment_id: Environment resource id,
             e.g. ``"default"``.
         :returns: JSON list of changed file entries with ``status`` field.
@@ -17497,7 +17497,7 @@ def create_runner_app(
         ``runner_workspace`` when the session uses a git worktree.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: None.
         """
         if session_id in _session_start_cache:
@@ -17527,7 +17527,7 @@ def create_runner_app(
         the next call retries once the agent binds to the session.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The cached/resolved spec entry, or ``None`` when no
             spec resolver is configured for this runner.
         :raises OmnigentError: If the server returns malformed data
@@ -17599,7 +17599,7 @@ def create_runner_app(
         honors the uploaded bundle's ``os_env`` settings.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The parsed session agent spec, or ``None`` when
             no spec resolver is configured.
         :raises OmnigentError: If the server returns malformed data
@@ -17639,7 +17639,7 @@ def create_runner_app(
         ``delete_session``).
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: Bundled skills followed by host skills, deduplicated
             by name. Empty when no spec resolver is configured or the
             spec exposes no skills.
@@ -17733,7 +17733,7 @@ def create_runner_app(
         web composer's slash-command menu).
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: JSON ``{"skills": [{"name", "description"}, ...]}``.
             Empty list when the runner has no spec resolver wired.
         """
@@ -17753,7 +17753,7 @@ def create_runner_app(
         lists instead of the static fallback table.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: JSON ``{"workers": {<name>: {source, verified, models,
             note}, ...}}`` shaped like the ``sys_list_models`` payload.
             ``"self"`` is the calling session's own harness.  Returns an
@@ -17783,7 +17783,7 @@ def create_runner_app(
         catalog. Non-codex-native sessions return an empty list.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: JSON ``{"models": [...]}``, where each model is a raw
             Codex ``model/list`` object.
         """
@@ -17836,7 +17836,7 @@ def create_runner_app(
         input (runner-resolves, server-persists).
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param request: Request whose JSON body carries ``{"name": str,
             "arguments": str}`` — the skill name and the raw argument
             string typed after the slash command (``arguments`` defaults
@@ -17907,7 +17907,7 @@ def create_runner_app(
         UI_SESSION_RESOURCES_MIGRATION design).
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param environment_id: Environment resource id,
             e.g. ``"default"``.
         :param path: Relative path (empty string for root).
@@ -18182,7 +18182,7 @@ def create_runner_app(
         reset) is untouched.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: Confirmation that the switch reset was applied.
         """
         _codex_terminal_ensure_locks.pop(session_id, None)
@@ -18275,7 +18275,7 @@ def create_runner_app(
         Returns ``{"result": {"output": "..."}}`` on success or
         ``{"error": {"code": ..., "message": ...}}`` on failure.
 
-        :param session_id: AP-allocated session id, e.g. ``"conv_abc123"``.
+        :param session_id: AP-allocated session id, e.g. ``"abc123"``.
         :param request: FastAPI request; body must be a JSON object with
             ``"method"`` and ``"params"`` keys.
         :returns: :class:`JSONResponse` carrying result or error.
@@ -18545,7 +18545,7 @@ def create_runner_app(
            DEFAULT for ``databricks-*`` model prefixes.
 
         :param session_id: Session/conversation identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param model: LLM model string used to decide whether to
             attempt Databricks profile resolution, e.g.
             ``"databricks/databricks-gpt-5-5"``.

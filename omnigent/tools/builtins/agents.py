@@ -86,7 +86,7 @@ class SysAgentGetTool(Tool):
                             "description": (
                                 "The session (conversation_id) whose "
                                 "bound agent to inspect, e.g. "
-                                "'conv_abc123'. Get this from "
+                                "'abc123'. Get this from "
                                 "sys_session_list or sys_agent_list."
                             ),
                         },
@@ -164,7 +164,7 @@ class SysAgentDownloadTool(Tool):
                             "description": (
                                 "The session (conversation_id) whose "
                                 "agent bundle to download, e.g. "
-                                "'conv_abc123'."
+                                "'abc123'."
                             ),
                         },
                         "dest_filename": {

@@ -16,11 +16,11 @@ def title_without_closed_marker(title: str | None) -> str | None:
     ``sys_session_close`` historically freed the
     ``(parent_conversation_id, title)`` unique slot by rewriting a
     child title from ``"agent:task"`` to
-    ``"agent:task:closed:conv_abc123"``. That suffix is persistence
+    ``"agent:task:closed:abc123"``. That suffix is persistence
     metadata, not user-facing text.
 
     :param title: Stored conversation title, e.g.
-        ``"researcher:auth:closed:conv_abc123"``.
+        ``"researcher:auth:closed:abc123"``.
     :returns: Title without the closed suffix, e.g.
         ``"researcher:auth"``, or the original value when no marker
         is present.
@@ -36,7 +36,7 @@ def has_closed_title_marker(title: str | None) -> bool:
     Return whether a stored title carries the legacy closed marker.
 
     :param title: Stored conversation title, e.g.
-        ``"researcher:auth:closed:conv_abc123"``.
+        ``"researcher:auth:closed:abc123"``.
     :returns: ``True`` when the title contains
         :data:`CLOSED_TITLE_INFIX`.
     """
@@ -57,7 +57,7 @@ def labels_with_closed_status(
     :param labels: Persisted session labels, e.g.
         ``{"omnigent.wrapper": "codex-native-ui"}``.
     :param title: Stored conversation title, e.g.
-        ``"researcher:auth:closed:conv_abc123"``.
+        ``"researcher:auth:closed:abc123"``.
     :returns: A mutable labels dict with ``omnigent.closed=true``
         added when the title marker is present.
     """
@@ -77,7 +77,7 @@ def is_session_closed(
     :param labels: Session labels, e.g.
         ``{"omnigent.closed": "true"}``.
     :param title: Optional stored title for legacy closed rows, e.g.
-        ``"researcher:auth:closed:conv_abc123"``.
+        ``"researcher:auth:closed:abc123"``.
     :returns: ``True`` when the explicit label is set or the legacy
         title marker is present.
     """

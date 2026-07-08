@@ -210,7 +210,7 @@ class OpenCodeNativeBridgeState:
     """
     Runtime state shared by the native OpenCode wrapper and harness.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param server_base_url: Loopback base URL of ``opencode serve``, e.g.
         ``"http://127.0.0.1:49231"``.
     :param opencode_session_id: OpenCode session id, e.g. ``"ses_abc123"``.
@@ -267,7 +267,7 @@ def bridge_dir_for_bridge_id(bridge_id: str) -> Path:
     """
     Return the bridge directory for an OpenCode-native bridge id.
 
-    :param bridge_id: Opaque bridge id, e.g. ``"conv_abc123"``.
+    :param bridge_id: Opaque bridge id, e.g. ``"abc123"``.
     :returns: Absolute bridge directory under
         ``~/.omnigent/opencode-native``.
     """
@@ -284,7 +284,7 @@ def build_opencode_native_spawn_env(
     Build spawn env for the ``opencode-native`` harness process.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_id: Opaque bridge id; ``None`` uses *conversation_id*.
     :returns: Environment variables the OpenCode-native executor needs.
     """
@@ -299,7 +299,7 @@ def prepare_bridge_dir(bridge_id: str) -> Path:
     """
     Create the bridge directory (and XDG roots) for *bridge_id*.
 
-    :param bridge_id: Opaque bridge id, e.g. ``"conv_abc123"``.
+    :param bridge_id: Opaque bridge id, e.g. ``"abc123"``.
     :returns: Prepared absolute bridge directory.
     """
     bridge_dir = bridge_dir_for_bridge_id(bridge_id)

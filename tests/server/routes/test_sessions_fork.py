@@ -389,7 +389,7 @@ async def test_fork_session_happy_path() -> None:
     assert body["agent_id"] != "ag_test", (
         "Fork should be bound to a cloned agent, not the source's agent"
     )
-    assert body["agent_id"].startswith("ag_"), "Cloned agent ID must use the ag_ prefix"
+    assert len(body["agent_id"]) == 32, "Cloned agent ID must be a bare 32-char hex id"
     assert body["status"] == "idle", "Freshly forked session should be idle"
     # 2 items copied from the source — proves the store's items were
     # included in the response, not an empty list.

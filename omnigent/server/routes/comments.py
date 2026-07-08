@@ -154,7 +154,7 @@ def create_comments_router(
         """Require access and a real session before comment store mutations.
 
         :param user_id: The authenticated caller, or the single-user sentinel.
-        :param session_id: The session to check, e.g. ``"conv_abc123"``.
+        :param session_id: The session to check, e.g. ``"abc123"``.
         :param level: Required permission level for auth-enabled servers.
         :raises OmnigentError: 404 when the session does not exist, or the
             auth helper's 401/403/404 when permission enforcement is active.
@@ -191,7 +191,7 @@ def create_comments_router(
 
         :param user_id: The authenticated caller, e.g. ``"bob@example.com"``.
         :param comment_id: The comment being mutated, e.g. ``"a1b2c3d4-..."``.
-        :param session_id: The owning session, e.g. ``"conv_abc123"``.
+        :param session_id: The owning session, e.g. ``"abc123"``.
         :raises OmnigentError: 404 if the comment is not found in this
             session; 403 if the caller is not the comment's author.
         """
@@ -215,7 +215,7 @@ def create_comments_router(
         Requires ``LEVEL_EDIT`` on the session in multi-user mode.
 
         :param request: The incoming request, used to extract the user identity.
-        :param session_id: The owning session, e.g. ``"conv_abc123"``.
+        :param session_id: The owning session, e.g. ``"abc123"``.
         :param body: Comment payload including path, body text, and the
             two range fields (start_index, end_index).
         :returns: The created comment as a serialized dict.
@@ -250,7 +250,7 @@ def create_comments_router(
         Requires ``LEVEL_READ`` on the session in multi-user mode.
 
         :param request: The incoming request, used to extract the user identity.
-        :param session_id: The session to query, e.g. ``"conv_abc123"``.
+        :param session_id: The session to query, e.g. ``"abc123"``.
         :param path: When provided, only return comments for this file,
             e.g. ``"src/App.tsx"``.
         :returns: List of serialized comment dicts.
@@ -277,7 +277,7 @@ def create_comments_router(
         stays open to any editor as a shared review-workflow action.
 
         :param request: The incoming request, used to extract the user identity.
-        :param session_id: The owning session, e.g. ``"conv_abc123"``.
+        :param session_id: The owning session, e.g. ``"abc123"``.
         :param comment_id: The comment to update, e.g. ``"a1b2c3d4-..."``.
         :param body: Fields to update; ``None`` fields are left unchanged.
         :returns: The updated serialized comment.
@@ -323,7 +323,7 @@ def create_comments_router(
         collaborator may not delete another user's comment.
 
         :param request: The incoming request, used to extract the user identity.
-        :param session_id: The owning session, e.g. ``"conv_abc123"``.
+        :param session_id: The owning session, e.g. ``"abc123"``.
         :param comment_id: The comment to delete, e.g. ``"a1b2c3d4-..."``.
         :returns: ``{"deleted": true}``.
         :raises OmnigentError: 401/403/404 if the user lacks edit permission,
@@ -355,7 +355,7 @@ def create_comments_router(
         it transitions comment status from ``draft`` to ``addressed``.
 
         :param request: The incoming request, used to extract the user identity.
-        :param session_id: The owning session, e.g. ``"conv_abc123"``.
+        :param session_id: The owning session, e.g. ``"abc123"``.
         :param body: List of comment IDs to send, with an optional
             custom instruction prefix.
         :returns: ``{"formatted_message": str, "sent_comment_ids": list[str]}``.

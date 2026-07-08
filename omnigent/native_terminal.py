@@ -31,7 +31,7 @@ def terminal_attach_url(base_url: str, session_id: str, terminal_id: str) -> str
     :param base_url: Omnigent server base URL, e.g.
         ``"https://example.databricksapps.com"``.
     :param session_id: Session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param terminal_id: Terminal resource id, e.g.
         ``"terminal_claude_main"``.
     :returns: Fully-qualified attach WebSocket URL.
@@ -56,7 +56,7 @@ async def bind_session_runner(
 
     :param client: HTTP client pointed at the Omnigent server.
     :param session_id: Session/conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param runner_id: Registered runner id, e.g.
         ``"runner_abc123"``.
     :returns: None.

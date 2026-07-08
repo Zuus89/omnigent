@@ -70,7 +70,7 @@ def has_pending(conversation_id: str) -> bool:
     session as "awaiting human approval" without threading the
     elicitation id around.
 
-    :param conversation_id: Session/conversation id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session/conversation id, e.g. ``"abc123"``.
     :returns: ``True`` when at least one approval is parked for the session.
     """
     return _session_pending.get(conversation_id, 0) > 0
@@ -156,7 +156,7 @@ async def wait_for_user_approval(
         policy evaluator and returned in the ``pending`` verdict,
         e.g. ``"elicit_abc123"``.
     :param conversation_id: Session/conversation id the prompt
-        was published on, e.g. ``"conv_abc123"``.
+        was published on, e.g. ``"abc123"``.
     :param publish_event: Callable that puts an SSE event on the
         runner's per-session outbound queue. Same shape the
         runner's ``_publish_event`` helper uses.

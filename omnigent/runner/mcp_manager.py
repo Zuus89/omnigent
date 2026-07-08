@@ -263,7 +263,7 @@ class RunnerMcpManager:
             prompt and parks on ``pending_approvals``. Otherwise
             declines.
 
-            :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+            :param session_id: Omnigent session id, e.g. ``"abc123"``.
             :param params: MCP elicitation params from the gateway.
             :returns: User verdict as an :class:`ElicitResult`.
             """
@@ -404,7 +404,7 @@ class RunnerMcpManager:
         :param tool_name: Namespaced tool name, e.g.
             ``"github__list_issues"``.
         :param arguments: Decoded tool argument dict.
-        :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent session id, e.g. ``"abc123"``.
             Forwarded to the connection for inline elicitation
             context. ``None`` when no session is available.
         :returns: Tool result string.

@@ -141,7 +141,7 @@ class _ConversationRow(Protocol):
     refactor that drops one of those fields breaks here loudly
     instead of confusing the renderer.
 
-    :param id: Conversation identifier, e.g. ``"conv_abc123"``.
+    :param id: Conversation identifier, e.g. ``"abc123"``.
     :param title: Optional human-set title; ``None`` when the
         user hasn't named it yet.
     :param created_at: Creation time as seconds since epoch.
@@ -437,7 +437,7 @@ class _PromptToolkitPickerState:
         """
         Return the currently highlighted conversation id.
 
-        :returns: Conversation id, e.g. ``"conv_abc123"``.
+        :returns: Conversation id, e.g. ``"abc123"``.
         """
         return str(self.conversations[self.selected_index].id)
 

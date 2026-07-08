@@ -12,7 +12,7 @@ def test_create_and_get(agent_store: SqlAlchemyAgentStore) -> None:
     agent = agent_store.create(
         agent_id="ag_test_gpt4", name="gpt-4", bundle_location="ag_test_gpt4/fakehash"
     )
-    assert agent.id.startswith("ag_")
+    assert agent.id == "ag_test_gpt4"
     assert agent.name == "gpt-4"
 
     fetched = agent_store.get(agent.id)

@@ -34,7 +34,7 @@ class _ParkedHarnessElicitation:
     fast path needs.
 
     :param session_id: Conversation id that issued the prompt, e.g.
-        ``"conv_abc123"`` (mirrors the ``_harness_elicitation_owners``
+        ``"abc123"`` (mirrors the ``_harness_elicitation_owners``
         entry; kept here so the correlation helper is self-contained).
     :param tool_name: Gated tool name from the harness hook, e.g.
         ``"Bash"``. ``None`` when the harness supplied none (e.g. a
@@ -67,7 +67,7 @@ class _PreResolvedHarnessElicitation:
     answered, so a re-park fail-asks.
 
     :param session_id: Omnigent session id that issued the resolution, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param created_at: Wall-clock timestamp from ``time.time()``, e.g.
         ``1710000000.0``.
     :param result: Web verdict to hand a re-parking hook, e.g.

@@ -1554,7 +1554,7 @@ async def test_multipart_create_with_parent_links_child(
     # The created agent identifiers prove the response contract the
     # runner's bundle-mode handle depends on; a missing/empty agent_id
     # would make sys_session_create fail loud on the runner side.
-    assert body["agent_id"].startswith("ag_")
+    assert len(body["agent_id"]) == 32
     assert body["agent_name"] == "bundle-child"
 
     snap = await client.get(f"/v1/sessions/{child_id}")

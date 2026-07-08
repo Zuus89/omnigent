@@ -166,7 +166,7 @@ def _resolve_session_owner_cached(
     """
     Resolve a session's owner, caching the immutable result.
 
-    :param conversation_id: The session, e.g. ``"conv_abc123"``.
+    :param conversation_id: The session, e.g. ``"abc123"``.
     :param conversation_store: Store for the owner lookup.
     :returns: The owner user id, or ``None`` when the session has no
         owner grant (single-user mode).
@@ -194,7 +194,7 @@ def _load_user_daily_cost(
     the per-user daily budget never trips — consistent with the write
     path, which also no-ops without an owner.
 
-    :param conversation_id: The session, e.g. ``"conv_abc123"``.
+    :param conversation_id: The session, e.g. ``"abc123"``.
     :param conversation_store: Store for the owner + daily-cost lookups.
     :returns: ``{"cost_usd": <float>, "ask_approved_usd": <float>,
         "user_id": <owner>}``; ``user_id`` omitted in single-user mode.
@@ -255,7 +255,7 @@ def build_policy_engine(
 
     :param spec: The parsed agent spec.
     :param conversation_id: The conversation this workflow is
-        running on, e.g. ``"conv_abc123"``.
+        running on, e.g. ``"abc123"``.
     :param conversation_store: The store used for label reads
         and writes. Held by the engine for the life of the
         workflow.
@@ -634,7 +634,7 @@ def _load_session_state(
     before engine build).
 
     :param conversation_id: Conversation to load,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conversation_store: Store to read from.
     :returns: Session state dict. Empty when nothing persisted.
     """
@@ -660,7 +660,7 @@ def _resolve_session_model(
     cost policies treat the model as undeterminable.
 
     :param conversation_id: Conversation to read the override from,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conversation_store: Store to read the conversation from.
     :param spec: The parsed agent spec (its ``llm.model`` is the
         fallback when no override is set).
@@ -745,7 +745,7 @@ def load_session_usage(
     subtree.
 
     :param conversation_id: Conversation to load,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conversation_store: Store to read from.
     :returns: Summed usage dict with keys ``input_tokens``,
         ``output_tokens``, ``total_tokens``, ``total_cost_usd`` (the
@@ -859,7 +859,7 @@ def _load_tree_conversations(
     is indexed, so this is a bounded indexed scan per page.
 
     :param root_conversation_id: The tree's root conversation id (every
-        conversation in a spawn tree shares it), e.g. ``"conv_abc123"``.
+        conversation in a spawn tree shares it), e.g. ``"abc123"``.
     :param conversation_store: Store to read from.
     :returns: All conversations in the tree, in store order.
     """
@@ -897,7 +897,7 @@ def _subtree_conversation_ids(
     :param tree: All conversations in the spawn tree (from
         :func:`_load_tree_conversations`); order-independent.
     :param conversation_id: The subtree root to walk from,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: Set of conversation ids in the subtree rooted at
         ``conversation_id`` (always includes ``conversation_id``).
     """
@@ -932,7 +932,7 @@ def _load_session_policy_specs(
     stored guardrail that never enforces fails loudly.
 
     :param conversation_id: The session whose policies to load,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param policy_store: The session-scoped policy store.
         ``None`` returns an empty list.
     :returns: List of :class:`FunctionPolicySpec` for enabled

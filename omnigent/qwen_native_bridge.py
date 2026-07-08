@@ -98,7 +98,7 @@ def qwen_session_id_for_conversation(conversation_id: str) -> str:
     session with ``--session-id <this>`` and later restores it with
     ``--resume <this>`` so the qwen TUI shows the prior conversation on resume.
 
-    :param conversation_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param conversation_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: A stable UUID string usable as qwen's session id.
     """
     return str(uuid.uuid5(_QWEN_SESSION_NAMESPACE, conversation_id))

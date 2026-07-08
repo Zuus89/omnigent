@@ -829,7 +829,7 @@ async def _list_child_sessions(
     Fetch child-session summaries for a parent session.
 
     :param server_client: Omnigent server client.
-    :param conversation_id: Parent session id, e.g. ``"conv_parent123"``.
+    :param conversation_id: Parent session id, e.g. ``"parent123"``.
     :param limit: Maximum child rows to request, e.g. ``100``.
     :param tool: When set alongside ``session_name``, filter to
         children whose title is ``"{tool}:{session_name}"``
@@ -872,7 +872,7 @@ async def _find_existing_child_session(
     a duplicate-create failure.
 
     :param server_client: Omnigent server client.
-    :param conversation_id: Parent session id, e.g. ``"conv_parent123"``.
+    :param conversation_id: Parent session id, e.g. ``"parent123"``.
     :param agent: Sub-agent name, e.g. ``"claude"``.
     :param title: Caller-chosen child title, e.g. ``"issue-1756"``.
     :returns: Matching child summary, ``None`` when absent, or an error
@@ -1375,7 +1375,7 @@ async def _execute_subagent_tool(
         ``title`` (instance label).
     :param server_client: httpx client pointed at the Omnigent server.
     :param conversation_id: Parent session/conversation ID,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_spec: Parent agent's :class:`AgentSpec`. Used
         to resolve sub-agent name to ``agent_id``.
     :param publish_event: Optional callback for publishing child-session
@@ -1867,7 +1867,7 @@ async def _send_to_existing_session(
     ``sys_read_inbox`` queue, matching named-mode send.
 
     :param target_session_id: The existing child session id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param message: The user message text to post.
     :param server_client: HTTP client pointed at the Omnigent server.
     :param conversation_id: The caller's own session id — the required
@@ -2003,7 +2003,7 @@ def _build_session_create_body(
     are included when provided; the message becomes the child's first
     queued user turn via ``initial_items``.
 
-    :param agent_id: The existing agent to launch, e.g. ``"ag_abc123"``.
+    :param agent_id: The existing agent to launch, e.g. ``"abc123"``.
     :param conversation_id: The caller's session id — the forced parent.
     :param title: Optional session label; included only when a non-empty
         string.
@@ -2046,7 +2046,7 @@ def _finalize_created_session(
 
     :param data: The :class:`SessionResponse` JSON from the create call.
     :param conversation_id: The caller (parent) session id.
-    :param agent_id: The launched agent id, e.g. ``"ag_abc123"``.
+    :param agent_id: The launched agent id, e.g. ``"abc123"``.
     :param title: The caller-supplied title (or non-str when absent).
     :param publish_event: Callback that enqueues an SSE event on the
         caller's outbound queue; ``None`` for in-process callers.
@@ -2242,7 +2242,7 @@ async def _post_child_first_message(
     named-mode ``sys_session_send``).
 
     :param child_session_id: The new child session id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param message: The first user message text.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: ``None`` on success; a JSON error string (carrying the
@@ -2451,7 +2451,7 @@ async def _execute_web_fetch_tool(
         optional ``url``.
     :param server_client: httpx client pointed at the Omnigent server.
     :param conversation_id: Parent session id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_spec: Parent agent's spec — used by the inner
         ``_execute_subagent_tool`` to resolve the sub-agent.
     :param task_id: Calling task id; used to discriminate parallel
@@ -2678,7 +2678,7 @@ async def _execute_timer_set(
         ``repeat`` (bool, default False), ``note`` (optional str).
     :param server_client: httpx client for persisting firings.
     :param conversation_id: Session the timer belongs to, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: JSON string with ``timer_id`` and ``status``.
     """
     from omnigent.runner import app as _app
@@ -2821,7 +2821,7 @@ async def _execute_comment_tool(
     :param tool_name: ``"list_comments"`` or ``"update_comment"``.
     :param arguments: JSON-encoded arguments string from the LLM.
     :param conversation_id: Current session id, e.g.
-        ``"conv_abc123"``. Required for per-session comment scoping.
+        ``"abc123"``. Required for per-session comment scoping.
     :param server_client: HTTP client pointed at the Omnigent server.
         ``None`` if unavailable (returns an error string).
     :returns: Tool output JSON string.
@@ -2903,7 +2903,7 @@ async def _execute_policy_tool(
     :param tool_name: ``"sys_add_policy"`` or ``"sys_policy_registry"``.
     :param arguments: JSON-encoded arguments string from the LLM.
     :param conversation_id: Current session id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: Tool output JSON string.
     """
@@ -3151,8 +3151,8 @@ async def _execute_session_query_tool(
         ``"sys_session_close"``, ``"sys_session_get_info"``, or
         ``"sys_session_share"``.
     :param arguments: JSON-encoded arguments string from the LLM, e.g.
-        ``'{"conversation_id": "conv_abc123", "tail_items": 5}'``.
-    :param conversation_id: The calling session id, e.g. ``"conv_root1"``;
+        ``'{"conversation_id": "abc123", "tail_items": 5}'``.
+    :param conversation_id: The calling session id, e.g. ``"root1"``;
         used as the parent for ``sys_session_list``.
     :param server_client: HTTP client pointed at the Omnigent server; ``None``
         if unavailable (returns an error string).
@@ -3466,7 +3466,7 @@ async def _execute_agent_tool(
         os_env cwd that ``sys_agent_download`` writes into and
         ``sys_agent_list`` scans for local configs.
     :param conversation_id: The caller's session id, for os_env cwd
-        resolution, e.g. ``"conv_abc123"``.
+        resolution, e.g. ``"abc123"``.
     :param runner_workspace: The runner's workspace dir, authoritative
         for the os_env cwd when present.
     :returns: Tool output JSON string.
@@ -3508,7 +3508,7 @@ async def _agent_get_via_rest(
     404 to ``agent_not_found`` and 401/403 to ``access_denied``.
 
     :param session_id: The session whose bound agent to inspect, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: JSON agent-metadata object, or a JSON error object.
     """
@@ -3818,7 +3818,7 @@ async def _session_list_via_rest(
     best-effort: a failure in either view yields an empty list for it
     rather than failing the whole call.
 
-    :param conversation_id: The caller session id, e.g. ``"conv_root1"``.
+    :param conversation_id: The caller session id, e.g. ``"root1"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :param agent_name: Optional agent-name filter for the global
         ``sessions`` view; ignored for ``sub_agents``.
@@ -4091,7 +4091,7 @@ async def _fetch_close_target(
     """
     Fetch + status-classify the close target's session snapshot.
 
-    :param target_id: The conversation id to close, e.g. ``"conv_abc123"``.
+    :param target_id: The conversation id to close, e.g. ``"abc123"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: The parsed snapshot dict on HTTP 200; otherwise a JSON
         error string (``session_not_found`` for 404,
@@ -4134,7 +4134,7 @@ async def _close_tree_scope_error(
     :param caller_conversation_id: The calling session's own id, e.g.
         ``"conv_caller"``.
     :param target_id: The target conversation id, echoed into errors,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: ``None`` when the target is in-tree and a sub-agent;
         otherwise a JSON error string (``session_out_of_tree`` or
@@ -4822,7 +4822,7 @@ async def _seed_os_env_snapshot(
         the current tool dispatch — reused to avoid opening a second connection.
     :param path: Path argument forwarded from the tool call, e.g. ``"src/foo.py"``.
     :param filesystem_registry: Registry that stores the snapshot.
-    :param conversation_id: Session scope for the snapshot, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session scope for the snapshot, e.g. ``"abc123"``.
     """
     try:
         existing = await os_env.read(path=path, offset=1, limit=None)
@@ -4944,10 +4944,10 @@ async def _execute_rest_tool(
         ``"sys_call_async"``.
     :param args: Tool arguments from the LLM.
     :param server_client: httpx client pointed at the Omnigent server.
-    :param agent_id: Durable agent id, e.g. ``"ag_abc123"``.
+    :param agent_id: Durable agent id, e.g. ``"abc123"``.
         Required from the session context.
     :param conversation_id: Parent conversation id, e.g.
-        ``"conv_abc123"``. Used to look up the runner binding
+        ``"abc123"``. Used to look up the runner binding
         on the parent session so the child session can be bound
         to the same runner.
     :returns: JSON result string for the LLM.
@@ -5061,7 +5061,7 @@ async def _execute_file_tool(
     :param args: Parsed tool arguments.
     :param server_client: HTTP client for the Omnigent server.
     :param conversation_id: Owning session/conversation id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_spec: Agent spec resolved for the current turn, used
         (with ``runner_workspace``) to derive the workspace root that
         an ``upload_file`` path is resolved against. ``None`` falls back
@@ -5268,7 +5268,7 @@ async def _emit_terminal_resource_event(
     :param args: Parsed launch / close arguments — fallback source
         for ``terminal`` / ``session`` if the envelope omits them.
     :param conversation_id: Owning conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param terminal_registry: The runner's ``TerminalRegistry``,
         used to look up the live instance for a fresh launch.
     :param resource_registry: Optional session-resource registry used to
@@ -5323,7 +5323,7 @@ async def _publish_terminal_created_event(
     no-op.
 
     :param conversation_id: Owning conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param terminal_name: Terminal spec name, e.g. ``"bash"``.
     :param session_key: Per-launch session key, e.g. ``"s1"``.
     :param terminal_registry: The runner's ``TerminalRegistry``.
@@ -5406,7 +5406,7 @@ def _publish_terminal_deleted_event(
     path emits via ``_publish_and_persist_resource_event``.
 
     :param conversation_id: Owning conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param terminal_name: Terminal spec name, e.g. ``"bash"``.
     :param session_key: Per-launch session key, e.g. ``"s1"``.
     :param publish_event: The runner's per-session SSE emitter.
@@ -5658,7 +5658,7 @@ async def _post_subagent_policy_verdict(
 
     :param server_client: HTTP client pointed at Omnigent server.
     :param conversation_id: Parent session id, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :param payload: Completed sub-agent inbox payload.
     :param output: Raw child output text.
     :returns: Parsed policy verdict, or ``None`` on failure.
@@ -5750,7 +5750,7 @@ async def _evaluate_subagent_inbox_output(
     :param payload: Inbox payload for a completed sub-agent task.
     :param server_client: HTTP client pointed at Omnigent server.
     :param conversation_id: Parent session id, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :returns: Evaluation result carrying the safe payload plus retry
         metadata for transient evaluation failures.
     """
@@ -5820,7 +5820,7 @@ async def _drain_inbox(
         no queue has been created yet.
     :param server_client: HTTP client pointed at Omnigent server.
     :param conversation_id: Parent session id, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :returns: Formatted string of completed tasks.
     """
     if inbox is None or inbox.empty():
@@ -6085,7 +6085,7 @@ async def _execute_task_lifecycle_tool(
     :param session_async_tasks: Per-session async task map
         from ``create_runner_app``.
     :param conversation_id: Parent session id, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: JSON-encoded result string.
     """
@@ -6130,9 +6130,9 @@ async def _cancel_subagent_task(
       stays best-effort (see message).
 
     :param args: Tool arguments containing ``task_id`` or
-        ``handle_id``, e.g. ``{"task_id": "conv_child456"}``.
+        ``handle_id``, e.g. ``{"task_id": "child456"}``.
     :param conversation_id: Parent session id, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :param server_client: HTTP client pointed at the Omnigent server.
     :returns: JSON cancellation result.
     """

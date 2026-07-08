@@ -63,7 +63,7 @@ def publish(conversation_id: str, event: dict[str, Any]) -> None:
     listening).
 
     :param conversation_id: The conversation to publish to,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param event: The event dict to publish, e.g.
         ``{"type": "response.output_text.delta",
         "delta": "Hello"}``. The ``"type"`` key SHOULD match the
@@ -117,7 +117,7 @@ def close(conversation_id: str) -> None:
     subscribers are connected.
 
     :param conversation_id: The conversation whose subscribers
-        should be signalled, e.g. ``"conv_abc123"``.
+        should be signalled, e.g. ``"abc123"``.
     """
     with _lock:
         subs = list(_subscribers.get(conversation_id, ()))
@@ -171,7 +171,7 @@ async def subscribe(
     ``loop.call_soon_threadsafe`` to enqueue across threads.
 
     :param conversation_id: The conversation to subscribe to,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param heartbeat_interval_s: When set, yield a synthetic
         ``{"type": "session.heartbeat"}`` dict whenever the queue
         has been idle for this many seconds. Heartbeats are

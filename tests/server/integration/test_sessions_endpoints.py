@@ -636,7 +636,7 @@ async def test_external_subagent_start_mints_child_session(
     assert resp.status_code in (200, 202), f"unexpected status {resp.status_code}: {resp.text}"
     body = resp.json()
     child_id = body["child_session_id"]
-    assert child_id.startswith("conv_")
+    assert len(child_id) == 32
     assert body["queued"] is False
 
     # The child should appear under the parent in child_sessions.
@@ -1031,7 +1031,7 @@ async def test_skill_slash_command_persists_visible_item_and_hidden_meta_message
         await fake_runner.aclose()
 
     assert resp.json()["queued"] is True
-    assert resp.json()["item_id"].startswith("sc_")
+    assert len(resp.json()["item_id"]) == 32
 
     items_resp = await client.get(f"/v1/sessions/{session['id']}/items")
     assert items_resp.status_code == 200, items_resp.text
@@ -6875,9 +6875,7 @@ async def test_external_codex_subagent_start_mints_child_session(
 
     assert resp.status_code == 202, f"unexpected status {resp.status_code}: {resp.text}"
     child_id = resp.json()["child_session_id"]
-    assert child_id.startswith("conv_"), (
-        f"child_session_id must start with conv_; got {child_id!r}"
-    )
+    assert len(child_id) == 32, f"child_session_id must be a bare 32-char hex id; got {child_id!r}"
 
     children_resp = await client.get(f"/v1/sessions/{parent['id']}/child_sessions")
     assert children_resp.status_code == 200

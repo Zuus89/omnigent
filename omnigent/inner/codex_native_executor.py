@@ -321,7 +321,7 @@ def _request_session_id_from_env() -> str | None:
     """
     Resolve the Omnigent session id that requested this harness process.
 
-    :returns: Omnigent session id, e.g. ``"conv_abc123"``, or ``None``.
+    :returns: Omnigent session id, e.g. ``"abc123"``, or ``None``.
     """
     raw = os.environ.get(CODEX_NATIVE_REQUEST_SESSION_ID_ENV_VAR, "").strip()
     return raw or None

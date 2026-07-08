@@ -341,7 +341,7 @@ def run_codex_native(
     :param server: Resolved Omnigent server URL, e.g.
         ``"http://127.0.0.1:8123"``.
     :param session_id: Optional existing Omnigent conversation id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param codex_args: Raw Codex CLI args to pass before ``resume``.
     :param resume_picker: ``True`` runs the Codex-native picker.
     :param command: Codex executable, e.g. ``"codex"``.
@@ -380,7 +380,7 @@ def _record_launch_for_fresh_session(session_id: str) -> None:
     Persist the wrapper's current cwd as the Codex session launch state.
 
     :param session_id: Newly created Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: None.
     """
     try:
@@ -403,7 +403,7 @@ def _align_working_directory_with_session(session_id: str) -> None:
     present and points at a different existing directory, ask whether
     to switch there before the runner and app-server sample cwd.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: None. Side-effect-only; may change process cwd.
     :raises click.ClickException: If recorded state exists but no
         viable resume directory exists, or if the user cancels.
@@ -777,7 +777,7 @@ async def _prepare_codex_terminal_via_daemon(
         ``("--config", "approval_policy=on-request")``.
     :param model: Optional model override for this launch, e.g.
         ``"gpt-5.4-mini"``.
-    :param host_id: Local host daemon id, e.g. ``"host_abc123"``.
+    :param host_id: Local host daemon id, e.g. ``"abc123"``.
     :param workspace: Absolute workspace path for the runner cwd, e.g.
         ``"/Users/me/repo"``.
     :param startup_progress: Optional user-visible progress renderer,
@@ -895,7 +895,7 @@ async def _ensure_codex_terminal_on_runner(
     Ask the bound runner to ensure the Codex app-server and terminal exist.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Session id, e.g. ``"conv_abc123"``.
+    :param session_id: Session id, e.g. ``"abc123"``.
     :returns: None.
     :raises click.ClickException: If the runner rejects the ensure request.
     """
@@ -920,7 +920,7 @@ async def _wait_for_codex_terminal_ready(
     Wait until the runner exposes the Codex terminal resource.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Session id, e.g. ``"conv_abc123"``.
+    :param session_id: Session id, e.g. ``"abc123"``.
     :param timeout_s: Max seconds to wait, e.g. ``60.0``.
     :returns: Terminal details including direct tmux attach metadata when
         available.
@@ -951,7 +951,7 @@ async def _post_initial_prompt(
 
     :param base_url: Omnigent server base URL.
     :param headers: HTTP auth headers for Omnigent requests.
-    :param session_id: Session id, e.g. ``"conv_abc123"``.
+    :param session_id: Session id, e.g. ``"abc123"``.
     :param prompt: User prompt text.
     :param auth: Optional refresh-capable HTTP auth for long-lived
         Databricks-backed sessions.
@@ -1387,7 +1387,7 @@ def _active_codex_session_id(bridge_dir: Path) -> str | None:
     Return the active Omnigent session id for a native Codex bridge.
 
     :param bridge_dir: Native Codex bridge directory.
-    :returns: Omnigent session id, e.g. ``"conv_abc123"``, or ``None`` when
+    :returns: Omnigent session id, e.g. ``"abc123"``, or ``None`` when
         bridge state has not been written yet.
     """
     state = read_bridge_state(bridge_dir)
@@ -1503,7 +1503,7 @@ async def _fetch_codex_session(client: httpx.AsyncClient, session_id: str) -> di
     Fetch an existing Omnigent session.
 
     :param client: HTTP client pointed at AP.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :returns: Decoded session payload.
     """
     resp = await client.get(f"/v1/sessions/{url_component(session_id)}")
@@ -1658,7 +1658,7 @@ def _clone_codex_rollout(
     designs/FORK_SESSION_UX.md.
 
     :param source_session_id: The SOURCE conversation id, used to locate
-        the source's ``CODEX_HOME``, e.g. ``"conv_abc123"``.
+        the source's ``CODEX_HOME``, e.g. ``"abc123"``.
     :param source_thread_id: The SOURCE Codex thread id / rollout stem to
         copy from, e.g. ``"019e96aa-0be2-7343-8d3b-6f914d60936b"``.
     :param target_thread_id: The thread id to assign the clone's copied
@@ -1728,7 +1728,7 @@ async def _ensure_local_codex_resume_rollout(
     state, not a cache that Omnigent should rewrite.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param external_session_id: Codex thread id, e.g.
         ``"019e96aa-0be2-7343-8d3b-6f914d60936b"``.
     :param codex_home: Per-session private ``CODEX_HOME`` whose
@@ -1827,7 +1827,7 @@ async def _fetch_all_session_items_for_codex_resume(
     Fetch committed Omnigent session items in chronological order.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :returns: Flat API item dicts from
         ``GET /v1/sessions/{id}/items``.
     :raises click.ClickException: If an item page cannot be fetched or
@@ -1899,7 +1899,7 @@ def _codex_rollout_records_from_session_items(
 
     :param items: Flat Omnigent item dicts in chronological order, e.g.
         ``{"type": "message", "role": "user", "content": [...]}``.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         Used for deterministic synthetic turn ids.
     :param external_session_id: Codex thread id, e.g.
         ``"019e96aa-0be2-7343-8d3b-6f914d60936b"``.
@@ -2256,7 +2256,7 @@ def _codex_turn_id_for_session_item(
     ``"codex_<turn_id>"`` for mirrored items. When that prefix is not
     present, build a deterministic synthetic turn id from stable inputs.
 
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param external_session_id: Codex thread id, e.g.
         ``"019e96aa-0be2-7343-8d3b-6f914d60936b"``.
     :param item: Flat Omnigent item dict.
@@ -2297,7 +2297,7 @@ async def _patch_external_session_id(
     Persist the native Codex thread id on the Omnigent session.
 
     :param client: HTTP client pointed at AP.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param thread_id: Codex thread id.
     :returns: None.
     """
@@ -2472,7 +2472,7 @@ async def _find_running_codex_terminal(
     and cold-resume the Codex thread.
 
     :param client: HTTP client pointed at AP.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :returns: Terminal details, or ``None`` when absent.
     :raises click.ClickException: If the server rejects the lookup for
         a reason other than "not currently attachable".
@@ -2597,7 +2597,7 @@ def _resolve_session_id_for_resume(
 
     :param base_url: Omnigent server base URL.
     :param headers: HTTP auth headers.
-    :param session_id: Explicit session id, e.g. ``"conv_abc123"``.
+    :param session_id: Explicit session id, e.g. ``"abc123"``.
     :param resume_picker: ``True`` for bare ``--resume``.
     :returns: Session id, or ``None`` for a fresh session / cancelled
         picker.

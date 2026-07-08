@@ -57,7 +57,7 @@ class DownloadFileTool(Tool):
                     "properties": {
                         "file_id": {
                             "type": "string",
-                            "description": ('The file ID to download, e.g. "file_abc123".'),
+                            "description": ('The file ID to download, e.g. "abc123".'),
                         },
                     },
                     "required": ["file_id"],

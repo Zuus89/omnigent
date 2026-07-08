@@ -101,7 +101,7 @@ class HostLaunchRunnerFrame:
         as the runner's working directory, e.g.
         ``"/Users/corey/projects/frontend"``.
     :param session_id: Conversation/session ID the runner is being
-        launched for, e.g. ``"conv_abc123"``. ``None`` means an older
+        launched for, e.g. ``"abc123"``. ``None`` means an older
         server did not include it.
     :param harness: Canonical harness the session will run, e.g.
         ``"claude-sdk"``. The host checks it is configured before

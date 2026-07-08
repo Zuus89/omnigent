@@ -74,7 +74,7 @@ _IDLE_TIMEOUT_ENV = "OMNIGENT_NATIVE_PANE_IDLE_TIMEOUT_S"
 class PaneRef(NamedTuple):
     """A live native CLI pane the reaper may reclaim.
 
-    :param conversation_id: AP-allocated conversation id, e.g. ``"conv_abc123"``.
+    :param conversation_id: AP-allocated conversation id, e.g. ``"abc123"``.
     :param terminal_id: Resource id of the native terminal, e.g.
         ``terminal_resource_id("claude", "main")`` — used for pane-scoped close.
     :param terminal_name: Harness short-name, e.g. ``"claude"``.

@@ -10,6 +10,7 @@ and deterministic. Integration with the full workflow lives in
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Iterator
 
 import pytest
@@ -109,29 +110,26 @@ def test_parse_provider_name(input_model: str, expected: tuple[str, str]) -> Non
 # ── trace_id_from_response_id ───────────────────────────
 
 
-def test_trace_id_from_response_id_valid() -> None:
+def test_trace_id_from_response_id_bare_hex() -> None:
     """
-    A well-formed response ID decodes to its 32-char hex suffix.
-    This proves operators can strip the ``resp_`` prefix and paste
-    the hex into a trace backend's lookup UI.
+    A bare 32-char hex response ID (the current format) is used
+    directly as the trace ID, so operators can paste it into a
+    trace backend's lookup UI.
+    """
+    assert telemetry.trace_id_from_response_id(_RESP_HEX) == _RESP_HEX
+
+
+def test_trace_id_from_response_id_strips_legacy_resp_prefix() -> None:
+    """
+    A legacy ``resp_``-prefixed ID still decodes to its hex body.
     """
     assert telemetry.trace_id_from_response_id(_RESP_ID) == _RESP_HEX
 
 
-def test_trace_id_from_response_id_wrong_prefix() -> None:
-    """
-    An ID without the ``resp_`` prefix raises ValueError. This is
-    the first validation line — operators should not be able to
-    confuse conversation IDs (``conv_...``) for response IDs.
-    """
-    with pytest.raises(ValueError, match="resp_"):
-        telemetry.trace_id_from_response_id("conv_" + _RESP_HEX)
-
-
 def test_trace_id_from_response_id_short_hex_zero_padded() -> None:
     """
-    A short hex suffix (< 32 chars) is zero-padded to 32 chars.
-    Harness-allocated response IDs use 24-char hex; the padding
+    A short hex body (< 32 chars) is zero-padded to 32 chars.
+    Harness-allocated response IDs use short hex; the padding
     produces a valid 128-bit W3C trace ID.
     """
     result = telemetry.trace_id_from_response_id("resp_abcdef")
@@ -139,23 +137,18 @@ def test_trace_id_from_response_id_short_hex_zero_padded() -> None:
     assert len(result) == 32
 
 
-def test_trace_id_from_response_id_too_long() -> None:
+def test_trace_id_from_response_id_polymorphic_falls_back_to_digest() -> None:
     """
-    A hex suffix longer than 32 chars raises ValueError.
+    A polymorphic harness turn id with no usable hex body (e.g.
+    ``resp_claude_<digest>``, ``kimi:...``, or an over-long body)
+    derives a stable 32-char hex trace ID from a digest instead of
+    raising, so tracing degrades gracefully rather than breaking a turn.
     """
-    with pytest.raises(ValueError, match="at most"):
-        telemetry.trace_id_from_response_id("resp_" + "a" * 33)
-
-
-def test_trace_id_from_response_id_invalid_hex() -> None:
-    """
-    An ID whose hex suffix contains non-hex characters raises
-    ValueError. Non-hex input would produce an undefined int
-    conversion, so we catch it explicitly.
-    """
-    bad_id = "resp_" + "Z" * 32
-    with pytest.raises(ValueError, match="hex"):
-        telemetry.trace_id_from_response_id(bad_id)
+    for rid in ("resp_claude_abcdef", "kimi:a0b2b7cd-79", "resp_" + "a" * 33, "resp_" + "Z" * 32):
+        result = telemetry.trace_id_from_response_id(rid)
+        assert re.fullmatch(r"[0-9a-f]{32}", result), f"{rid!r} -> {result!r}"
+        # Deterministic: same input yields the same trace id.
+        assert telemetry.trace_id_from_response_id(rid) == result
 
 
 # ── _env_bool / should_capture_content ─────────────────

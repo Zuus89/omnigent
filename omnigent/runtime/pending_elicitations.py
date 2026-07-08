@@ -108,7 +108,7 @@ def record_publish(conversation_id: str, event: dict[str, Any]) -> None:
     parent-wake notifier) can react without re-deriving the event type.
 
     :param conversation_id: Conversation/session id the event was
-        published on, e.g. ``"conv_abc123"``.
+        published on, e.g. ``"abc123"``.
     :param event: The event dict as passed to
         :func:`omnigent.runtime.session_stream.publish`. Reads
         ``event["type"]`` to dispatch and ``event["elicitation_id"]``
@@ -140,7 +140,7 @@ def _notify_observer(conversation_id: str, event: dict[str, Any]) -> None:
     into a ``None`` dereference between the check and the call.
 
     :param conversation_id: Conversation/session id the event was
-        published on, e.g. ``"conv_abc123"``.
+        published on, e.g. ``"abc123"``.
     :param event: The elicitation request/resolved event dict.
     :returns: None.
     """
@@ -169,7 +169,7 @@ def resolve(conversation_id: str, elicitation_id: str) -> None:
     returns ``0`` cleanly without leaving stale keys.
 
     :param conversation_id: Conversation/session id the verdict
-        was dispatched against, e.g. ``"conv_abc123"``.
+        was dispatched against, e.g. ``"abc123"``.
     :param elicitation_id: The elicitation correlation id from the
         approval payload, e.g. ``"elicit_abc123"``.
     """
@@ -187,7 +187,7 @@ def count_for(conversation_id: str) -> int:
     Return the number of outstanding elicitations for one session.
 
     :param conversation_id: Conversation/session id to query,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: Count of outstanding elicitations; ``0`` when the
         session has none tracked.
     """
@@ -206,7 +206,7 @@ def counts_for(conversation_ids: list[str]) -> dict[str, int]:
     pass without re-acquiring the lock per session.
 
     :param conversation_ids: Conversation/session ids to query,
-        e.g. ``["conv_abc123", "conv_def456"]``.
+        e.g. ``["abc123", "def456"]``.
     :returns: Mapping from each id in the input to its outstanding
         count. Ids not tracked in the index map to ``0``.
     """
@@ -229,7 +229,7 @@ def pending_session_ids() -> list[str]:
     (the rare, transient case).
 
     :returns: Session ids with outstanding elicitations, e.g.
-        ``["conv_child123"]``. Empty when nothing is pending anywhere.
+        ``["child123"]``. Empty when nothing is pending anywhere.
     """
     with _lock:
         return list(_pending.keys())
@@ -252,7 +252,7 @@ def snapshot_for(conversation_id: str) -> list[dict[str, Any]]:
     the index for subsequent reads.
 
     :param conversation_id: Conversation/session id to query,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: List of event dicts (each shaped like the original
         ``response.elicitation_request`` payload). Order is
         insertion order. Empty list when the session has no

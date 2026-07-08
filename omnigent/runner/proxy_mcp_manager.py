@@ -48,7 +48,7 @@ class ProxyMcpManager:
     of a direct manager.
 
     :param session_id: The AP-allocated session (conversation) id, e.g.
-        ``"conv_abc123"``.  Used to build the proxy endpoint URL:
+        ``"abc123"``.  Used to build the proxy endpoint URL:
         ``/v1/sessions/{session_id}/mcp``.
     :param ap_client: An :class:`httpx.AsyncClient` pointed at the Omnigent server.
         Must already carry the runner's service auth (e.g. Databricks bearer
@@ -63,7 +63,7 @@ class ProxyMcpManager:
     ) -> None:
         """Create a proxy manager bound to one session.
 
-        :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent session id, e.g. ``"abc123"``.
         :param ap_client: HTTP client pointed at the Omnigent server.
         :param publish_event: Optional callback that puts an SSE event on
             the runner's per-session outbound queue.  Required for the
@@ -80,7 +80,7 @@ class ProxyMcpManager:
     def _mcp_url(self) -> str:
         """MCP proxy endpoint URL for this session.
 
-        :returns: Path string, e.g. ``"/v1/sessions/conv_abc123/mcp"``.
+        :returns: Path string, e.g. ``"/v1/sessions/abc123/mcp"``.
         """
         return f"/v1/sessions/{self._session_id}/mcp"
 

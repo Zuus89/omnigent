@@ -179,7 +179,7 @@ class Conversation:
     """
     A conversation on the server.
 
-    :param id: Server-assigned conversation id, e.g. ``"conv_abc123"``.
+    :param id: Server-assigned conversation id, e.g. ``"abc123"``.
     :param title: Optional user-assigned title.
     :param created_at: Unix epoch timestamp of creation.
     :param labels: Guardrails labels on this conversation (keys are

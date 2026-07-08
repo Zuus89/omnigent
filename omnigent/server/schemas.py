@@ -189,7 +189,7 @@ class AgentObject(BaseModel):
     """
     API representation of a registered agent.
 
-    :param id: Unique agent identifier, e.g. ``"ag_abc123"``.
+    :param id: Unique agent identifier, e.g. ``"abc123"``.
     :param object: Fixed resource type, always ``"agent"``.
     :param name: Human-readable agent name,
         e.g. ``"research-agent"``.
@@ -272,7 +272,7 @@ class SessionPolicyObject(BaseModel):
     Returned by all CRUD endpoints under
     ``/v1/sessions/{session_id}/policies``.
 
-    :param id: Opaque policy identifier, e.g. ``"spol_abc123"``.
+    :param id: Opaque policy identifier, e.g. ``"abc123"``.
         ``None`` for spec-declared policies that are not
         store-persisted.
     :param object: Fixed resource type, always
@@ -392,7 +392,7 @@ class DefaultPolicyObject(BaseModel):
 
     Returned by all CRUD endpoints under ``/v1/policies``.
 
-    :param id: Opaque policy identifier, e.g. ``"dpol_abc123"``.
+    :param id: Opaque policy identifier, e.g. ``"abc123"``.
     :param object: Fixed resource type, always
         ``"default_policy"``.
     :param name: Human-readable policy name,
@@ -499,7 +499,7 @@ class FileObject(BaseModel):
     """
     API representation of an uploaded file.
 
-    :param id: Unique file identifier, e.g. ``"file_abc123"``.
+    :param id: Unique file identifier, e.g. ``"abc123"``.
     :param object: Fixed resource type, always ``"file"``.
     :param filename: Original filename, e.g. ``"report.pdf"``.
     :param bytes: File size in bytes.
@@ -524,9 +524,9 @@ class CopyFilesRequest(BaseModel):
     it does not grant cross-session read access.
 
     :param source_session_id: Session that owns the source files, e.g.
-        ``"conv_parent"``. Must be a strict ancestor of the destination.
+        ``"parent"``. Must be a strict ancestor of the destination.
     :param file_ids: Non-empty, unique ids of the source-owned files to
-        copy, e.g. ``["file_abc123"]``.
+        copy, e.g. ``["abc123"]``.
     """
 
     source_session_id: str
@@ -540,7 +540,7 @@ class CopiedFile(BaseModel):
     """
     A single copied file's new identity and preserved metadata.
 
-    :param new_id: The new child-scoped file id, e.g. ``"file_def456"``.
+    :param new_id: The new child-scoped file id, e.g. ``"def456"``.
     :param filename: The copied file's name, carried over from the source.
     :param content_type: The copied file's MIME type, preserved from the
         source row so the caller need not re-fetch it or guess from the
@@ -629,7 +629,7 @@ class ConversationObject(BaseModel):
     API representation of a conversation.
 
     :param id: Unique conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param object: Fixed resource type, always
         ``"conversation"``.
     :param title: Optional user-assigned conversation title.
@@ -656,7 +656,7 @@ class ConversationDeleted(BaseModel):
     Confirmation payload returned after deleting a conversation.
 
     :param id: ID of the deleted conversation,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param object: Fixed resource type, always
         ``"conversation.deleted"``.
     :param deleted: Always ``True``.
@@ -672,7 +672,7 @@ class ConversationRef(BaseModel):
     Lightweight reference to a conversation, used in request and
     response bodies where only the conversation ID is needed.
 
-    :param id: Conversation identifier, e.g. ``"conv_abc123"``.
+    :param id: Conversation identifier, e.g. ``"abc123"``.
     """
 
     id: str
@@ -693,12 +693,12 @@ class ChildSessionSummary(BaseModel):
     latest :class:`Task` (newest by ``created_at``).
 
     :param id: Child conversation/session identifier,
-        e.g. ``"conv_child123"``.
+        e.g. ``"child123"``.
     :param object: Fixed resource type, always
         ``"child_session"``.
     :param parent_session_id: Parent conversation id (echo of the
         route's ``session_id`` path parameter), e.g.
-        ``"conv_parent987"``. Stable join key for clients that
+        ``"parent987"``. Stable join key for clients that
         cache child rows across multiple parents.
     :param title: Sub-agent title, ``"{agent_type}:{session_name}"``
         as written by :func:`omnigent.tools.builtins.spawn._spawn_one`,
@@ -720,7 +720,7 @@ class ChildSessionSummary(BaseModel):
     :param updated_at: Unix epoch timestamp of the child's most
         recent update.
     :param agent_id: Agent id recorded on the latest task,
-        e.g. ``"ag_abc123"``. ``None`` if the child has no tasks
+        e.g. ``"abc123"``. ``None`` if the child has no tasks
         yet (rare — ``_spawn_one`` creates a task atomically with
         the conversation).
     :param agent_name: Agent type recorded on the latest task,
@@ -1204,7 +1204,7 @@ class SessionCreateRequest(BaseModel):
     session-create contract for clients that already uploaded an agent.
 
     :param agent_id: Durable identifier of the agent to bind,
-        e.g. ``"ag_abc123"``. Must match a registered agent.
+        e.g. ``"abc123"``. Must match a registered agent.
     :param initial_items: Initial queued events/inputs, typically a
         single user ``"message"``.
     :param title: Optional human-readable title for the session,
@@ -1233,7 +1233,7 @@ class SessionCreateRequest(BaseModel):
         waits for the launch to settle instead of failing with
         "no runner bound".
     :param host_id: Optional host to launch the runner on, e.g.
-        ``"host_a1b2c3d4..."``. When set, the server triggers the
+        ``"a1b2c3d4..."``. When set, the server triggers the
         host launch flow (generate binding token, write runner_id,
         send launch frame). ``None`` for CLI-initiated sessions.
         Must be ``None`` when ``host_type`` is ``"managed"``.
@@ -1405,7 +1405,7 @@ class SessionCreateMetadata(BaseModel):
         validated when a turn executes. ``None`` means use the agent
         default.
     :param host_id: Optional host to launch the runner on, e.g.
-        ``"host_a1b2c3d4..."``. When set, the server generates a
+        ``"a1b2c3d4..."``. When set, the server generates a
         binding token, writes the expected runner_id to the session
         row, and sends a ``host.launch_runner`` frame to the host.
         ``None`` for CLI-initiated sessions where the caller
@@ -1423,7 +1423,7 @@ class SessionCreateMetadata(BaseModel):
         are validated server-side. ``None`` for non-native sessions.
         See designs/NATIVE_RUNNER_SERVER_LAUNCH.md.
     :param parent_session_id: Optional parent session id, e.g.
-        ``"conv_abc123"``. When set, the new session is created as a
+        ``"abc123"``. When set, the new session is created as a
         sub-agent child of that session (``kind="sub_agent"``) and
         inherits the parent's runner binding for co-location. The
         caller must have READ access to the parent. ``None``
@@ -1446,9 +1446,9 @@ class CreatedSessionResponse(BaseModel):
     Response body for multipart ``POST /v1/sessions``.
 
     :param session_id: Identifier of the newly created session,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_id: Identifier of the session-scoped agent created
-        from the uploaded bundle, e.g. ``"ag_abc123"``.
+        from the uploaded bundle, e.g. ``"abc123"``.
     :param agent_name: Agent name loaded from the uploaded bundle's
         spec, e.g. ``"code-assistant"``.
     """
@@ -1462,7 +1462,7 @@ class SessionLabelsResponse(BaseModel):
     """
     Lightweight response body for ``GET /v1/sessions/{id}/labels``.
 
-    :param id: Session identifier, e.g. ``"conv_abc123"``.
+    :param id: Session identifier, e.g. ``"abc123"``.
     :param labels: Session-scoped guardrails labels. Empty dict when
         no labels have been written.
     """
@@ -1555,9 +1555,9 @@ class SessionResponse(BaseModel):
     and ``PATCH /v1/sessions/{id}``.
 
     :param id: Unique session identifier (also the underlying
-        conversation ID), e.g. ``"conv_abc123"``.
+        conversation ID), e.g. ``"abc123"``.
     :param agent_id: Durable identifier of the bound agent,
-        e.g. ``"ag_abc123"``. Stable across renames of the
+        e.g. ``"abc123"``. Stable across renames of the
         agent.
     :param agent_name: Human-readable name of the bound agent,
         e.g. ``"research-agent"``. Loaded from the agent row at
@@ -1584,7 +1584,7 @@ class SessionResponse(BaseModel):
         ``"runner_abc123"``. ``None`` until a client binds one via
         ``PATCH /v1/sessions/{id}``.
     :param host_id: Host that launched (or should launch) the
-        runner for this session, e.g. ``"host_a1b2c3d4..."``.
+        runner for this session, e.g. ``"a1b2c3d4..."``.
         ``None`` for CLI-initiated sessions.
     :param runner_online: Strict runner liveness — ``True`` iff a
         runner tunnel is currently registered for this session.
@@ -1620,13 +1620,13 @@ class SessionResponse(BaseModel):
         type name within the parent's spec tree, e.g.
         ``"summarizer"``. ``None`` for top-level sessions.
     :param parent_session_id: For sub-agent sessions, the parent
-        conversation's id, e.g. ``"conv_parent987"``. ``None`` for
+        conversation's id, e.g. ``"parent987"``. ``None`` for
         top-level sessions. Lets clients identify a session as a
         child and link back to its parent without an extra
         round-trip — the same conversation row exposes this via
         ``parent_conversation_id`` internally.
     :param root_conversation_id: The id of this session's spawn-tree
-        root, e.g. ``"conv_root1"``. Equals ``id`` for top-level
+        root, e.g. ``"root1"``. Equals ``id`` for top-level
         sessions; for sub-agents it points at the top-level ancestor.
         Lets orchestration tools (e.g. ``sys_session_close``) confirm
         a target shares the caller's spawn tree over the REST path.
@@ -2093,7 +2093,7 @@ class SessionListItem(BaseModel):
     Same shape as :class:`SessionResponse` minus ``items``.
 
     :param id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_id: Durable identifier of the bound agent.
     :param agent_name: Human-readable name of the bound agent,
         e.g. ``"research-agent"``. ``None`` when the agent row
@@ -2252,7 +2252,7 @@ class PermissionObject(BaseModel):
 
     :param user_id: The grantee, e.g. ``"alice@example.com"``.
     :param conversation_id: The session, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param level: Numeric permission level (1=read, 2=edit,
         3=manage).
     """
@@ -2379,7 +2379,7 @@ class SessionStatusEvent(_SSEEventBase):
 
     :param type: Always ``"session.status"``.
     :param conversation_id: The conversation/session identifier
-        whose status changed, e.g. ``"conv_abc123"``.
+        whose status changed, e.g. ``"abc123"``.
     :param status: New session status. ``"launching"`` (session or
         child task created, but no concrete harness start observed),
         ``"idle"`` (no loop running), ``"running"`` (loop executing),
@@ -2467,7 +2467,7 @@ class SessionModelEvent(_SSEEventBase):
     switch without a reload.
 
     :param type: Always ``"session.model"``.
-    :param conversation_id: Session identifier, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session identifier, e.g. ``"abc123"``.
     :param model: Tier alias the session is now on, e.g. ``"opus"`` —
         Claude Code's version-agnostic alias, matching the picker's
         vocabulary (not a pinned ``"claude-opus-4-8"`` id).
@@ -2493,7 +2493,7 @@ class SessionReasoningEffortEvent(_SSEEventBase):
     a reload.
 
     :param type: Always ``"session.reasoning_effort"``.
-    :param conversation_id: Session identifier, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session identifier, e.g. ``"abc123"``.
     :param reasoning_effort: Reasoning effort now active for the session, e.g.
         ``"medium"``, or ``None`` when Codex cleared to its default.
 
@@ -2517,7 +2517,7 @@ class SessionCollaborationModeEvent(_SSEEventBase):
     indicator without a reload.
 
     :param type: Always ``"session.collaboration_mode"``.
-    :param conversation_id: Session identifier, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session identifier, e.g. ``"abc123"``.
     :param mode: The active collaboration mode string, e.g. ``"plan"`` or
         ``"default"``.
 
@@ -2544,9 +2544,9 @@ class SessionAgentChangedEvent(_SSEEventBase):
     round-trip lands).
 
     :param type: Always ``"session.agent_changed"``.
-    :param conversation_id: Session identifier, e.g. ``"conv_abc123"``.
+    :param conversation_id: Session identifier, e.g. ``"abc123"``.
     :param agent_id: The session-scoped clone now bound to the session,
-        e.g. ``"ag_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_name: Display name of the agent the session now runs,
         e.g. ``"claude-native-ui"``. Deliberately the clean target-agent
         name — not the clone row's ``"… (switch ag_…)"`` disambiguation
@@ -2575,7 +2575,7 @@ class SessionTodosEvent(_SSEEventBase):
 
     :param type: Always ``"session.todos"``.
     :param conversation_id: Session identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param todos: Current todo items read from Claude's todo file.
         Each entry is a raw dict with ``content`` (str),
         ``status`` (``"pending"`` | ``"in_progress"`` |
@@ -2615,7 +2615,7 @@ class SessionTerminalPendingEvent(_SSEEventBase):
 
     :param type: Always ``"session.terminal_pending"``.
     :param conversation_id: Session identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param pending: ``True`` while the terminal is being created;
         ``False`` once it lands or auto-create fails.
 
@@ -2643,7 +2643,7 @@ class SessionSandboxStatusEvent(_SSEEventBase):
 
     :param type: Always ``"session.sandbox_status"``.
     :param conversation_id: Session identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param stage: The launch stage just entered, e.g.
         ``"provisioning"`` — see :class:`SandboxStatus` for the full
         pipeline order.
@@ -2684,7 +2684,7 @@ class SessionSkillsEvent(_SSEEventBase):
 
     :param type: Always ``"session.skills"``.
     :param conversation_id: Session identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
 
     Category: **transient** (SSE-only). On reconnect, clients seed
     the menu from the session snapshot's ``skills`` field, which is
@@ -2711,7 +2711,7 @@ class SessionModelOptionsEvent(_SSEEventBase):
 
     :param type: Always ``"session.model_options"``.
     :param conversation_id: Session identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
 
     Category: **transient** (SSE-only). On reconnect, clients seed
     Codex model / effort controls from the session snapshot.
@@ -2858,9 +2858,9 @@ class SessionCreatedEvent(_SSEEventBase):
     :param type: Always ``"session.created"``.
     :param conversation_id: The PARENT session/conversation id —
         this event rides the parent's stream, e.g.
-        ``"conv_parent123"``.
+        ``"parent123"``.
     :param child_session_id: The newly-created child session id,
-        e.g. ``"conv_child456"``. Same as ``conversation_id`` on
+        e.g. ``"child456"``. Same as ``conversation_id`` on
         the child's own stream when consumers pivot to it.
     :param agent_id: Registered agent id the child runs as,
         e.g. ``"agent_xyz"``. ``None`` is permitted only for
@@ -2915,9 +2915,9 @@ class SessionSupersededEvent(_SSEEventBase):
 
     :param type: Always ``"session.superseded"``.
     :param conversation_id: The superseded (old) conversation id this
-        event rides the stream of, e.g. ``"conv_old"``.
+        event rides the stream of, e.g. ``"oldid"``.
     :param target_conversation_id: The conversation to follow to, e.g.
-        ``"conv_new"``.
+        ``"newid"``.
     :param reason: Why the session was superseded. Currently always
         ``"clear"`` (a Claude Code ``/clear``); kept as a field so the
         client can branch on future supersession causes.
@@ -3077,7 +3077,7 @@ class OutputFileDoneEvent(_SSEEventBase):
 
     :param type: Always ``"response.output_file.done"``.
     :param file_id: Identifier of the materialized file,
-        e.g. ``"file_abc123"``.
+        e.g. ``"abc123"``.
     :param filename: Original filename if the annotation supplied
         one, e.g. ``"report.pdf"``. ``None`` otherwise.
     :param content_type: MIME content type if the annotation
@@ -3205,7 +3205,7 @@ class SessionPresenceEvent(_SSEEventBase):
     :param type: Always ``"session.presence"``.
     :param conversation_id: The conversation whose stream delivered
         this event — the root or a sub-agent conversation, e.g.
-        ``"conv_abc123"``. Matches the streamed conversation (not
+        ``"abc123"``. Matches the streamed conversation (not
         necessarily the tree's root) so clients can guard events by
         the conversation they are viewing.
     :param viewers: All users currently viewing any conversation in
@@ -3254,7 +3254,7 @@ class ElicitationRequestParams(BaseModel):
         request payload (≤1024 chars in current AP), for the
         consumer's renderer.
     :param target_session_id: AP session whose resolve endpoint owns
-        this elicitation, e.g. ``"conv_child123"``. Present when a
+        this elicitation, e.g. ``"child123"``. Present when a
         child/sub-agent prompt is mirrored into an ancestor stream;
         ``None`` means resolve against the current session.
     """
@@ -3363,7 +3363,7 @@ class PolicyDeniedEvent(_SSEEventBase):
 
     :param type: Always ``"response.policy_denied"``.
     :param conversation_id: Session/conversation id the DENY applies to,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param reason: Human-readable deny reason from the deciding policy, e.g.
         ``"Blocked by policy."``.
     :param phase: The policy phase the DENY landed on, e.g. ``"tool_call"``.
@@ -3705,7 +3705,7 @@ class SessionChildSessionUpdatedEvent(_SSEEventBase):
     :param type: Always ``"session.child_session.updated"``.
     :param conversation_id: The PARENT (carrier) session id.
     :param child_session_id: The child session id, e.g.
-        ``"conv_child_abc123"``.
+        ``"child_abc123"``.
     :param child: A PARTIAL :class:`ChildSessionSummary` — the
         snapshot-on-connect sends the full summary, while live runner
         deltas carry only the fields that changed (a status delta omits
@@ -3769,7 +3769,7 @@ class TurnStartedEvent(_SSEEventBase):
 
     :param type: Fixed literal ``"turn.started"``.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
 
     type: Literal["turn.started"]
@@ -3782,7 +3782,7 @@ class TurnCompletedEvent(_SSEEventBase):
 
     :param type: Fixed literal ``"turn.completed"``.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
 
     type: Literal["turn.completed"]
@@ -3795,7 +3795,7 @@ class TurnFailedEvent(_SSEEventBase):
 
     :param type: Fixed literal ``"turn.failed"``.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param error: Error details, e.g.
         ``{"message": "LLM timeout", "type": "TimeoutError"}``.
     """
@@ -3811,7 +3811,7 @@ class TurnCancelledEvent(_SSEEventBase):
 
     :param type: Fixed literal ``"turn.cancelled"``.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
 
     type: Literal["turn.cancelled"]

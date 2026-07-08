@@ -70,7 +70,7 @@ async def wait_for_host_online(
     wait, with the last transport error included in the message.
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param host_id: This machine's host id, e.g. ``"host_abc123"``.
+    :param host_id: This machine's host id, e.g. ``"abc123"``.
     :param timeout_s: Max seconds to wait, e.g. ``30.0``.
     :returns: None once the host reports ``status == "online"``.
     :raises click.ClickException: If the host is not online in time.
@@ -179,8 +179,8 @@ async def launch_or_reuse_daemon_runner(
     ``POST /v1/hosts/{host_id}/runners`` (which atomically binds it).
 
     :param client: HTTP client pointed at the Omnigent server.
-    :param host_id: This machine's host id, e.g. ``"host_abc123"``.
-    :param session_id: Session to bind, e.g. ``"conv_abc123"``.
+    :param host_id: This machine's host id, e.g. ``"abc123"``.
+    :param session_id: Session to bind, e.g. ``"abc123"``.
     :param workspace: Absolute host path for the runner cwd, e.g.
         ``"/Users/me/proj"``.
     :returns: The bound runner id, e.g. ``"runner_abc123"``.

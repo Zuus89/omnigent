@@ -38,7 +38,7 @@ from omnigent.host.frames import (
     HostStopRunnerResultFrame,
     decode_host_frame,
 )
-from omnigent.host.identity import MANAGED_HOST_TOKEN_HEADER
+from omnigent.host.identity import MANAGED_HOST_TOKEN_HEADER, normalize_host_id
 from omnigent.runner.transports.ws_tunnel.frames import (
     PingFrame,
     PongFrame,
@@ -132,6 +132,10 @@ def create_host_tunnel_router(
         7. Start sender, receiver, and ping loops.
         8. On disconnect: deregister, set offline in DB.
         """
+        # A not-yet-upgraded host still dials in with a legacy ``host_``
+        # prefix in the tunnel URL; strip it here so it matches its
+        # migrated, prefix-less DB row (and the bare managed.host_id below).
+        host_id = normalize_host_id(host_id)
         # Authenticate from the handshake BEFORE accepting the upgrade,
         # so an unauthenticated peer never completes the WS handshake — no
         # acceptance oracle and no pre-auth protocol I/O. ``get_user_id`` reads

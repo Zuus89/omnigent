@@ -687,7 +687,7 @@ def test_repl_full_session_lifecycle(
     try:
         _wait_ready(child)
         result = _drive_turn(child, "SESSION_LIFECYCLE_OK", mock_llm_server_url)
-        assert result.session_id.startswith("conv_")
+        assert len(result.session_id) == 32
         assert result.runner_id.startswith("runner_")
 
         submit_prompt(child, "/history")

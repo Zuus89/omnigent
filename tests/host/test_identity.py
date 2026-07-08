@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import re
 import socket
 from pathlib import Path
 
 import pytest
 import yaml
 
-from omnigent.host.identity import load_or_create_host_identity
+from omnigent.host.identity import load_or_create_host_identity, normalize_host_id
 
 
 def test_create_identity_when_no_config(tmp_path: Path) -> None:
@@ -23,13 +24,10 @@ def test_create_identity_when_no_config(tmp_path: Path) -> None:
     identity = load_or_create_host_identity(config_path)
 
     assert config_path.exists(), "config.yaml should be created on first call"
-    # host_id format: host_{32 hex chars}
-    assert identity.host_id.startswith("host_"), (
-        f"host_id should start with 'host_', got {identity.host_id!r}"
+    # host_id is a bare 32-char hex uuid (no prefix).
+    assert re.fullmatch(r"[0-9a-f]{32}", identity.host_id), (
+        f"host_id should be bare 32-char hex, got {identity.host_id!r}"
     )
-    hex_part = identity.host_id[len("host_") :]
-    assert len(hex_part) == 32, f"hex portion should be 32 chars (uuid4), got {len(hex_part)}"
-    int(hex_part, 16)  # raises ValueError if not valid hex
 
     # Name defaults to machine hostname.
     assert identity.name == socket.gethostname()
@@ -48,15 +46,37 @@ def test_load_existing_identity(tmp_path: Path) -> None:
         yaml.safe_dump(
             {
                 "server": "http://example.com",
-                "host": {"host_id": "host_aabbccdd", "name": "my-laptop"},
+                "host": {
+                    "host_id": "aabbccddaabbccddaabbccddaabbccdd",
+                    "name": "my-laptop",
+                },
             }
         )
     )
 
     identity = load_or_create_host_identity(config_path)
 
-    assert identity.host_id == "host_aabbccdd"
+    assert identity.host_id == "aabbccddaabbccddaabbccddaabbccdd"
     assert identity.name == "my-laptop"
+
+
+def test_legacy_host_prefix_stripped_on_load(tmp_path: Path) -> None:
+    """A pre-migration config with a ``host_`` prefix loads prefix-less so it
+    matches the migrated, bare server-side host row."""
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        yaml.safe_dump({"host": {"host_id": "host_aabbccdd", "name": "my-laptop"}})
+    )
+
+    identity = load_or_create_host_identity(config_path)
+
+    assert identity.host_id == "aabbccdd"
+
+
+def test_normalize_host_id_strips_legacy_prefix_only() -> None:
+    """normalize_host_id strips a leading ``host_`` and is a no-op otherwise."""
+    assert normalize_host_id("host_abc123") == "abc123"
+    assert normalize_host_id("abc123") == "abc123"
 
 
 def test_identity_stable_across_calls(tmp_path: Path) -> None:
@@ -112,13 +132,13 @@ def test_env_override_returns_identity_without_touching_config(
     must not read or write config.yaml (managed sandboxes are
     disposable; the server owns their identity).
     """
-    monkeypatch.setenv("OMNIGENT_HOST_ID", "host_env_override")
+    monkeypatch.setenv("OMNIGENT_HOST_ID", "envoverrideenvoverrideenvoverr123")
     monkeypatch.setenv("OMNIGENT_HOST_NAME", "managed-env")
     config_path = tmp_path / "config.yaml"
 
     identity = load_or_create_host_identity(config_path)
 
-    assert identity.host_id == "host_env_override"
+    assert identity.host_id == "envoverrideenvoverrideenvoverr123"
     assert identity.name == "managed-env"
     # The identity file must not be materialized by the env path.
     assert not config_path.exists()

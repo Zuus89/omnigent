@@ -202,7 +202,7 @@ class _ForwarderTarget:
     """
     Mutable AP/Codex target currently owned by the forwarder.
 
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param thread_id: Codex app-server thread id, e.g.
         ``"0196..."``.
     :param delta_coalescer: Text-delta coalescer posting to
@@ -960,7 +960,7 @@ class _OutputTextDeltaCoalescer:
     explicit flush barriers.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param flush_interval_seconds: Maximum time to hold the first
         buffered delta before posting it.
     :param flush_char_threshold: Maximum buffered character count before
@@ -979,7 +979,7 @@ class _OutputTextDeltaCoalescer:
         Initialize the coalescer.
 
         :param client: HTTP client for Omnigent event posts.
-        :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         :param flush_interval_seconds: Maximum buffering delay in
             seconds, e.g. ``0.05``.
         :param flush_char_threshold: Character threshold that triggers
@@ -1147,7 +1147,7 @@ class _SessionUsageCoalescer:
     nothing changed).
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     """
 
     def __init__(
@@ -1160,7 +1160,7 @@ class _SessionUsageCoalescer:
         Initialize the usage coalescer.
 
         :param client: HTTP client for Omnigent event posts.
-        :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         :param model: Model name to attach to token posts, e.g. ``"gpt-5.5"``.
             Needed for child coalescers, created where ``forwarder_state`` is
             ``None`` and ``record()`` receives no model — without it the server
@@ -1295,7 +1295,7 @@ class _CodexElicitationTaskTracker:
         :param client: HTTP client for Omnigent hook posts.
         :param codex_client: Connected Codex app-server client used
             to send JSON-RPC results.
-        :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         :param event: Codex JSON-RPC request envelope.
         :returns: None.
         """
@@ -1338,7 +1338,7 @@ class _CodexElicitationTaskTracker:
         Mark the hook wait resolved by Codex's explicit notification.
 
         :param client: HTTP client for Omnigent event posts.
-        :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         :param params: ``serverRequest/resolved`` params, e.g.
             ``{"threadId": "thread_abc", "requestId": 12}``.
         :returns: None.
@@ -1372,7 +1372,7 @@ class _CodexElicitationTaskTracker:
         turn.
 
         :param client: HTTP client for Omnigent event posts.
-        :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         :param params: Codex ``turn/completed`` params, e.g.
             ``{"threadId": "thread_abc", "turn": {"id": "turn_abc"}}``.
         :returns: None.
@@ -1426,7 +1426,7 @@ class _CodexElicitationTaskTracker:
 
         :param client: HTTP client for Omnigent hook posts.
         :param codex_client: Connected Codex app-server client.
-        :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         :param event: Codex JSON-RPC request envelope.
         :returns: None.
         """
@@ -1472,7 +1472,7 @@ class _CodexElicitationTaskTracker:
         Post one Omnigent resolution signal, suppressing duplicates.
 
         :param client: HTTP client for Omnigent event posts.
-        :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
         :param pending: Pending hook wait metadata to resolve.
         :returns: None.
         """
@@ -1566,7 +1566,7 @@ async def supervise_forwarder(
     :param base_url: Omnigent server base URL, e.g.
         ``"http://127.0.0.1:6767"``.
     :param headers: Static HTTP headers for Omnigent requests.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param app_server_url: Codex app-server transport, e.g.
         ``"ws://127.0.0.1:9876"``. Used to (re)connect a fallback
@@ -1870,7 +1870,7 @@ async def _fetch_session_snapshot(client: httpx.AsyncClient, session_id: str) ->
     Fetch an Omnigent session snapshot for Codex session rotation.
 
     :param client: Omnigent HTTP client.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :returns: Decoded JSON session snapshot.
     :raises httpx.HTTPStatusError: If Omnigent rejects the request.
     :raises RuntimeError: If the response is not a JSON object.
@@ -2126,7 +2126,7 @@ async def _post_resume_terminal_status(
     terminal state from transcript items alone.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param thread_id: Codex thread id from the resume payload, e.g.
         ``"thread_123"``.
@@ -2225,7 +2225,7 @@ async def _handle_event(
     Forward one Codex app-server notification.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param event: Codex notification envelope.
     :param usage_coalescer: Coalescer for high-frequency usage
@@ -2470,7 +2470,7 @@ async def _maybe_handle_codex_request(
     Handle Codex server-to-client requests if this event is one.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param event: Codex notification/request envelope.
     :param method: Codex method value, e.g.
         ``"item/tool/requestUserInput"``.
@@ -2555,7 +2555,7 @@ async def _sync_model_change(
     baseline unchanged so the next settings update retries.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param forwarder_state: Mutable forwarder state carrying the current
         model and the last-mirrored baseline.
     :returns: None.
@@ -2584,7 +2584,7 @@ async def _sync_reasoning_effort_change(
     Mirror Codex's active reasoning effort to Omnigent session metadata.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param forwarder_state: Mutable forwarder state carrying the current
         Codex effort and last-mirrored baseline.
     :returns: None.
@@ -2614,7 +2614,7 @@ async def _sync_codex_collaboration_mode_change(
     Mirror Codex's active collaboration mode kind to Omnigent labels.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param forwarder_state: Mutable forwarder state carrying the current
         Codex collaboration mode and last-mirrored baseline.
     :returns: None.
@@ -2650,7 +2650,7 @@ async def _maybe_handle_turn_event(
     Handle turn/thread-level Codex events.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param method: Codex method value, e.g. ``"turn/started"``.
     :param params: Codex notification params.
@@ -2755,7 +2755,7 @@ async def _maybe_handle_delta_event(
     Handle Codex streaming text/plan delta events.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param method: Codex method value, e.g.
         ``"item/agentMessage/delta"``.
@@ -2815,7 +2815,7 @@ async def _handle_completed_event(
     Flush pending text and mirror one completed Codex item.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex ``item/completed`` params.
     :param delta_coalescer: Optional text-delta coalescer to flush
         before the completed item.
@@ -2849,7 +2849,7 @@ async def _handle_terminal_turn_boundary(
     Handle a Codex terminal turn completion/failure boundary.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param method: Codex method, e.g. ``"turn/completed"``.
     :param params: Codex notification params.
@@ -2941,7 +2941,7 @@ async def _handle_turn_plan_updated(
     the structured plan into a compact assistant message.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex ``turn/plan/updated`` params.
     :returns: None.
     """
@@ -3024,7 +3024,7 @@ async def _handle_codex_elicitation_request(
     :param client: HTTP client for Omnigent hook posts.
     :param codex_client: Connected Codex app-server client used to
         send JSON-RPC results.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param event: Codex JSON-RPC request envelope.
     :returns: None.
     """
@@ -3053,7 +3053,7 @@ async def _codex_elicitation_hook_result(
     unanswered or drop a synthetic prompt.
 
     :param client: HTTP client for Omnigent hook posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param event: Codex JSON-RPC request envelope.
     :returns: Parsed JSON-RPC result payload, or ``None``.
     """
@@ -3137,7 +3137,7 @@ async def _post_codex_elicitation_request(
     responses are final.
 
     :param client: HTTP client for Omnigent hook posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param event: Codex JSON-RPC request envelope.
     :returns: The final hook response, or ``None`` when the retry budget
         ran out — the caller leaves the native request unanswered, as
@@ -3249,7 +3249,7 @@ async def _maybe_handle_plan_implementation_prompt(
 
     :param client: HTTP client for Omnigent hook posts.
     :param codex_client: Connected Codex app-server client.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param params: Codex ``turn/completed`` params.
     :param forwarder_state: Mutable forwarder state.
@@ -3464,7 +3464,7 @@ async def _handle_turn_started(
     Forward a Codex terminal turn start event.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param params: Codex ``turn/started`` params.
     :returns: None.
@@ -3505,7 +3505,7 @@ async def _handle_terminal_turn_event(
     Forward a terminal-observed Codex turn completion/failure event.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param method: Codex method, e.g. ``"turn/completed"``.
     :param params: Codex turn event params.
@@ -3720,7 +3720,7 @@ async def _handle_completed_item(
     of the same item only write once. Collab items are dispatched separately.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex ``item/completed`` params.
     :param forwarder_state: Optional mutable state for dedup tracking.
     :returns: None.
@@ -3819,7 +3819,7 @@ async def _maybe_persist_interrupted_partial_text(
     the session goes idle.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param method: Codex terminal method, e.g. ``"turn/completed"``.
     :param params: Codex terminal notification params.
     :param forwarder_state: Mutable forwarder state carrying partial text.
@@ -3881,7 +3881,7 @@ async def _post_interrupted_partial_agent_message(
     Persist an interrupted Codex turn's visible partial assistant text.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex turn params including ``turnId``.
     :param text: Partial assistant text, e.g. ``"The answer is"``.
     :returns: None.
@@ -3924,7 +3924,7 @@ async def _flush_turn_diff(
     second terminal boundary for the same turn is a no-op.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex terminal turn-boundary params.
     :param forwarder_state: Mutable forwarder state holding the stored diff.
     :returns: None.
@@ -4429,7 +4429,7 @@ async def _handle_agent_message_delta(
     answer.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param params: Codex ``item/agentMessage/delta`` params, e.g.
         ``{"turnId": "turn_123", "itemId": "item_123",
@@ -4496,7 +4496,7 @@ async def _handle_plan_delta(
     consume the buffered deltas so the visible partial plan is still durable.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param bridge_dir: Native Codex bridge directory.
     :param params: Codex ``item/plan/delta`` params, e.g.
         ``{"turnId": "turn_123", "itemId": "item_plan",
@@ -4567,7 +4567,7 @@ async def _ensure_user_message_posted(
     turn's user message was already posted this connection.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex ``item/completed`` params for the assistant
         message whose turn's user message must already be posted.
     :param forwarder_state: Mutable forwarder state tracking posted user
@@ -4650,7 +4650,7 @@ async def _post_user_message(
     Persist a Codex user message observed from the TUI.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex notification params.
     :param item: Codex ``userMessage`` item.
     :returns: None.
@@ -4699,7 +4699,7 @@ async def _post_agent_message(
     Persist a Codex assistant message observed from the TUI/app-server.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex notification params.
     :param item: Codex ``agentMessage`` item.
     :returns: None.
@@ -4736,7 +4736,7 @@ async def _post_tool_item(
     ``function_call`` / ``function_call_output`` pair the web UI renders.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex ``item/completed`` params.
     :param item: Codex tool item, e.g.
         ``{"type": "commandExecution", "id": "call_abc",
@@ -4786,7 +4786,7 @@ async def _post_plan_item(
     Persist one completed Codex plan item as assistant text.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex ``item/completed`` params.
     :param item: Codex ``plan`` thread item.
     :returns: None.
@@ -4826,7 +4826,7 @@ async def _post_review_mode_marker(
     swallow the web user's next real message.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex ``item/completed`` params.
     :param item: Codex ``enteredReviewMode`` / ``exitedReviewMode`` item,
         e.g. ``{"type": "enteredReviewMode", "id": "rev_1",
@@ -5107,7 +5107,7 @@ async def _post_external_item(
     the producer's own responsibility.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param item_type: Conversation item type, e.g. ``"message"``.
     :param item_data: Conversation item payload.
     :param response_id: Response id for the mirrored Codex turn.
@@ -5147,7 +5147,7 @@ async def _post_status(
     Publish a native Codex status edge.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param status: Session status, e.g. ``"running"``.
     :param response_id: Optional response id for this status edge,
         e.g. ``"codex_turn_abc123"``.
@@ -5189,7 +5189,7 @@ async def _post_turn_status_edge(
     flags ``reauth_required`` and appends a re-auth hint to the output.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param edge: Derived lifecycle edge, or ``None`` when no status should
         be published.
     :returns: None.
@@ -5230,7 +5230,7 @@ async def _post_external_elicitation_resolved(
     Post a native-side elicitation resolution signal to AP.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param elicitation_id: Omnigent elicitation id, e.g.
         ``"elicit_codex_abc123"``.
     :returns: ``True`` when Omnigent accepted the event.
@@ -5258,7 +5258,7 @@ async def _post_output_text_delta(
     Publish a transient Codex assistant text delta.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param delta: Assistant text fragment, e.g. ``"hello"``.
     :param message_id: Optional stable native message stream id,
         e.g. ``"codex:thread_123:turn_123:agentMessage:item_agent"``.
@@ -5302,7 +5302,7 @@ async def _post_compaction_status(
     notification.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param status: ``"in_progress"`` or ``"completed"``.
     :param forwarder_state: Optional state carrying the dedupe baseline.
     :returns: None.
@@ -5440,7 +5440,7 @@ async def _handle_reasoning_delta(
     opens the block (``started=True`` → ``response.reasoning.started``).
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param params: Codex reasoning delta params, e.g.
         ``{"turnId": "turn_123", "itemId": "item_r", "delta": "Let me"}``.
     :param forwarder_state: Optional forwarder state tracking which
@@ -5484,7 +5484,7 @@ async def _post_output_reasoning_delta(
     Publish a transient Codex reasoning delta.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param delta: Reasoning text fragment, e.g. ``"Let me think"``.
     :param started: Whether this opens a new reasoning block; when
         ``True`` the server precedes the delta with a single
@@ -5510,7 +5510,7 @@ async def _post_session_interrupted(
     Publish a Codex-observed interrupted-turn signal into AP.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param response_id: Optional interrupted response id, e.g.
         ``"codex_turn_abc123"``.
     :returns: None.
@@ -5773,7 +5773,7 @@ async def _post_session_event(
     payload with the structured classification replay needs (#1579).
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param event_type: Session event type, e.g.
         ``"external_conversation_item"``.
     :param data: Event data payload, e.g. ``{"status": "running"}``.
@@ -5821,7 +5821,7 @@ async def _post_session_event_inner(
     Post one Omnigent session event with bounded transient retries.
 
     :param client: HTTP client for Omnigent event posts.
-    :param session_id: Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent conversation id, e.g. ``"abc123"``.
     :param event_type: Session event type, e.g.
         ``"external_conversation_item"``.
     :param data: Event data payload, e.g.

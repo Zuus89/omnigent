@@ -324,7 +324,7 @@ async def test_create_session_accepts_application_json(
     resp = await client.post("/v1/sessions", json={"agent_id": agent["id"]})
     assert resp.status_code == 201, resp.text
     # Real session id returned → JSON create reached the handler and succeeded.
-    assert resp.json()["id"].startswith("conv_")
+    assert len(resp.json()["id"]) == 32
 
 
 async def test_create_session_accepts_multipart_bundled_create(

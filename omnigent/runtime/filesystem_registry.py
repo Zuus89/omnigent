@@ -359,7 +359,7 @@ class FilesystemRegistry(ABC):
         :param operation: One of ``"created"``, ``"modified"``, or
             ``"deleted"``.
         :param session_id: The session that made the change,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         return
 
@@ -388,7 +388,7 @@ class FilesystemRegistry(ABC):
         :class:`GitFilesystemRegistry` holds no per-session state).
 
         :param conversation_id: The conversation to remove,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         return
 
@@ -406,7 +406,7 @@ class FilesystemRegistry(ABC):
     def list_changed_files(self, conversation_id: str, *, limit: int) -> list[dict[str, Any]]:
         """Return changed files visible to *conversation_id*, newest first.
 
-        :param conversation_id: The session to query, e.g. ``"conv_abc123"``.
+        :param conversation_id: The session to query, e.g. ``"abc123"``.
         :param limit: Maximum number of records to return.
         :returns: List of file-record dicts with ``path``, ``status``,
             ``bytes``, and ``modified_at`` fields, newest first.
@@ -416,7 +416,7 @@ class FilesystemRegistry(ABC):
     def get_changed_file(self, session_id: str, path: str) -> dict[str, Any] | None:
         """Return the change record for a single *path*, or ``None``.
 
-        :param session_id: The session to query, e.g. ``"conv_abc123"``.
+        :param session_id: The session to query, e.g. ``"abc123"``.
         :param path: Path relative to the workspace root, e.g. ``"src/foo.py"``.
         :returns: A file-record dict with ``path``, ``status``, ``bytes``, and
             ``modified_at`` fields, or ``None`` when the file has no changes.
@@ -490,7 +490,7 @@ class AgentEditFilesystemRegistry(FilesystemRegistry):
         :param operation: One of ``"created"``, ``"modified"``, or
             ``"deleted"``.
         :param session_id: The session that made the change,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         norm = _normalize_path(path, self._cwd)
         if norm is None:
@@ -522,7 +522,7 @@ class AgentEditFilesystemRegistry(FilesystemRegistry):
         """Drop the event list and evict any snapshot entries for *conversation_id*.
 
         :param conversation_id: The conversation to remove,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         with self._lock:
             self._session_events.pop(conversation_id, None)
@@ -535,7 +535,7 @@ class AgentEditFilesystemRegistry(FilesystemRegistry):
         """Return files changed by the agent in *conversation_id*'s session.
 
         :param conversation_id: The session to query, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param limit: Maximum number of records to return.
         :returns: List of file-record dicts suitable for the
             ``workspace.changed_files`` API response, newest first.
@@ -590,7 +590,7 @@ class AgentEditFilesystemRegistry(FilesystemRegistry):
         caller.  The inner loop is O(E) where E is the total number of events
         for this session — typically much smaller than all changed files.
 
-        :param session_id: The conversation to query, e.g. ``"conv_abc123"``.
+        :param session_id: The conversation to query, e.g. ``"abc123"``.
         :param path: Path relative to the workspace root, e.g.
             ``"src/foo.py"``.
         :returns: A file-record dict (``path``, ``status``, ``bytes``,

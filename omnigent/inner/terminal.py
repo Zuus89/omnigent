@@ -863,7 +863,7 @@ class TerminalInstance:
         ``env`` / ``env_unset``.
     :param sandbox_policy: Optional sandbox wrapper policy.
     :param conversation_link: Optional web UI link for the owning
-        conversation, e.g. ``"/c/conv_abc123"``.
+        conversation, e.g. ``"/c/abc123"``.
     :param scrollback: Tmux scrollback history limit.
     :param tmux_allow_passthrough: Whether pane applications may use
         tmux passthrough escapes to query/control the attached terminal.
@@ -1003,7 +1003,7 @@ class TerminalInstance:
         Update the link shown in this terminal's tmux status bar.
 
         :param conversation_link: Conversation URL to show, e.g.
-            ``"/c/conv_abc123"``, or ``None`` to clear the status
+            ``"/c/abc123"``, or ``None`` to clear the status
             value.
         :returns: None.
         :raises RuntimeError: If the running tmux server rejects the
@@ -1867,7 +1867,7 @@ def create_terminal_instance(
     :param sandbox_override: Optional override for the sandbox type,
         one of ``"none"`` or ``"linux_bwrap"``.
     :param conversation_link: Optional web UI link for the owning
-        conversation, e.g. ``"/c/conv_abc123"``.
+        conversation, e.g. ``"/c/abc123"``.
     :returns: A :class:`TerminalCreateResult` carrying the new instance
         and the resolved cwd to pass to ``launch()``.
     """

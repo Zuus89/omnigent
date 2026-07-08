@@ -1484,7 +1484,7 @@ class _HostDaemonRecord:
     :param started_at: Unix epoch seconds when the daemon was spawned,
         e.g. ``1710000000``.
     :param host_id: Local host id advertised to Omnigent servers, e.g.
-        ``"host_abc123"``. ``None`` for legacy records.
+        ``"abc123"``. ``None`` for legacy records.
     :param resolved_server_url: Concrete local server URL discovered for
         local mode, e.g. ``"http://127.0.0.1:8123"``. ``None`` until
         discovery succeeds or for remote mode.
@@ -1563,7 +1563,7 @@ class _SessionsPageResult:
     Decoded sessions page.
 
     :param sessions: Session rows returned by the page.
-    :param last_id: Last session id in the page, e.g. ``"conv_abc123"``.
+    :param last_id: Last session id in the page, e.g. ``"abc123"``.
     :param has_more: Whether another page should be fetched.
     :param error: Human-readable error text, or ``None`` on success.
     """
@@ -1853,7 +1853,7 @@ def _load_existing_host_id() -> str | None:
     """
     Load the existing local host id without creating one.
 
-    :returns: Host id from config, e.g. ``"host_abc123"``, or ``None``.
+    :returns: Host id from config, e.g. ``"abc123"``, or ``None``.
     """
     candidate_paths = [_effective_global_config_path()]
     from omnigent.host.identity import CONFIG_PATH
@@ -2119,7 +2119,7 @@ def _foreground_daemon_record(
         ``"https://example.databricksapps.com"`` or ``"local"``.
     :param server_url: Concrete Omnigent server URL being connected to, e.g.
         ``"http://127.0.0.1:8123"``.
-    :param host_id: Local host id, e.g. ``"host_abc123"``.
+    :param host_id: Local host id, e.g. ``"abc123"``.
     :returns: Daemon registry record for ``os.getpid()``.
     """
     mode = "local" if target == _LOCAL_DAEMON_MARKER else "server"
@@ -2215,7 +2215,7 @@ def _load_or_create_host_id() -> str | None:
     """
     Load or create the host id used by a foreground host process.
 
-    :returns: Host id from local config, e.g. ``"host_abc123"``, or
+    :returns: Host id from local config, e.g. ``"abc123"``, or
         ``None`` if the identity file cannot be created.
     """
     host_id = _load_existing_host_id()
@@ -4180,7 +4180,7 @@ def _reject_native_on_windows(harness: str) -> None:
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to claude-native sessions."
     ),
 )
@@ -4259,7 +4259,7 @@ def claude(
     \b
     Examples:
       omnigent claude
-      omnigent claude --resume conv_abc123
+      omnigent claude --resume abc123
       omnigent claude --resume                  # interactive picker
       omnigent claude --server https://<app>.databricksapps.com
     """
@@ -4346,7 +4346,7 @@ def claude(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to codex-native sessions."
     ),
 )
@@ -4386,7 +4386,7 @@ def codex(
     \b
     Examples:
       omnigent codex
-      omnigent codex --resume conv_abc123
+      omnigent codex --resume abc123
       omnigent codex --resume                  # interactive picker
       omnigent codex --server https://<app>.databricksapps.com
     """
@@ -4465,7 +4465,7 @@ def codex(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to opencode-native sessions."
     ),
 )
@@ -4496,7 +4496,7 @@ def opencode(
     \b
     Examples:
       omnigent opencode
-      omnigent opencode --resume conv_abc123
+      omnigent opencode --resume abc123
       omnigent opencode --resume                  # interactive picker
       omnigent opencode --server https://<app>.databricksapps.com
     """
@@ -4564,7 +4564,7 @@ def opencode(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to pi-native sessions."
     ),
 )
@@ -4588,7 +4588,7 @@ def pi(
     \b
     Examples:
       omnigent pi
-      omnigent pi --resume conv_abc123
+      omnigent pi --resume abc123
       omnigent pi --resume                    # interactive picker
       omnigent pi --model local-deepseek/deepseek-v4-flash
     """
@@ -4752,7 +4752,7 @@ def _ensure_bundled_agent_brain_credential(name: str) -> None:
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to cursor-native sessions."
     ),
 )
@@ -4797,7 +4797,7 @@ def cursor(
     Examples:
       omnigent cursor
       omnigent cursor --model gpt-5.2
-      omnigent cursor --resume conv_abc123
+      omnigent cursor --resume abc123
       omnigent cursor --resume                 # interactive picker
       omnigent cursor --mode plan              # start in plan (read-only) mode
       omnigent cursor --mode ask               # start in ask (Q&A) mode
@@ -4862,7 +4862,7 @@ def cursor(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to kiro-native sessions."
     ),
 )
@@ -4914,7 +4914,7 @@ def kiro(
     \b
     Examples:
       omnigent kiro
-      omnigent kiro --resume conv_abc123
+      omnigent kiro --resume abc123
       omnigent kiro --resume                  # interactive picker
       omnigent kiro --model auto -p "review this repo"
     """
@@ -5015,7 +5015,7 @@ def _build_kiro_launch_args(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to goose-native sessions."
     ),
 )
@@ -5039,7 +5039,7 @@ def goose(
     \b
     Examples:
       omnigent goose
-      omnigent goose --resume conv_abc123
+      omnigent goose --resume abc123
       omnigent goose --resume                 # interactive picker
     """
     choice = _split_resume_value(resume)
@@ -5095,7 +5095,7 @@ def goose(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to hermes-native sessions."
     ),
 )
@@ -5119,7 +5119,7 @@ def hermes(
     \b
     Examples:
       omnigent hermes
-      omnigent hermes --resume conv_abc123
+      omnigent hermes --resume abc123
       omnigent hermes --resume                 # interactive picker
     """
     choice = _split_resume_value(resume)
@@ -5175,7 +5175,7 @@ def hermes(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to antigravity-native sessions."
     ),
 )
@@ -5201,7 +5201,7 @@ def antigravity(
     \b
     Examples:
       omnigent antigravity
-      omnigent antigravity --resume conv_abc123
+      omnigent antigravity --resume abc123
       omnigent antigravity --resume                  # interactive picker
       omnigent antigravity --server https://<app>.databricksapps.com
     """
@@ -5269,7 +5269,7 @@ def antigravity(
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to qwen-native sessions."
     ),
 )
@@ -5293,7 +5293,7 @@ def qwen(
     \b
     Examples:
       omnigent qwen
-      omnigent qwen --resume conv_abc123
+      omnigent qwen --resume abc123
       omnigent qwen --resume                  # interactive picker
     """
     choice = _split_resume_value(resume)
@@ -5430,7 +5430,7 @@ def debby(run_args: tuple[str, ...]) -> None:
     default=None,
     help=(
         "Resume a prior Omnigent conversation. With a conversation id "
-        "(e.g. ``--resume conv_abc123``) attaches directly; with no value "
+        "(e.g. ``--resume abc123``) attaches directly; with no value "
         "opens an interactive picker scoped to kimi-native sessions."
     ),
 )
@@ -5463,7 +5463,7 @@ def kimi(
     \b
     Examples:
       omnigent kimi
-      omnigent kimi --resume conv_abc123
+      omnigent kimi --resume abc123
       omnigent kimi --resume                   # interactive picker
     """
     choice = _split_resume_value(resume)
@@ -5513,7 +5513,7 @@ def resume(
     # comments so they don't leak into CLI output.
     #
     # :param target: Optional Omnigent conversation id, e.g.
-    #     ``"conv_abc123"``. None falls through to the picker.
+    #     ``"abc123"``. None falls through to the picker.
     # :param server: Remote Omnigent server URL (optional in id mode;
     #     required in picker mode).
     """Resume an Omnigent conversation, auto-dispatching by runtime.
@@ -5531,8 +5531,8 @@ def resume(
 
     \b
     Examples:
-      omnigent resume conv_abc123
-      omnigent resume conv_abc123 --server https://<app>.databricksapps.com
+      omnigent resume abc123
+      omnigent resume abc123 --server https://<app>.databricksapps.com
       omnigent resume --server https://<app>.databricksapps.com
     """
     from omnigent.resume_dispatch import run_resume
@@ -5550,9 +5550,9 @@ def session(ctx: click.Context) -> None:
 
     \b
     Examples:
-      omnigent session export --id conv_abc123
-      omnigent session export --id conv_abc123 --output transcript.jsonl
-      omnigent session export --id conv_abc123 --server https://myserver.com
+      omnigent session export --id abc123
+      omnigent session export --id abc123 --output transcript.jsonl
+      omnigent session export --id abc123 --server https://myserver.com
     """
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
@@ -5564,7 +5564,7 @@ def session(ctx: click.Context) -> None:
     "session_id",
     required=True,
     metavar="SESSION_ID",
-    help="Session ID to export, e.g. conv_abc123.",
+    help="Session ID to export, e.g. abc123.",
 )
 @click.option(
     "--output",
@@ -5593,9 +5593,9 @@ def session_export(session_id: str, output: str | None, server: str | None) -> N
 
     \b
     Examples:
-      omnigent session export --id conv_abc123
-      omnigent session export --id conv_abc123 --output my_session.jsonl
-      omnigent session export --id conv_abc123 --server https://myserver.com
+      omnigent session export --id abc123
+      omnigent session export --id abc123 --output my_session.jsonl
+      omnigent session export --id abc123 --server https://myserver.com
     """
     import httpx
 
@@ -5670,7 +5670,7 @@ _PROMPT_HELP = "Send this as the first message when the REPL starts."
 _SYSTEM_PROMPT_HELP = "Instructions to use for the agent."
 _RESUME_HELP = (
     "Resume a prior conversation. With no value, opens an interactive "
-    "picker; with a conversation id (e.g. --resume conv_abc123), attaches "
+    "picker; with a conversation id (e.g. --resume abc123), attaches "
     "directly to that conversation."
 )
 _CONTINUE_HELP = "Continue the most recent conversation for this agent."
@@ -6390,7 +6390,7 @@ def _require_live_conversation(
 
     :param base_url: Omnigent server base URL, e.g. ``"http://127.0.0.1:6767"``.
     :param conversation_id: Conversation id to attach to, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :raises click.ClickException: When the server is unreachable or the
         conversation does not exist.
     """
@@ -6458,8 +6458,8 @@ def attach(
 
     \b
     Examples:
-      omnigent attach conv_abc123
-      omnigent attach conv_abc123 --server https://<app>.databricksapps.com
+      omnigent attach abc123
+      omnigent attach abc123 --server https://<app>.databricksapps.com
     """
     cfg = _load_effective_config()
     base_url = _resolve_attach_server(server, cfg.get("server"))
@@ -7068,7 +7068,7 @@ def _daemon_session_request_params(
     :param connected_only: When ``True``, ask the server for connected
         sessions only.
     :param after: Optional cursor from the prior page, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Query parameters for ``GET /v1/sessions``.
     """
     params: dict[str, str | int] = {
@@ -7700,7 +7700,7 @@ def _stop_session_on_server(
 
     :param base_url: Omnigent server base URL, e.g.
         ``"https://example.databricksapps.com"``.
-    :param session_id: Session id, e.g. ``"conv_abc123"``.
+    :param session_id: Session id, e.g. ``"abc123"``.
     :raises click.ClickException: If the server rejects the stop event.
     """
     from omnigent.claude_native_bridge import url_component
@@ -7853,7 +7853,7 @@ def host_stop_session(
 
     :param ctx: Click context carrying group-level options.
     :param session_ids: Session ids to stop, e.g.
-        ``["conv_abc123", "conv_def456"]``.
+        ``["abc123", "def456"]``.
     :param server: Omnigent server URL that owns the sessions, e.g.
         ``"https://example.databricksapps.com"``. ``None`` falls back
         to config/local discovery.

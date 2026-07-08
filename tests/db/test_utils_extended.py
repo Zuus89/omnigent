@@ -23,7 +23,7 @@ from sqlalchemy import text
 
 from omnigent.db.db_models import SqlUser
 from omnigent.db.utils import (
-    _ITEM_TYPE_PREFIX,
+    _ITEM_TYPES,
     clear_engine_cache,
     delete_fts_by_conversation,
     ensure_fts_table,
@@ -157,21 +157,21 @@ class TestManagedSessionMaker:
 class TestIdGenerators:
     def test_generate_file_id_format(self) -> None:
         fid = generate_file_id()
-        assert re.fullmatch(r"file_[0-9a-f]{32}", fid)
+        assert re.fullmatch(r"[0-9a-f]{32}", fid)
 
     def test_generate_conversation_id_format(self) -> None:
         cid = generate_conversation_id()
-        assert re.fullmatch(r"conv_[0-9a-f]{32}", cid)
+        assert re.fullmatch(r"[0-9a-f]{32}", cid)
 
     def test_generate_task_id_format(self) -> None:
         tid = generate_task_id()
-        assert re.fullmatch(r"resp_[0-9a-f]{32}", tid)
+        assert re.fullmatch(r"[0-9a-f]{32}", tid)
 
     def test_generate_item_id_all_types(self) -> None:
-        for item_type, prefix in _ITEM_TYPE_PREFIX.items():
+        for item_type in _ITEM_TYPES:
             item_id = generate_item_id(item_type)
-            assert item_id.startswith(prefix), f"{item_type} should start with {prefix}"
-            assert len(item_id) == len(prefix) + 32
+            # IDs are prefix-less bare 32-char hex; the type lives in its column.
+            assert re.fullmatch(r"[0-9a-f]{32}", item_id), f"{item_type}: {item_id!r}"
 
     def test_generate_item_id_unknown_type_raises(self) -> None:
         with pytest.raises(ValueError, match="unknown item type"):

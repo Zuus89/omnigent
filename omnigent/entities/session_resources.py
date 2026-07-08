@@ -141,7 +141,7 @@ def terminal_resource_view(session_id: str, entry: TerminalListEntry) -> Session
     ``session.resource.created`` event after a successful launch.
 
     :param session_id: Owning session/conversation id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param entry: The terminal registry entry to project.
     :returns: The :class:`SessionResourceView` for *entry*.
     """
@@ -243,7 +243,7 @@ def list_session_resources_from_terminal_registry(
     Phase 1a.
 
     :param session_id: Owning session/conversation id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param terminal_registry: Terminal registry to scan for running
         terminals.  ``None`` skips terminal enumeration.
     :param has_os_env: When ``False``, the logical default environment

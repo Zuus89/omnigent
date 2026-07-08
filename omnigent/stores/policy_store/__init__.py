@@ -59,7 +59,7 @@ class PolicyStore(ABC):
         :param policy_id: Pre-generated unique policy identifier,
             e.g. ``"pol_a1b2c3..."``.
         :param session_id: The session this policy is scoped to,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param name: Human-readable name unique within the
             session, e.g. ``"block_non_feature_branch_push"``.
         :param type: Handler discriminator: ``"python"``,

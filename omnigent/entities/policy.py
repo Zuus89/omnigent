@@ -29,7 +29,7 @@ class Policy:
         unique for default policies,
         e.g. ``"block_non_feature_branch_push"``.
     :param session_id: The session this policy is scoped to,
-        e.g. ``"conv_abc123"``. ``None`` for server-wide
+        e.g. ``"abc123"``. ``None`` for server-wide
         default policies.
     :param scope: ``"default"`` for server-wide policies;
         ``"session"`` for session-scoped policies.

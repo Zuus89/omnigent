@@ -262,7 +262,7 @@ async def write_session_log(
         REPL's existing client is fine — this helper does not
         open a new connection.
     :param conversation_id: The session to dump,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param agent_name: Agent name to include in the dump (for
         readers that want to know which agent owned this thread
         without separately querying the agent registry),

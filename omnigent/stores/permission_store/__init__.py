@@ -43,7 +43,7 @@ class PermissionStore(ABC):
         :param user_id: The grantee, e.g. ``"alice@example.com"``
             or ``"__public__"`` for public access.
         :param conversation_id: The session to grant access to,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param level: Numeric permission level (1=read, 2=edit,
             3=manage).
         :returns: The resulting :class:`SessionPermission`.
@@ -59,7 +59,7 @@ class PermissionStore(ABC):
         :param user_id: The grantee to revoke, e.g.
             ``"alice@example.com"``.
         :param conversation_id: The session to revoke access from,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: ``True`` if a row was deleted, ``False`` if no
             matching grant existed.
         """
@@ -70,7 +70,7 @@ class PermissionStore(ABC):
         """Look up a single permission grant.
 
         :param user_id: The grantee, e.g. ``"alice@example.com"``.
-        :param conversation_id: The session, e.g. ``"conv_abc123"``.
+        :param conversation_id: The session, e.g. ``"abc123"``.
         :returns: The :class:`SessionPermission` if found, otherwise
             ``None``.
         """
@@ -81,7 +81,7 @@ class PermissionStore(ABC):
         """Return all grants on a session.
 
         :param conversation_id: The session to query, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: List of :class:`SessionPermission` objects.
         """
         ...
@@ -96,7 +96,7 @@ class PermissionStore(ABC):
         for the specific user or owner they care about.
 
         :param conversation_ids: List of conversation IDs to fetch,
-            e.g. ``["conv_abc123", "conv_def456"]``.  An empty list
+            e.g. ``["abc123", "def456"]``.  An empty list
             returns an empty dict without touching the database.
         :returns: A dict mapping each conversation ID from
             *conversation_ids* to its list of :class:`SessionPermission`
@@ -229,7 +229,7 @@ class PermissionStore(ABC):
         :param user_id: The authenticated user, e.g.
             ``"alice@example.com"``, or ``None`` if unauthenticated.
         :param conversation_id: The session to resolve, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: A :class:`ResolvedAccess` snapshot. For ``user_id=None``
             every field is falsy (``is_admin=False``, both levels ``None``).
         """
@@ -244,7 +244,7 @@ class PermissionStore(ABC):
         period.
 
         :param conversation_id: The session to check, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: ``True`` if at least one grant exists.
         """
         ...

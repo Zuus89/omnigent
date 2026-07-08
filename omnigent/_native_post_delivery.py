@@ -70,7 +70,7 @@ def append_dead_letter(
 
     :param bridge_dir: Native forwarder bridge directory the dead-letter file lives in.
     :param session_id: Omnigent conversation id the dropped event targeted,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param event_type: Session event type that was dropped, e.g.
         ``"external_conversation_item"``.
     :param payload: The event ``data`` payload that failed to deliver.

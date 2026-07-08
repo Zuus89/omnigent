@@ -13,13 +13,13 @@ class Agent:
     """
     A registered agent.
 
-    :param id: Unique agent identifier, e.g. ``"ag_abc123"``.
+    :param id: Unique agent identifier, e.g. ``"abc123"``.
     :param created_at: Unix epoch timestamp of creation.
     :param name: Human-readable agent name, e.g.
         ``"research-agent"``. Template agents have unique names;
         session-scoped copies may reuse names across sessions.
     :param bundle_location: Artifact store key for the current bundle,
-        e.g. ``"ag_abc123/a1b2c3d4e5f6..."``. Content-addressed
+        e.g. ``"abc123/a1b2c3d4e5f6..."``. Content-addressed
         (SHA-256 hex of the bundle bytes).
     :param version: Monotonic version counter. Starts at 1, incremented
         on each update.

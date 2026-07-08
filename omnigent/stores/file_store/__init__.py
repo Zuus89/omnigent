@@ -66,7 +66,7 @@ class FileStore(ABC):
         belongs to that session.
 
         :param file_id: Unique file identifier,
-            e.g. ``"file_abc123"``.
+            e.g. ``"abc123"``.
         :param session_id: If set, verify the file belongs to
             this session. ``None`` returns any file.
         :returns: The :class:`StoredFile` if found (and owned

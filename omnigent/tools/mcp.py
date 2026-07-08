@@ -501,7 +501,7 @@ class McpServerConnection:
         :param name: The tool name as returned by discovery.
         :param arguments: The tool arguments dict (already parsed
             from the LLM's JSON string).
-        :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent session id, e.g. ``"abc123"``.
             Forwarded to ``_invoke_tool`` for inline elicitation
             context. ``None`` when no session is available.
         :returns: The tool result as a string. For multi-content
@@ -554,7 +554,7 @@ class McpServerConnection:
 
         :param name: The tool name.
         :param arguments: The tool arguments dict.
-        :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+        :param session_id: Omnigent session id, e.g. ``"abc123"``.
             Set on the connection for the inline elicitation handler.
         :returns: The formatted tool result string.
         :raises McpElicitationRequired: When the MCP server returns

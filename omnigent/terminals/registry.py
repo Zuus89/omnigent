@@ -66,12 +66,12 @@ def conversation_link_for_id(
     Build the web UI link for a conversation.
 
     :param conversation_id: Conversation/session id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param base_url: Optional Omnigent server base URL, e.g.
         ``"http://127.0.0.1:6767"``. When provided, the returned
         link is absolute.
-    :returns: Web UI link, e.g. ``"/c/conv_abc123"`` or
-        ``"http://127.0.0.1:6767/c/conv_abc123"``.
+    :returns: Web UI link, e.g. ``"/c/abc123"`` or
+        ``"http://127.0.0.1:6767/c/abc123"``.
     """
     if base_url is None or not base_url.strip():
         return f"/c/{quote(conversation_id, safe='')}"
@@ -148,9 +148,9 @@ class TerminalRegistry:
         Build a status-bar conversation link using this registry's base URL.
 
         :param conversation_id: Conversation/session id, e.g.
-            ``"conv_abc123"``.
-        :returns: Web UI link, e.g. ``"/c/conv_abc123"`` or
-            ``"http://127.0.0.1:6767/c/conv_abc123"``.
+            ``"abc123"``.
+        :returns: Web UI link, e.g. ``"/c/abc123"`` or
+            ``"http://127.0.0.1:6767/c/abc123"``.
         """
         return conversation_link_for_id(
             conversation_id,
@@ -179,7 +179,7 @@ class TerminalRegistry:
         was created.
 
         :param conversation_id: The owning conversation id, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param terminal_name: The terminal's spec name from
             ``AgentSpec.terminals``, e.g. ``"bash"``.
         :param session_key: The per-launch session key, e.g.

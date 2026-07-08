@@ -152,7 +152,7 @@ def _new_session_conversation_row(
     Build the conversation row for atomic session creation.
 
     :param conversation_id: New conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param now: Unix epoch seconds used for created/updated fields.
     :param title: Optional session title.
     :param reasoning_effort: Optional per-session reasoning-effort
@@ -171,7 +171,7 @@ def _new_session_conversation_row(
         sub-agent child (``kind="sub_agent"``); ``None`` creates a
         top-level row.
     :param root_conversation_id: Root of the spawn tree, e.g.
-        ``"conv_root1"``. Required (resolved from the parent row)
+        ``"root1"``. Required (resolved from the parent row)
         when ``parent_conversation_id`` is set; ``None`` for
         top-level rows, where the root mirrors the primary key.
     :param runner_id: Optional runner binding inherited from the
@@ -215,7 +215,7 @@ def _new_session_agent_row(
     """
     Build the session-scoped agent row for atomic creation.
 
-    :param agent_id: New agent id, e.g. ``"ag_abc123"``.
+    :param agent_id: New agent id, e.g. ``"abc123"``.
     :param agent_name: Agent name loaded from the uploaded spec.
     :param agent_bundle_location: Artifact-store key for the bundle.
     :param agent_description: Optional description from the spec.
@@ -374,7 +374,7 @@ def _fetch_labels(
 
     :param session: The active SQLAlchemy session.
     :param conversation_id: Unique conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: Mapping from label key to value (string-typed).
         Empty dict when no rows match.
     """
@@ -551,7 +551,7 @@ class SqlAlchemyConversationStore(ConversationStore):
 
         :param session: The active SQLAlchemy session.
         :param conversation_id: The conversation to lock,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         """
         if self._supports_for_update:
             stmt = (
@@ -601,7 +601,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         :param parent_conversation_id: Phase 4 — id of the
             owning parent conversation. ``None`` for top-level.
         :param agent_id: Agent to bind at creation time, e.g.
-            ``"ag_abc123"``. ``None`` only for legacy rows or
+            ``"abc123"``. ``None`` only for legacy rows or
             callers that cannot bind a conversation.
         :param runner_id: Optional runner binding to persist at
             creation time, e.g. ``"runner_abc123"``. Child
@@ -612,7 +612,7 @@ class SqlAlchemyConversationStore(ConversationStore):
             sub-agent type name within the parent's spec tree,
             e.g. ``"summarizer"``. ``None`` for top-level.
         :param host_id: Host that should launch the runner for
-            this session, e.g. ``"host_a1b2c3d4..."``. ``None``
+            this session, e.g. ``"a1b2c3d4..."``. ``None``
             for CLI-initiated sessions.
         :param workspace: Absolute path on disk where the runner
             should start, e.g. ``"/Users/corey/universe/src/foo"``.
@@ -737,7 +737,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         under serializable isolation.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The :class:`Conversation` if found, otherwise
             ``None``.
         """
@@ -779,7 +779,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         to drive. See the abstract method for the contract.
 
         :param conversation_ids: Session/conversation IDs to look up,
-            e.g. ``["conv_abc123", "conv_def456"]``.
+            e.g. ``["abc123", "def456"]``.
         :returns: Mapping ``conversation_id -> SessionConnectivity``;
             ids without a conversation row are omitted.
         """
@@ -830,7 +830,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         of one per id. Missing ids are omitted from the result.
 
         :param conversation_ids: Conversation ids to fetch,
-            e.g. ``["conv_abc123", "conv_def456"]``. Duplicates are
+            e.g. ``["abc123", "def456"]``. Duplicates are
             tolerated; empty input returns ``{}`` without a query.
         :returns: Mapping ``{conversation_id: Conversation}`` for the
             ids that resolved to a row.
@@ -915,7 +915,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         Empty updates is a no-op.
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param updates: Mapping from label key to new value.
             Example: ``{"integrity": "0"}``. Empty dict
             returns immediately without opening a transaction.
@@ -942,7 +942,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         ``session_state`` column on the ``conversations`` table.
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param state: The complete session-state dict to persist.
         """
         import json
@@ -969,7 +969,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         ``session_usage`` column on the ``conversations`` table.
 
         :param conversation_id: The conversation to update,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param usage: The complete usage dict to persist, e.g.
             ``{"input_tokens": 1500, "output_tokens": 350,
             "total_tokens": 1850}``. May carry a nested ``"by_model"``
@@ -1253,7 +1253,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         owner) returns ``None`` rather than the sentinel.
 
         :param conversation_id: The session to look up, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: The owner's user id, e.g. ``"alice@example.com"``,
             or ``None`` when the session has no real (non-public)
             permission grants.
@@ -1285,7 +1285,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         :param query: The FTS search query string,
             e.g. ``"deployment error"``.
         :param conversation_id: Optional conversation to scope
-            the search to, e.g. ``"conv_abc123"``.
+            the search to, e.g. ``"abc123"``.
         :param limit: Maximum number of results to return.
         :returns: A list of matching :class:`ConversationItem`
             objects in relevance order.
@@ -1367,7 +1367,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         List items in a conversation with cursor-based pagination.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param limit: Maximum number of items to return.
         :param after: Cursor item ID; return items appearing
             after this item in sort order,
@@ -1495,7 +1495,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         searchability.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param items: List of :class:`NewConversationItem` objects
             to persist.
         :returns: The persisted :class:`ConversationItem` list
@@ -1684,7 +1684,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         :param limit: Maximum number of conversations to return.
         :param after: Cursor conversation ID; return
             conversations appearing after this one in sort
-            order, e.g. ``"conv_abc123"``.
+            order, e.g. ``"abc123"``.
         :param before: Cursor conversation ID; return
             conversations appearing before this one in sort
             order.
@@ -1886,7 +1886,7 @@ class SqlAlchemyConversationStore(ConversationStore):
 
         :param stmt: The current SELECT statement to augment.
         :param cursor_id: The conversation ID acting as the page cursor,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param sort_col: Primary sort column (``created_at`` or ``updated_at``).
         :param is_desc: ``True`` for descending, ``False`` for ascending.
         :param tiebreaker_col: Secondary sort column; must match the
@@ -1950,7 +1950,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         Update mutable fields on a conversation.
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param title: New title, or ``None`` to leave unchanged.
         :param reasoning_effort: Per-session reasoning effort,
             e.g. ``"high"``. ``None`` leaves unchanged.
@@ -2063,7 +2063,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         rebind child conversations to their parent's current runner.
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param runner_id: New runner id, e.g. ``"runner_abc123"``.
         :returns: The updated :class:`Conversation`.
         :raises ConversationNotFoundError: If no conversation row
@@ -2084,7 +2084,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         Null out ``conversations.runner_id``. Atomic last-write-wins.
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The updated :class:`Conversation`.
         :raises ConversationNotFoundError: If no conversation row
             exists for ``conversation_id``.
@@ -2109,7 +2109,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         ``ck_conversations_workspace_required_for_host`` mid-update.
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The updated :class:`Conversation`.
         :raises ConversationNotFoundError: If no conversation row
             exists for ``conversation_id``.
@@ -2168,9 +2168,9 @@ class SqlAlchemyConversationStore(ConversationStore):
         create can pass ``None`` to leave it untouched.
 
         :param conversation_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :param workspace: Optional canonical absolute workspace
             path to set alongside ``host_id``, e.g.
             ``"/Users/corey/projects/myapp"``. ``None`` (default)
@@ -2217,7 +2217,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         full contract.
 
         :param conversation_id: Conversation to update, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param value: Runtime-native session id, e.g.
             ``"a1b2c3d4-..."``.
         :returns: The updated :class:`Conversation`.
@@ -2270,11 +2270,11 @@ class SqlAlchemyConversationStore(ConversationStore):
         ``conversations.agent_id``.
 
         :param agent_id: Pre-generated agent id, e.g.
-            ``"ag_abc123"``.
+            ``"abc123"``.
         :param agent_name: Human-readable agent name from the
             uploaded spec, e.g. ``"code-assistant"``.
         :param agent_bundle_location: Artifact-store key for the
-            uploaded bundle, e.g. ``"ag_abc123/a1b2c3d4"``.
+            uploaded bundle, e.g. ``"abc123/a1b2c3d4"``.
         :param agent_description: Optional spec description.
             ``None`` when the spec omits it.
         :param title: Optional session title, e.g.
@@ -2397,7 +2397,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         :class:`SessionConnectivity`).
 
         :param source_conversation_id: ID of the conversation to
-            fork, e.g. ``"conv_abc123"``.
+            fork, e.g. ``"abc123"``.
         :param title: Title for the new conversation. When
             ``None``, defaults to ``"Fork of <source_title>"``
             (or ``"Fork of <source_id>"`` when the source has no
@@ -2683,7 +2683,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         cross-family switch, clears ``external_session_id``, and
         replaces the harness-presentation / carry-history labels.
 
-        :param conversation_id: Session to switch, e.g. ``"conv_abc123"``.
+        :param conversation_id: Session to switch, e.g. ``"abc123"``.
         :param new_agent_id: Pre-generated id for the new agent row.
         :param new_agent_name: Name for the new agent row.
         :param new_agent_bundle_location: Artifact-store key to clone.
@@ -2793,7 +2793,7 @@ class SqlAlchemyConversationStore(ConversationStore):
         the conversation rows themselves (children before parent).
 
         :param conversation_id: Unique conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: ``True`` if the conversation existed,
             ``False`` otherwise.
         """

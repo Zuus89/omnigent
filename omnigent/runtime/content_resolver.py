@@ -299,7 +299,7 @@ def resolve_content_references(
         re-encoding the same file across agent loop iterations.
         Pass ``None`` to disable caching.
     :param session_id: Optional owning session id used to verify
-        session-scoped file ownership, e.g. ``"conv_abc123"``.
+        session-scoped file ownership, e.g. ``"abc123"``.
     :returns: A list of conversation items with all ``file_id``
         references replaced by inline base64 content.
     :raises ValueError: If a referenced ``file_id`` does not exist
@@ -353,7 +353,7 @@ def _resolve_message_content(
     :param cache: Optional per-task base64 cache (see
         :func:`resolve_content_references`).
     :param session_id: Optional owning session id used to verify
-        session-scoped file ownership, e.g. ``"conv_abc123"``.
+        session-scoped file ownership, e.g. ``"abc123"``.
     :returns: The original list (unchanged) or a new list with
         ``file_id`` references resolved to inline content.
     """
@@ -383,7 +383,7 @@ def _session_id_from_block(block: dict[str, Any]) -> str | None:
     Extract optional session ownership from a content block.
 
     :param block: Content block dict, e.g.
-        ``{"file_id": "file_abc123", "session_id": "conv_abc123"}``.
+        ``{"file_id": "abc123", "session_id": "abc123"}``.
     :returns: Session id if present, otherwise ``None``.
     """
     for key in ("session_id", "conversation_id"):
@@ -413,13 +413,13 @@ def _resolve_file_id_block(
     adapters parse the URI to extract the media type and payload.
 
     :param block: A content block dict containing ``file_id``,
-        e.g. ``{"type": "input_image", "file_id": "file_abc123"}``.
+        e.g. ``{"type": "input_image", "file_id": "abc123"}``.
     :param file_store: Store for file metadata lookups.
     :param artifact_store: Store for binary content fetches.
     :param cache: Optional per-task base64 cache (see
         :func:`resolve_content_references`).
     :param session_id: Optional owning session id used to verify
-        session-scoped file ownership, e.g. ``"conv_abc123"``.
+        session-scoped file ownership, e.g. ``"abc123"``.
     :returns: A new dict with ``file_id`` replaced by inline
         content. All other fields are preserved.
     :raises ValueError: If ``file_id`` is not found in the file

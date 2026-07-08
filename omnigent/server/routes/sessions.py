@@ -484,7 +484,7 @@ def _publish_collaboration_mode(session_id: str, mode: str) -> None:
     Publish the live collaboration-mode for a session.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param mode: The active collaboration mode string, e.g.
         ``"plan"`` or ``"default"``.
     :returns: None.
@@ -506,7 +506,7 @@ def _publish_policy_denied(session_id: str, reason: str, phase: str) -> None:
     reflects that an action was blocked. This surfaces the decision as a
     positive event for observers (web UI, capability bench). Fire-and-forget.
 
-    :param session_id: Session/conversation identifier, e.g. ``"conv_abc123"``.
+    :param session_id: Session/conversation identifier, e.g. ``"abc123"``.
     :param reason: Deny reason from the deciding policy.
     :param phase: The policy phase the DENY landed on, e.g. ``"tool_call"``.
     :returns: None.
@@ -1035,7 +1035,7 @@ def _announce_session_added(user_id: str | None, session_id: str) -> None:
 
     :param user_id: The user the session is now accessible to (the owner on
         create/fork, the grantee on share), or ``None`` in single-user mode.
-    :param session_id: The newly-accessible session id, e.g. ``"conv_abc123"``.
+    :param session_id: The newly-accessible session id, e.g. ``"abc123"``.
     """
     user_session_stream.publish(
         _discovery_key(user_id), {"type": "session_added", "session_id": session_id}
@@ -1180,7 +1180,7 @@ def _native_ask_gate_lock(conversation_id: str, deciding_policy: str) -> asyncio
     lookup and the insert (single event loop).
 
     :param conversation_id: Omnigent conversation id whose ASK gate is being
-        serialized, e.g. ``"conv_abc123"``. Sub-agent native tool calls
+        serialized, e.g. ``"abc123"``. Sub-agent native tool calls
         evaluate against the parent conversation id, so they share its lock.
     :param deciding_policy: Name of the policy that produced the ASK verdict,
         e.g. ``"session_cost_guard"``. Distinct policies get distinct locks so
@@ -1470,7 +1470,7 @@ async def _publish_and_wait_for_harness_elicitation(
 
     :param request: FastAPI request object so upstream disconnect can
         be detected.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param params: Elicitation params to publish.
     :param timeout_s: Maximum wait in seconds, e.g. ``300.0``.
     :param conversation_store: Optional store used to mirror
@@ -1663,7 +1663,7 @@ def _signal_terminal_resolved_harness_elicitation(
     check — so a Codex hook that records ``tool_name`` benefits too.
 
     :param session_id: Omnigent conversation id whose forwarder mirrored the
-        result, e.g. ``"conv_abc123"``.
+        result, e.g. ``"abc123"``.
     :param tool_name: Tool name the result is for, e.g. ``"Bash"``.
     :param tool_input: Tool input the result is for, e.g.
         ``{"command": "ls"}``, or ``None`` if unavailable.
@@ -1721,7 +1721,7 @@ def _schedule_deferred_elicitation_clear(
     grace and badges don't stick.
 
     :param session_id: Session that owns the elicitation, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param elicitation_id: Correlation id whose card may need clearing,
         e.g. ``"elicit_claude_0f3a..."``.
     :param conversation_store: Store used to mirror the clear into
@@ -1767,7 +1767,7 @@ def _client_supplied_hook_elicitation_id(
     :param payload: Parsed PermissionRequest hook body. Reads the
         optional ``_omnigent_elicitation_id`` key.
     :param session_id: Session the hook call is for, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: The validated id, or ``None`` when the client supplied
         none (the wait mints a random id as before).
     :raises OmnigentError: 400 when the id is malformed or is
@@ -1798,7 +1798,7 @@ def _consume_pre_resolved_harness_elicitation(
     """
     Consume a resolution that arrived before the hook wait registered.
 
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param elicitation_id: Harness elicitation id, e.g.
         ``"elicit_codex_abc123"``.
     :returns: The consumed tombstone when one matched this session
@@ -1854,7 +1854,7 @@ def _signal_harness_elicitation_resolved_by_id(
     """
     Resolve or pre-resolve one parked harness elicitation by id.
 
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param elicitation_id: Harness elicitation id, e.g.
         ``"elicit_codex_abc123"``.
     :returns: None.
@@ -1958,7 +1958,7 @@ def _session_status_from_cache(conversation_id: str) -> Literal["idle", "running
     as ``"idle"``.
 
     :param conversation_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: One of ``"idle"``, ``"running"``, ``"failed"``.
     """
     cached = _session_status_cache.get(conversation_id)
@@ -1982,9 +1982,9 @@ def _session_status_with_child_rollup(
     honest without mounting a child-session query for each row.
 
     :param conversation_id: Parent session/conversation identifier,
-        e.g. ``"conv_parent123"``.
+        e.g. ``"parent123"``.
     :param child_session_ids: Direct sub-agent child conversation ids,
-        e.g. ``["conv_child1", "conv_child2"]``.
+        e.g. ``["child1", "child2"]``.
     :returns: One of ``"idle"``, ``"running"``, ``"failed"`` for the
         session-list row.
     """
@@ -2154,7 +2154,7 @@ async def _apply_liveness_to_items(
     :param items: Session-list rows to annotate.
     :param liveness_lookup: Bulk liveness lookup from session id to a
         :class:`SessionLiveness` pair, e.g.
-        ``{"conv_abc123": SessionLiveness(runner_online=True,
+        ``{"abc123": SessionLiveness(runner_online=True,
         host_online=None)}``. ``None`` means this server cannot compute
         liveness for list rows, in which case both fields are left
         ``None``.
@@ -2187,7 +2187,7 @@ def _targeted_elicitation_event(
         e.g. ``{"type": "response.elicitation_request",
         "elicitation_id": "elicit_abc", "params": {...}}``.
     :param target_session_id: Session that owns the parked
-        elicitation, e.g. ``"conv_child123"``.
+        elicitation, e.g. ``"child123"``.
     :returns: A shallow event copy with a copied ``params`` dict
         carrying ``target_session_id``.
     """
@@ -2209,7 +2209,7 @@ def _ancestor_session_ids(
 
     :param conv_store: Store used to read conversation parent links.
     :param session_id: Session to walk upward from, e.g.
-        ``"conv_child123"``.
+        ``"child123"``.
     :returns: Ancestor ids in parent-to-root order. Empty when the
         session is top-level or missing.
     """
@@ -2236,7 +2236,7 @@ def _publish_elicitation_request_to_ancestors(
 
     :param conv_store: Store used to discover ancestor sessions.
     :param session_id: Child session that owns the elicitation,
-        e.g. ``"conv_child123"``.
+        e.g. ``"child123"``.
     :param event: Original ``response.elicitation_request`` event.
     """
     mirrored = _targeted_elicitation_event(event, target_session_id=session_id)
@@ -2254,7 +2254,7 @@ def _publish_elicitation_resolved_to_ancestors(
 
     :param conv_store: Store used to discover ancestor sessions.
     :param session_id: Child session that owns the elicitation,
-        e.g. ``"conv_child123"``.
+        e.g. ``"child123"``.
     :param elicitation_id: Elicitation correlation id, e.g.
         ``"elicit_abc123"``.
     """
@@ -2284,7 +2284,7 @@ def _publish_subtree_cost_to_ancestors(
     :param conv_store: Store used to discover ancestors and sum each
         ancestor's subtree usage.
     :param session_id: The child session whose usage just changed, e.g.
-        ``"conv_child123"``.
+        ``"child123"``.
     :returns: None.
     """
     for ancestor_id in _ancestor_session_ids(conv_store, session_id):
@@ -2316,7 +2316,7 @@ def _descendant_sessions(
     Return descendant sub-agent conversations for a session.
 
     :param conv_store: Store used to list conversations.
-    :param session_id: Ancestor session id, e.g. ``"conv_root123"``.
+    :param session_id: Ancestor session id, e.g. ``"root123"``.
     :returns: Sub-agent conversations below ``session_id``. Empty
         for sessions with no descendants.
     """
@@ -2621,7 +2621,7 @@ def _publish_compaction_in_progress(session_id: str) -> None:
     Publish the standard compaction progress event to a session stream.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
     session_stream.publish(
         session_id,
@@ -2639,7 +2639,7 @@ def _publish_compaction_completed(session_id: str, total_tokens: int | None) -> 
     the permanent "Conversation compacted" marker on this event.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param total_tokens: Tiktoken estimate of the post-compaction
         context size, e.g. ``8421``. ``None`` when unavailable.
     """
@@ -2660,7 +2660,7 @@ def _publish_compaction_failed(session_id: str) -> None:
     was not modified.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
     session_stream.publish(session_id, {"type": "response.compaction.failed"})
 
@@ -3069,7 +3069,7 @@ def _accumulate_session_usage(
     :param resp_obj: The ``response`` dict from the
         ``response.completed`` SSE event.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conversation_store: Store for reading and writing
         the ``session_usage`` column.
     :returns: The session's cumulative priced cost in USD after this
@@ -3522,7 +3522,7 @@ async def _persist_external_model_change(
     round-trip where the web PATCH set the override moments earlier.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row for ``session_id`` (read at the route
         boundary); ``conv.model_override`` is the dedupe baseline.
     :param body: External model-change event body. ``data.model`` must
@@ -3603,7 +3603,7 @@ async def _persist_external_reasoning_effort_change(
     effort, so re-injecting it would loop.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row for ``session_id`` at the route boundary.
     :param body: External effort-change event body.
     :param conversation_store: Store used to update ``reasoning_effort``.
@@ -3636,7 +3636,7 @@ async def _persist_external_codex_collaboration_mode_change(
     Persist Codex's collaboration mode kind as an internal session label.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row for ``session_id`` at the route boundary.
     :param body: External Codex mode-change event body. ``data.mode`` must be
         ``"default"`` or ``"plan"``.
@@ -3697,7 +3697,7 @@ async def _persist_model_change_note(
     done).
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param model_override: The new model id, e.g.
         ``"databricks-gpt-5-4"``, or ``None`` when the override was
         cleared back to the agent default.
@@ -3734,7 +3734,7 @@ def _handle_external_session_todos(
     so connected web clients update their todo panel immediately.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param body: The ``external_session_todos`` event body. Must have
         ``data.todos`` as a list of todo dicts, e.g.
         ``[{"content": "Fix bug", "status": "in_progress", "activeForm": "Fixing the bug"}]``.
@@ -3909,7 +3909,7 @@ def _publish_elicitation_resolved(session_id: str, elicitation_id: str) -> None:
     and the chat-side ``ApprovalCard`` flip on every live subscriber.
     Idempotent on duplicate emissions for the same id.
 
-    :param session_id: Session id, e.g. ``"conv_abc123"``.
+    :param session_id: Session id, e.g. ``"abc123"``.
     :param elicitation_id: Correlation id, e.g. ``"elicit_abc123"``.
     """
     session_stream.publish(
@@ -3939,7 +3939,7 @@ async def _forward_approval_to_runner(
     caller's resolution (the server-side Future was already set).
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param data: The approval payload to forward verbatim as the
         event ``data``, e.g. ``{"elicitation_id": "elicit_abc",
         "action": "accept"}``.
@@ -4000,7 +4000,7 @@ async def _resolve_elicitation(
        ``/events``. Forwarded as a canonical ``approval`` event.
 
     :param session_id: Session/conversation identifier that owns
-        the elicitation, e.g. ``"conv_abc123"``.
+        the elicitation, e.g. ``"abc123"``.
     :param data: Approval payload carrying the ``elicitation_id``
         correlation key plus the MCP ``ElicitationResult`` fields
         (``action``, optional ``content``), e.g.
@@ -4092,7 +4092,7 @@ def _spawn_native_approval_popup_forward(
     answers first releases the gate. Non-native harnesses 204 no-op on the
     runner.
 
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param elicitation_id: The parked elicitation's id, e.g. ``"elicit_x"``.
     :param message: The approval reason shown in the popup.
     :param policy_name: Name of the deciding policy, rendered as the
@@ -4136,7 +4136,7 @@ def _spawn_native_blocked_notice_forward(
     harness-gated (only ``opencode-native`` pops — claude/codex already show a
     clean ``UserPromptSubmit`` block, so they no-op).
 
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param message: The block reason shown in the popup.
     :param policy_name: Deciding policy, rendered as the popup header. ``None``
         falls back to a generic header on the runner.
@@ -4199,7 +4199,7 @@ async def _hold_native_ask_gate(
 
     :param request: FastAPI request, for upstream-disconnect detection
         inside the parking helper.
-    :param session_id: Omnigent session id, e.g. ``"conv_abc123"``.
+    :param session_id: Omnigent session id, e.g. ``"abc123"``.
     :param phase: Enforcement phase being gated, e.g.
         :attr:`Phase.TOOL_CALL` or :attr:`Phase.REQUEST`.
     :param data: The proto event ``data`` — for a tool call,
@@ -4417,7 +4417,7 @@ def _find_claude_native_subagent_child(
 
     :param conversation_store: Store to query.
     :param parent_id: Parent (claude-native) conversation id,
-        e.g. ``"conv_parent987"``.
+        e.g. ``"parent987"``.
     :param subagent_id: Stable Claude-side identifier read from
         ``agent-<id>.meta.json``'s directory name, e.g.
         ``"a5c7effac5a9a35ab"``.
@@ -4464,7 +4464,7 @@ def _find_subagent_child_by_title(
     under the same parent identifies the same physical sub-agent.
 
     :param conversation_store: Store to query.
-    :param parent_id: Parent conversation id, e.g. ``"conv_parent987"``.
+    :param parent_id: Parent conversation id, e.g. ``"parent987"``.
     :param title: Exact child title, e.g. ``"Explore:a5c7effac5a9a35ab"``.
     :returns: Matching child :class:`Conversation`, or ``None`` when no
         row under *parent_id* carries that title.
@@ -4497,11 +4497,11 @@ def _publish_session_created(
     invalidate their ``child_sessions`` cache and re-fetch on this
     event.
 
-    :param parent_id: Parent conversation id, e.g. ``"conv_parent987"``.
+    :param parent_id: Parent conversation id, e.g. ``"parent987"``.
     :param child_session_id: The minted (or adopted) child id, e.g.
-        ``"conv_child456"``.
+        ``"child456"``.
     :param agent_id: Agent id stamped on the child (the parent's
-        agent), e.g. ``"ag_abc123"``. ``None`` only for legacy parents
+        agent), e.g. ``"abc123"``. ``None`` only for legacy parents
         without one.
     """
     event = SessionCreatedEvent(
@@ -4541,7 +4541,7 @@ async def _persist_external_subagent_start(
     row is healed for subsequent deliveries).
 
     :param parent_id: Parent (claude-native) conversation id,
-        e.g. ``"conv_parent987"``.
+        e.g. ``"parent987"``.
     :param parent_conv: Pre-fetched parent row — its ``agent_id`` is
         copied onto the child and its labels disambiguate
         claude-native parents from other harnesses.
@@ -4552,7 +4552,7 @@ async def _persist_external_subagent_start(
         (e.g. ``"toolu_..."``).
     :param conversation_store: Store used to read existing children
         (for idempotency) and create the new row.
-    :returns: The child conversation id, e.g. ``"conv_child456"``.
+    :returns: The child conversation id, e.g. ``"child456"``.
     :raises OmnigentError: 400 if the payload is missing any of
         the required keys; 400 if the parent has no ``agent_id``
         (claude-native parents always carry one, so this would be
@@ -4685,7 +4685,7 @@ def _find_codex_native_subagent_child(
 
     :param conversation_store: Store to query.
     :param parent_id: Parent codex-native conversation id, e.g.
-        ``"conv_parent987"``.
+        ``"parent987"``.
     :param thread_id: Codex child thread id, e.g.
         ``"019e8720-98d7-7b23-ac0a-bfb0eb02e0c9"``.
     :returns: Matching child :class:`Conversation`, or ``None`` when no
@@ -4816,13 +4816,13 @@ async def _create_and_publish_codex_child(
     Create a new Codex child Conversation row and publish ``session.created``.
 
     :param parent_id: Parent codex-native conversation id, e.g.
-        ``"conv_parent987"``.
+        ``"parent987"``.
     :param parent_conv: Parent row whose ``agent_id`` and ``runner_id``
         are inherited by the child.
     :param thread_id: Codex child thread id, e.g. ``"thread_child"``.
     :param labels: Labels to stamp on the new child row.
     :param conversation_store: Store used to create the child row.
-    :returns: New child conversation id, e.g. ``"conv_child456"``.
+    :returns: New child conversation id, e.g. ``"child456"``.
     """
     # Stable title so the (parent, title) unique index prevents race-condition
     # duplicate rows when the forwarder retries a failed registration.
@@ -4884,11 +4884,11 @@ async def _persist_external_codex_subagent_start(
     existing child id and upsert any new labels.
 
     :param parent_id: Parent codex-native conversation id, e.g.
-        ``"conv_parent987"``.
+        ``"parent987"``.
     :param parent_conv: Pre-fetched parent row.
     :param body: POST event body with ``data.thread_id`` required.
     :param conversation_store: Store for reading/creating child rows.
-    :returns: Child conversation id, e.g. ``"conv_child456"``.
+    :returns: Child conversation id, e.g. ``"child456"``.
     :raises OmnigentError: If ``thread_id`` is missing or parent has
         no bound agent.
     """
@@ -4931,7 +4931,7 @@ async def _persist_external_conversation_item(
     without starting or steering the placeholder Omnigent agent.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv: Conversation row for title seeding.
     :param body: External item event body.
     :param conversation_store: Store used to append the item.
@@ -5121,7 +5121,7 @@ def _latest_assistant_text_from_store(
 
     :param conversation_store: Store used to read conversation items.
     :param session_id: Session/conversation id, e.g.
-        ``"conv_child123"``.
+        ``"child123"``.
     :returns: Latest assistant text, or ``None`` when none is
         persisted yet.
     """
@@ -5160,7 +5160,7 @@ async def _enrich_idle_status_with_subagent_output(
     :param data: The ``external_session_status`` ``data`` to enrich, e.g.
         ``{"status": "idle"}``.
     :param status: Status edge; only ``"idle"`` is enriched.
-    :param session_id: Sub-agent session id, e.g. ``"conv_child123"``.
+    :param session_id: Sub-agent session id, e.g. ``"child123"``.
     :param conversation_store: Store read for the child's assistant text.
     :returns: ``data`` with ``"output"`` added when an idle edge has a
         persisted assistant message; otherwise unchanged.
@@ -5203,7 +5203,7 @@ def _require_external_status_forward(
     runner through this forward. Dropping it would leave the parent
     waiting forever with no inbox result.
 
-    :param session_id: Sub-agent session id, e.g. ``"conv_child123"``.
+    :param session_id: Sub-agent session id, e.g. ``"child123"``.
     :param status: External status value, e.g. ``"idle"``.
     :param runner_result: HTTP result returned by the runner, or ``None``
         when no runner could be reached.
@@ -5334,7 +5334,7 @@ def _require_collaboration_mode_forward(
     the previous mode, so explicit UI toggles require a confirmed 2xx forward.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param enabled: ``True`` when entering Plan mode; ``False`` when
         returning to Default mode.
     :param runner_result: HTTP result returned by the runner, or ``None``
@@ -5372,7 +5372,7 @@ def _drive_terminal_resolved_elicitation(session_id: str, persisted: Conversatio
     Other item types are ignored.
 
     :param session_id: Omnigent conversation id the item was mirrored for,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param persisted: The stored conversation item the forwarder just
         mirrored via ``external_conversation_item``.
     """
@@ -5600,7 +5600,7 @@ async def _publish_runner_recovered_status(
     it back to idle and hiding the error.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conversation_store: Store used to read the persisted error
         code and clear the labels on genuine recovery.
     :param require_disconnect_code: When ``True`` (passive-reconnect
@@ -5647,7 +5647,7 @@ def _publish_terminal_pending(session_id: str, pending: bool) -> None:
     live off this event.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param pending: ``True`` while the runner is auto-creating the
         terminal; ``False`` once it lands or auto-create fails.
     """
@@ -5683,7 +5683,7 @@ def _publish_sandbox_status(session_id: str, stage: str, error: str | None = Non
     thread its sandbox exec steps run on.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param stage: The launch stage just entered, e.g.
         ``"provisioning"`` — one of
         :data:`omnigent.server.schemas.SandboxLaunchStage`.
@@ -5724,7 +5724,7 @@ def _publish_runner_skills(session_id: str) -> None:
     buffer): a client binding later reads the now-warm snapshot directly.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
     event = SessionSkillsEvent(
         type="session.skills",
@@ -5742,7 +5742,7 @@ def _publish_model_options(session_id: str) -> None:
     snapshot and apply its cache-backed ``model_options`` field.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     """
     event = SessionModelOptionsEvent(
         type="session.model_options",
@@ -5766,7 +5766,7 @@ def _invalidate_runner_backed_snapshot_state(
     in-flight fetch so a dead runner cannot land a late stale value.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param cancel_inflight: Whether to cancel currently-running fetches.
         Use ``True`` when a runner disconnects; use ``False`` for browser
         refreshes so concurrent page-load callers do not cancel each other.
@@ -5794,7 +5794,7 @@ def _publish_changed_files_invalidated(session_id: str, environment_id: str = "d
     deltas.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param environment_id: Environment resource id,
         e.g. ``"default"``.
     """
@@ -5819,7 +5819,7 @@ def _publish_interrupted(session_id: str, response_id: str | None = None) -> Non
     response-level one.
 
     :param session_id: The session/conversation identifier whose
-        stream should receive the event, e.g. ``"conv_abc123"``.
+        stream should receive the event, e.g. ``"abc123"``.
     :param response_id: Optional response id for terminal-backed
         interrupted turns, e.g. ``"codex_turn_abc123"``.
     """
@@ -5892,7 +5892,7 @@ async def _get_runner_client(
     back to the in-process runner client for test setups.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param runner_router: The ``RunnerRouter`` instance, or
         ``None`` for in-process setups.
     :returns: An ``httpx.AsyncClient`` pointed at the runner,
@@ -5944,7 +5944,7 @@ async def _wait_for_runner_client(
     timeout late.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param runner_router: The ``RunnerRouter`` instance, or ``None`` for
         in-process test setups.
     :param tunnel_registry: The server's ``TunnelRegistry`` instance, or
@@ -6010,7 +6010,7 @@ async def _validate_session_workspace(
 
     :param user_id: Authenticated caller, e.g.
         ``"alice@example.com"``, or ``None`` when auth is disabled.
-    :param host_id: Stable host id, e.g. ``"host_a1b2c3d4..."``.
+    :param host_id: Stable host id, e.g. ``"a1b2c3d4..."``.
     :param workspace: Absolute path supplied by the caller, e.g.
         ``"/Users/corey/universe/src/foo"``. ``None`` is rejected
         with the "workspace required when host_id is set" message.
@@ -6306,7 +6306,7 @@ async def _run_managed_launch(
     (the armed launch token expires with the same cap).
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param owner: User the managed host acts for — the session
         creator, e.g. ``"alice@example.com"`` (or the reserved local
         user on auth-disabled servers).
@@ -6930,7 +6930,7 @@ async def _ensure_runner_session_initialized(
     serializes the handshake ahead of the caller's message forward.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row for *session_id*; supplies
         ``agent_id`` and ``sub_agent_name`` for the handshake body.
     :param runner_client: Runner client already resolved for
@@ -6992,7 +6992,7 @@ async def _proxy_get_session_resources_to_runner(
 
     :param runner_client: HTTP client bound to the session's runner.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param resource_type: Optional ``?type=`` filter forwarded to the
         runner, e.g. ``"environment"``. ``None`` returns all types.
     :returns: The runner's validated resource page.
@@ -7085,7 +7085,7 @@ async def _reset_runner_resources_after_switch(session_id: str) -> None:
     call is lost (runner offline, races).
 
     :param session_id: Session/conversation id just switched, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: None.
     """
     try:
@@ -7333,7 +7333,7 @@ async def _ensure_native_terminal_ready(
 
     :param runner_client: HTTP client pointed at the session's runner.
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row used to identify the native harness.
     :returns: The probe outcome — a definitive ``error`` (terminal could
         not start) and/or a non-fatal ``policy_notice``.
@@ -7411,7 +7411,7 @@ def _publish_error_event(session_id: str, error: ErrorData) -> None:
     Publish a live ``response.error`` event for a persisted error item.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param error: Durable error payload to mirror into SSE.
     :returns: None.
     """
@@ -7452,7 +7452,7 @@ async def _persist_native_terminal_failure(
     edge the normal completion path relies on.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row for the session.
     :param body: Original user message event.
     :param conversation_store: Store used for the durable append.
@@ -7534,7 +7534,7 @@ async def _persist_host_launch_failure_turn(
     run setup.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row for the session.
     :param body: Original user message event.
     :param conversation_store: Store used for the durable append.
@@ -7612,7 +7612,7 @@ async def _forward_native_subagent_terminal_failure(
     inbox entry to forward to — identical to the normal path's
     ``_is_codex_native_subagent`` exclusion).
 
-    :param session_id: Sub-agent session id, e.g. ``"conv_child123"``.
+    :param session_id: Sub-agent session id, e.g. ``"child123"``.
     :param conv: Conversation row for the sub-agent session.
     :param error: Boot error to relay to the parent as the turn result.
     :param runner_router: Router used to resolve the sub-agent's runner,
@@ -7657,7 +7657,7 @@ async def _persist_native_policy_notice(
     still forwards; this is an advisory notice only.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conversation_store: Store used for the durable append.
     :param reason: Human-readable cause from the runner, e.g. ``"Codex CLI
         0.128.0 is older than 0.129.0; upgrade codex to enforce tool-call
@@ -7743,7 +7743,7 @@ async def _forward_native_terminal_message(
 
     :param runner_client: Runner client selected for ``session_id``.
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: Conversation row for *session_id*.
     :param body: Sessions API message event to inject.
     :param file_store: Optional file metadata store for resolving
@@ -7920,7 +7920,7 @@ async def _forward_session_change_to_runner(
     and the status would be silently dropped.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param runner_router: The session's ``RunnerRouter`` (may be
         ``None`` in tests / in-process setups).
     :param event: The ``/events`` POST body, e.g.
@@ -7991,7 +7991,7 @@ async def _stop_session_via_runner(
     would ever lift it).
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param runner_router: The session's ``RunnerRouter`` (may be
         ``None`` in tests / in-process setups).
     :returns: ``True`` if the stop was delivered to a runner (2xx),
@@ -8072,9 +8072,9 @@ async def _stop_session_host_runner(
     can only ever stop the runner bound to that session.
 
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param host_id: Owning host identifier from the session row, e.g.
-        ``"host_a1b2c3d4..."``.
+        ``"a1b2c3d4..."``.
     :param runner_id: Runner bound to the session, e.g.
         ``"runner_token_abc123..."``.
     :param host_registry: The :class:`HostRegistry` tracking live host
@@ -8253,7 +8253,7 @@ async def _resolve_skill_meta_text_via_runner(
     ``POST /v1/sessions/{id}/skills/resolve``.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param skill_name: Exact skill name to resolve, e.g.
         ``"code-review"``.
     :param arguments: Raw argument string typed after the slash
@@ -8340,7 +8340,7 @@ async def _dispatch_skill_slash_command_to_runner(
     runner accepts the event.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv: Conversation row for ``session_id``.
     :param body: Structured ``slash_command`` event body.
     :param conversation_store: Store used to append both durable
@@ -8666,7 +8666,7 @@ async def _forward_event_to_runner(
     ``POST /v1/sessions/{id}/events``.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv: The conversation row for ``session_id``.
     :param body: The validated event input from the client.
     :param conversation_store: Store for item persistence.
@@ -9213,7 +9213,7 @@ def _resource_event_item_from_sse(
     the relay.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param event: Parsed SSE event dict from the runner stream.
     :returns: A ``resource_event`` :class:`NewConversationItem`, or
         ``None``.
@@ -9382,7 +9382,7 @@ async def _relay_persist_error_once(
 
     :param conversation_store: Store instance, or ``None`` to skip.
     :param session_id: Session/conversation identifier, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param item: The candidate ``type="error"`` item.
     :returns: ``"persisted"`` if this call appended the item,
         ``"duplicate"`` if a matching recent error already exists,
@@ -9498,7 +9498,7 @@ async def _flush_relay_text(
 
     :param conversation_store: Store to append to, or ``None`` to skip
         persistence (test parsing path).
-    :param session_id: Conversation/session id, e.g. ``"conv_abc123"``.
+    :param session_id: Conversation/session id, e.g. ``"abc123"``.
     :param text_acc: Accumulated delta strings; cleared in place on success.
     :param response_id: Turn id so the segment groups with its tool calls.
     :param model_id: Assistant agent label for the message.
@@ -9574,7 +9574,7 @@ async def _relay_runner_stream(
     calls) to the conversation store as they arrive.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param runner_client: HTTP client pointed at the runner.
     :param conversation_store: Store for persisting conversation
         items extracted from the runner's SSE stream.
@@ -10057,7 +10057,7 @@ def _ensure_runner_relay(
     against the new runner.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param runner_id: Runner id the new relay subscribes to,
         e.g. ``"runner_abc123"``. ``None`` skips relay
         (in-process path with no runner binding).
@@ -10130,7 +10130,7 @@ async def _ensure_runner_relay_ready(
     the user with an apparently successful empty response.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param runner_id: Runner id the relay should bind to, e.g.
         ``"runner_abc123"``. ``None`` skips relay setup.
     :param runner_client: HTTP client pointed at ``runner_id``.
@@ -10463,7 +10463,7 @@ async def _register_policy_elicitation(
     so the runner can key its Future on it.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param result: The :class:`PolicyResult` with action=ASK,
         carrying the reason and deciding_policy fields.
     :param arguments_preview: Truncated argument string for
@@ -10561,7 +10561,7 @@ async def _apply_pending_policy_ask_writes(
     all non-policy elicitations).
 
     :param session_id: Session id that owns the elicitation, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param conv: The session conversation, for the agent / spec lookup.
     :param conversation_store: Store the engine persists session state to.
     :param agent_store: Store for the agent spec lookup.
@@ -10741,7 +10741,7 @@ async def _evaluate_tool_call_policy(
     ``None`` on ALLOW. Returns a verdict dict on DENY or ASK.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv: The session's :class:`Conversation` entity.
     :param body: The validated ``function_call`` event with
         ``evaluate_policy: true``.
@@ -10998,7 +10998,7 @@ async def _evaluate_input_policy(
         :func:`_hold_native_ask_gate` for upstream-disconnect detection
         while parked on an ASK.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv: The session's :class:`Conversation` entity.
     :param body: The validated ``message`` event.
     :param conversation_store: Store for label state.
@@ -11165,7 +11165,7 @@ async def _evaluate_output_policy(
     original.
 
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv: The session's :class:`Conversation` entity.
     :param body: The validated ``message`` event.
     :param conversation_store: Store for label state.
@@ -11268,7 +11268,7 @@ async def _wake_parent_for_blocked_child(
     *outcome* is reported back so the notifier can release its per-block
     debounce and let a later publish retry rather than silencing the block.
 
-    :param parent_id: Parent session id, e.g. ``\"conv_parent123\"``.
+    :param parent_id: Parent session id, e.g. ``\"parent123\"``.
     :param child: The blocked child :class:`Conversation`; used only for its
         label/id in the notice and logs.
     :param notice: The ``[System: …]`` text to inject into the parent.
@@ -11448,7 +11448,7 @@ async def _stream_live_events(
 
     :param request: The FastAPI request, used to detect disconnect.
     :param session_id: Session/conversation identifier whose stream
-        to subscribe to, e.g. ``"conv_abc123"``.
+        to subscribe to, e.g. ``"abc123"``.
     :param on_subscribed: Optional snapshot-on-connect hook forwarded to
         :func:`session_stream.subscribe`; its events are yielded ahead of
         the live tail so a fresh client sees current resource state
@@ -11464,7 +11464,7 @@ async def _stream_live_events(
         when *viewer_user_id* is ``None``.
     :param presence_root_id: Root conversation of the streamed
         session's tree (its ``root_conversation_id``), e.g.
-        ``"conv_root123"``. Presence is scoped to the tree's root so
+        ``"root123"``. Presence is scoped to the tree's root so
         viewers of different agents/sub-agents in one session see
         each other. Required when *viewer_user_id* is set; ignored
         otherwise.
@@ -11633,7 +11633,7 @@ def _require_host_conn_for_worktree(host_id: str | None, request: Request) -> Ho
     Resolve the live host connection for a worktree operation.
 
     :param host_id: Target host id from the session request, e.g.
-        ``"host_a1b2c3d4..."``. ``None`` is rejected — git worktree
+        ``"a1b2c3d4..."``. ``None`` is rejected — git worktree
         creation requires a host (the server has no filesystem).
     :param request: FastAPI request carrying ``app.state.host_registry``.
     :returns: The live :class:`HostConnection` for ``host_id``.
@@ -11678,7 +11678,7 @@ async def _create_session_worktree(
     becomes the session ``workspace``. See
     designs/SESSION_GIT_WORKTREE.md.
 
-    :param host_id: Target host id, e.g. ``"host_a1b2c3d4..."``.
+    :param host_id: Target host id, e.g. ``"a1b2c3d4..."``.
         Required (worktree creation needs a host).
     :param source_repo: Canonical path of the picked source repo (the
         boundary-validated workspace), e.g. ``"/Users/alice/myrepo"``.
@@ -11747,7 +11747,7 @@ async def _remove_session_worktree_best_effort(
     operation still completes.
 
     :param host_id: Host that owns the worktree, e.g.
-        ``"host_a1b2c3d4..."``.
+        ``"a1b2c3d4..."``.
     :param worktree_path: Absolute worktree directory to remove on the
         host, e.g. ``"/Users/alice/myrepo-worktrees/feature-login"``.
     :param branch: Branch checked out in the worktree, e.g.
@@ -12549,7 +12549,7 @@ def _persist_stored_session_bundle(
     :param metadata: Validated session metadata. A set
         ``parent_session_id`` creates the conversation as a
         sub-agent child of that session.
-    :param agent_id: New agent id, e.g. ``"ag_abc123"``.
+    :param agent_id: New agent id, e.g. ``"abc123"``.
     :param agent_name: Agent name loaded from the uploaded spec.
     :param agent_bundle_location: Artifact key for the stored bundle.
     :param agent_description: Optional description from the spec.
@@ -12629,7 +12629,7 @@ def _delete_stored_session_bundle_after_failure(
 
     :param artifact_store: Store that contains the uploaded bundle.
     :param agent_bundle_location: Artifact key to delete, e.g.
-        ``"ag_abc123/a1b2c3d4"``.
+        ``"abc123/a1b2c3d4"``.
     :returns: None.
     """
     try:
@@ -12662,7 +12662,7 @@ async def _authorize_bundled_parent_and_inherit_runner(
     caller doesn't own is not inherited.
 
     :param parent_session_id: The requested parent session id,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param user_id: Authenticated caller, e.g. ``"alice@example.com"``.
     :param permission_store: Permission store for the access
         check; ``None`` in single-user / no-auth mode.
@@ -12708,9 +12708,9 @@ async def _notify_runner_of_bundled_child(
     JSON create path's post-create notify. Failures are logged and
     swallowed — the notify is additive and must not fail the create.
 
-    :param session_id: The new child session id, e.g. ``"conv_abc123"``.
+    :param session_id: The new child session id, e.g. ``"abc123"``.
     :param agent_id: The child's session-scoped agent id,
-        e.g. ``"ag_abc123"``.
+        e.g. ``"abc123"``.
     :param runner_router: Router used to resolve the bound runner's
         client; ``None`` falls back to the in-process runner.
     :returns: None.
@@ -12869,7 +12869,7 @@ def _child_session_summary_from_conversation(
         (``kind="sub_agent"``) from
         :meth:`ConversationStore.list_conversations`.
     :param parent_session_id: The parent session id from the
-        route, e.g. ``"conv_parent987"``. Passed in rather than
+        route, e.g. ``"parent987"``. Passed in rather than
         re-reading from ``conv.parent_conversation_id`` to keep
         the helper indifferent to legacy rows where the FK might
         be missing.
@@ -12964,7 +12964,7 @@ async def _child_session_summaries_from_conversations(
 
     :param children: Child conversation rows from
         ``list_conversations(kind="sub_agent")``.
-    :param parent_session_id: Parent session id, e.g. ``"conv_parent987"``.
+    :param parent_session_id: Parent session id, e.g. ``"parent987"``.
     :param conv_store: Conversation store used for the batched message read.
     :returns: One :class:`ChildSessionSummary` per input child, preserving
         input order.
@@ -13252,7 +13252,7 @@ def _mcp_input_required_response(
         Contains the ``elicitation_id`` and ``session_id`` so the server
         can verify authenticity on retry without server-side storage.
     :param session_id: Session/conversation id for constructing the
-        approval page URL, e.g. ``"conv_abc123"``. ``None`` omits the
+        approval page URL, e.g. ``"abc123"``. ``None`` omits the
         URL (form mode).
     :returns: A :class:`Response` carrying the JSON-RPC 2.0
         ``InputRequiredResult`` envelope.
@@ -13307,7 +13307,7 @@ async def _handle_mcp_tools_list(
 
     :param rpc_id: The JSON-RPC request id, e.g. ``1``.
     :param session_id: The session id whose agent's tools to list,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param runner_router: Router used to get an httpx client pointed
         at the session's runner. ``None`` returns an error.
     :returns: A JSON-RPC 2.0 ``tools/list`` result response, or an
@@ -13405,7 +13405,7 @@ async def _handle_mcp_tools_call(
     7. Return the result in MCP ``content`` format.
 
     :param rpc_id: The JSON-RPC request id, e.g. ``1``.
-    :param session_id: The session id, e.g. ``"conv_abc123"``.
+    :param session_id: The session id, e.g. ``"abc123"``.
     :param params: The JSON-RPC ``params`` object.  On first call,
         contains ``"name"`` and ``"arguments"``.  On retry, also
         contains ``"requestState"`` (opaque blob from the server) and
@@ -14390,7 +14390,7 @@ def create_sessions_router(
         :param request: The incoming FastAPI request (for auth).
         :param response: The FastAPI response (for cache headers).
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param include_items: When ``False``, skip the committed-items
             read and return ``items=[]``. The web chat surface passes
             ``False`` because it hydrates the transcript via the
@@ -14455,7 +14455,7 @@ def create_sessions_router(
         :param request: The incoming FastAPI request (for auth).
         :param response: The FastAPI response (for cache headers).
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: The session id and labels.
         :raises OmnigentError: 404 if no session exists.
         """
@@ -14508,11 +14508,11 @@ def create_sessions_router(
         :param limit: Maximum number of sessions to return
             (1-1000, default 20).
         :param after: Cursor — return sessions after this
-            session ID in sort order, e.g. ``"conv_abc123"``.
+            session ID in sort order, e.g. ``"abc123"``.
         :param before: Cursor — return sessions before this
             session ID.
         :param agent_id: When set, only return sessions bound
-            to this agent, e.g. ``"ag_abc123"``. ``None``
+            to this agent, e.g. ``"abc123"``. ``None``
             returns sessions across all agents.
         :param agent_name: When set, only return sessions whose
             bound agent row has this name. This intentionally
@@ -14659,7 +14659,7 @@ def create_sessions_router(
         or deleted.
 
         :param conv_ids: Session ids to summarize,
-            e.g. ``["conv_abc123"]``.
+            e.g. ``["abc123"]``.
         :returns: Map from session id to its
             :class:`CommentsFingerprint`; empty when no comment store
             is wired. Sessions without comments are absent.
@@ -15060,7 +15060,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param body: The validated :class:`UpdateSessionRequest`.
         :returns: The updated :class:`SessionResponse` snapshot.
         :raises OmnigentError: 400 if the runner is not
@@ -15458,7 +15458,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param source_id: Session/conversation identifier of the
-            source session to fork, e.g. ``"conv_abc123"``.
+            source session to fork, e.g. ``"abc123"``.
         :param body: The validated :class:`SessionForkRequest`.
         :returns: A :class:`SessionResponse` describing the newly
             created fork (status ``"idle"``).
@@ -15656,7 +15656,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier to switch,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param body: The validated :class:`SessionSwitchAgentRequest`.
         :returns: A :class:`SessionResponse` describing the session after
             the switch (status ``"idle"``).
@@ -16872,7 +16872,7 @@ def create_sessions_router(
         ``GET /v1/conversations/{id}/items``.
 
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param limit: Maximum number of items to return
             (1-1000, default 100).
         :param after: Cursor — return items after this item ID,
@@ -16942,13 +16942,13 @@ def create_sessions_router(
         :param request: Inbound HTTP request; carries the caller
             identity used to authorize READ on the parent session.
         :param session_id: Parent session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param limit: Maximum number of children to return
             (1-1000, default 20 — sub-agent fan-out is typically
             sparse compared to conversation items).
         :param after: Cursor — return children whose id appears
             after this one in sort order,
-            e.g. ``"conv_child123"``.
+            e.g. ``"child123"``.
         :param before: Cursor — return children before this one.
         :param order: Sort direction, ``"desc"`` (newest-first,
             default) or ``"asc"``. Sort column is ``created_at``.
@@ -17030,7 +17030,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param type: Optional resource-type filter, e.g.
             ``"environment"`` / ``"terminal"`` / ``"file"``. Forwarded
             to the runner (its registry applies it) and honored by the
@@ -18185,7 +18185,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param environment_id: Environment resource id,
             e.g. ``"default"``.
         :param q: Case-insensitive search substring, e.g. ``"test.md"``.
@@ -18505,7 +18505,7 @@ def create_sessions_router(
         :param request: The inbound request, used for identity
             extraction.
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param elicitation_id: Correlation id of the elicitation to
             resolve, e.g. ``"elicit_abc123"``. Taken from the URL
             path, not the body.
@@ -18561,7 +18561,7 @@ def create_sessions_router(
         :param request: The inbound request, used for identity
             extraction.
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param elicitation_id: Correlation id of the elicitation,
             e.g. ``"elicit_abc123"``.
         :returns: JSON with ``status`` (``"pending"`` or
@@ -19671,7 +19671,7 @@ def create_sessions_router(
         :param request: The FastAPI request, used to detect
             disconnect.
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param idle: Presence idle flag computed by the web client
             at connect time (tab backgrounded ≥ its debounce). An
             idle *flip* mid-view arrives as a reconnect carrying the
@@ -19832,7 +19832,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session/conversation identifier,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param delete_branch: Opt-in git cleanup, as a query param
             (``?delete_branch=true``). When ``True`` and the session
             has a server-created worktree (``git_branch`` set), the
@@ -19991,7 +19991,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session to grant access to,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param body: The grant request with ``user_id`` and ``level``.
         :returns: The resulting :class:`PermissionObject`.
         :raises OmnigentError: 404 if no session or no access,
@@ -20053,7 +20053,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session to revoke access from,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param target_user_id: User whose grant to revoke,
             e.g. ``"alice@example.com"``.
         :returns: 204 No Content.
@@ -20097,7 +20097,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session to look up,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: ``{"owner": "<user_id>"}`` or
             ``{"owner": null}``.
         """
@@ -20122,7 +20122,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request (for auth).
         :param session_id: Session to list grants for,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :returns: List of :class:`PermissionObject`.
         :raises OmnigentError: 404 if no session or no access.
         """
@@ -20277,7 +20277,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request.
         :param session_id: Session identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: The bound agent's :class:`AgentObject`.
         :raises OmnigentError: If the session or agent is not found.
         """
@@ -20327,7 +20327,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request.
         :param session_id: Session identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :returns: Raw bundle bytes as ``application/gzip``.
         :raises OmnigentError: If the session, agent, or bundle is
             not found.
@@ -20401,7 +20401,7 @@ def create_sessions_router(
 
         :param request: The incoming FastAPI request.
         :param session_id: Session identifier, e.g.
-            ``"conv_abc123"``.
+            ``"abc123"``.
         :param bundle: Uploaded ``.tar.gz`` agent bundle file.
         :returns: The updated :class:`AgentObject`.
         :raises OmnigentError: If the session or agent is not found,
@@ -20531,7 +20531,7 @@ def create_sessions_router(
         - ``tools/call`` — policy eval on AP, execution on runner.
 
         :param session_id: Session whose agent's MCP servers to proxy,
-            e.g. ``"conv_abc123"``.
+            e.g. ``"abc123"``.
         :param request: The incoming FastAPI request. Body must be a
             JSON-RPC 2.0 object.
         :returns: A ``application/json`` JSON-RPC 2.0 response.
@@ -20625,7 +20625,7 @@ async def _fetch_runner_skills(
     :param runner_client: HTTP client pointed at the bound runner, or
         ``None`` when no runner is bound.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :returns: Skill summaries (name + one-line description) for the
         session, or ``[]`` when unavailable.
     """
@@ -20739,7 +20739,7 @@ async def _fetch_model_options(
     :param runner_client: HTTP client pointed at the bound runner, or
         ``None`` when no runner is bound.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param conv: Conversation row whose labels identify the wrapper.
     :returns: Model options, or ``[]`` when the session has no model picker or
         the (codex) options are not yet available.
@@ -20838,7 +20838,7 @@ async def _get_session_snapshot(
 
     :param conv_store: The conversation store to read from.
     :param session_id: Session/conversation identifier,
-        e.g. ``"conv_abc123"``.
+        e.g. ``"abc123"``.
     :param permission_level: The requesting user's numeric level
         on this session, or ``None`` when permissions are disabled.
     :param agent_store: Optional agent store used to look up the

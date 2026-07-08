@@ -190,7 +190,7 @@ class ElicitationRequest:
         only): truncated snapshot of the gated content. Safe to
         display verbatim. Empty string when not applicable.
     :param target_session_id: Session whose resolve endpoint owns
-        this elicitation, e.g. ``"conv_child123"``. Set when a
+        this elicitation, e.g. ``"child123"``. Set when a
         sub-agent's prompt was mirrored into an ancestor stream so the
         consumer can route the verdict back to the child that parked on
         it. ``None`` means resolve against the session the event arrived

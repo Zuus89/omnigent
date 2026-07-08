@@ -301,7 +301,7 @@ async def _authorize_terminal_attach(
     :param websocket: The incoming FastAPI :class:`WebSocket`, used to
         resolve the caller's identity via *auth_provider*.
     :param session_id: Session/conversation identifier the attach
-        targets, e.g. ``"conv_abc123"``.
+        targets, e.g. ``"abc123"``.
     :param read_only: ``True`` for a view-only attach (requires
         ``LEVEL_READ``); ``False`` for an interactive write attach
         (requires ``LEVEL_OWNER``).

@@ -209,7 +209,7 @@ class LaunchRunnerRequest(BaseModel):
     """Request body for ``POST /v1/hosts/{host_id}/runners``.
 
     :param session_id: Session to bind the new runner to, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param workspace: Absolute path on the host machine to use
         as the runner's working directory, e.g.
         ``"/Users/corey/projects/frontend"``. When ``git`` is set,
@@ -374,7 +374,7 @@ def create_hosts_router(
 
         :param request: The incoming request (for auth).
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :returns: Host details dict.
         :raises HTTPException: 404 if the host does not exist.
         """
@@ -418,7 +418,7 @@ def create_hosts_router(
         and waits for the host's acknowledgement.
 
         :param request: The incoming request (for auth).
-        :param host_id: Target host, e.g. ``"host_a1b2c3d4..."``.
+        :param host_id: Target host, e.g. ``"a1b2c3d4..."``.
         :param body: Launch request with ``session_id`` and
             ``workspace``.
         :returns: ``{"runner_id": ..., "status": "launching"}``.
@@ -699,7 +699,7 @@ def create_hosts_router(
 
         :param request: FastAPI request (for auth).
         :param host_id: Host identifier, e.g.
-            ``"host_a1b2c3d4..."``.
+            ``"a1b2c3d4..."``.
         :param limit: Max entries per page.
         :param after: Optional forward pagination cursor (entry
             path), e.g. ``"/Users/corey/projects/m"``.
@@ -869,7 +869,7 @@ def create_hosts_router(
         does not by itself grant an agent access to it.
 
         :param request: FastAPI request (for auth).
-        :param host_id: Host identifier, e.g. ``"host_a1b2c3d4..."``.
+        :param host_id: Host identifier, e.g. ``"a1b2c3d4..."``.
         :param body: Request body carrying the absolute (or
             tilde-prefixed) ``path`` to create.
         :returns: ``{"object": "directory", "path": "<created abs path>"}``.
@@ -950,7 +950,7 @@ def create_hosts_router(
         picker can quietly fall back to "no worktrees".
 
         :param request: FastAPI request (for auth).
-        :param host_id: Host identifier, e.g. ``"host_a1b2c3d4..."``.
+        :param host_id: Host identifier, e.g. ``"a1b2c3d4..."``.
         :param path: Absolute path inside the repo on the host to list
             worktrees for, e.g. ``"/Users/alice/myrepo"``.
         :returns: ``{"object": "list", "data": [{path, branch,

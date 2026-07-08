@@ -144,7 +144,7 @@ class SubagentBlockNotifier:
         deterministically. Other event types are ignored.
 
         :param conversation_id: Session the event was published on,
-            e.g. ``"conv_child123"``.
+            e.g. ``"child123"``.
         :param event: The elicitation request/resolved event dict.
         :returns: None.
         """
@@ -252,7 +252,7 @@ class SubagentBlockNotifier:
         stale block notice.
 
         :param conversation_id: The blocked child session id,
-            e.g. ``"conv_child123"``.
+            e.g. ``"child123"``.
         :param event: The ``response.elicitation_request`` event dict.
         :returns: None.
         """
@@ -322,7 +322,7 @@ class SubagentBlockNotifier:
         publish path; ``CancelledError`` (a ``BaseException`` raised by
         :meth:`close`) is not caught and still tears the handler down.
 
-        :param parent_id: Parent session id to wake, e.g. ``"conv_parent123"``.
+        :param parent_id: Parent session id to wake, e.g. ``"parent123"``.
         :param child: The blocked child :class:`Conversation`.
         :param notice: Pre-formatted ``[System: …]`` notice text.
         :param armed_id: Correlation id whose arm gates the dispatch, or

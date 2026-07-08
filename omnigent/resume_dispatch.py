@@ -52,7 +52,7 @@ def run_resume(
     leak state and collide with any other in-flight ``omnigent``
     process the user has running.
 
-    :param target: Optional conversation id, e.g. ``"conv_abc123"``.
+    :param target: Optional conversation id, e.g. ``"abc123"``.
         ``None`` selects the picker form.
     :param server: Optional remote Omnigent server URL. Required in the
         picker form (no agent is supplied so we can't bootstrap a
@@ -160,7 +160,7 @@ def _dispatch_by_runtime(
     via server-side agent lookup) is tracked separately and not in
     this PR's scope.
 
-    :param target: Conversation id, e.g. ``"conv_abc123"``.
+    :param target: Conversation id, e.g. ``"abc123"``.
     :param server: Optional remote Omnigent server URL. ``None`` when
         the lookup should hit a freshly-started local server (the
         claude-native wrapper owns its own local server lifecycle).
@@ -313,7 +313,7 @@ def _read_wrapper_label_local(*, conv_id: str) -> str | None:
     """
     Read a conversation's wrapper label from the local persistent store.
 
-    :param conv_id: Local Omnigent conversation id, e.g. ``"conv_abc123"``.
+    :param conv_id: Local Omnigent conversation id, e.g. ``"abc123"``.
     :returns: Value of ``labels.omnigent.wrapper``, or ``None`` when
         no wrapper label is present.
     :raises click.ClickException: If the conversation id is not found

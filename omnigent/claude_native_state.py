@@ -120,7 +120,7 @@ def _state_dir_for_conversation_id(conversation_id: str) -> Path:
     always a single child of the state root.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Absolute directory path; not guaranteed to exist.
     """
     digest = hashlib.sha256(conversation_id.encode("utf-8")).hexdigest()[:_ID_HASH_CHARS]
@@ -145,7 +145,7 @@ def write_launch_state(conversation_id: str, working_directory: str) -> None:
     to parse.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param working_directory: Absolute filesystem path the wrapper
         was invoked from, e.g. ``"/home/me/repo"``. Should already be
         ``Path.cwd().resolve()``-canonicalized by the caller so
@@ -204,7 +204,7 @@ def redirect_launch_state(conversation_id: str, working_directory: str) -> None:
     resumes, so the persisted cwd must follow it.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param working_directory: New absolute filesystem path for
         future resumes, e.g. ``"/home/me/new-repo"``.
     :returns: None.
@@ -244,7 +244,7 @@ def read_launch_state(conversation_id: str) -> ClaudeNativeLaunchState | None:
     block resume. The user can still chdir manually if Claude exits.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Parsed state, or ``None`` if missing / malformed.
     """
     target = _state_dir_for_conversation_id(conversation_id) / _LAUNCH_FILE

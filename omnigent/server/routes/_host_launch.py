@@ -65,7 +65,7 @@ def resolve_host_owner(
 
     :param user_id: Authenticated caller, e.g. ``"alice@example.com"``,
         or ``None`` when auth is disabled.
-    :param host_id: Target host id, e.g. ``"host_a1b2c3d4..."``.
+    :param host_id: Target host id, e.g. ``"a1b2c3d4..."``.
     :param host_store: Persistent host registrations.
     :returns: The host record owned by the caller.
     :raises HTTPException: 404 if the host is unknown; 403 if it is
@@ -101,9 +101,9 @@ def resolve_host_launch(
 
     :param user_id: Authenticated caller, e.g. ``"alice@example.com"``,
         or ``None`` when auth is disabled.
-    :param host_id: Target host id, e.g. ``"host_a1b2c3d4..."``.
+    :param host_id: Target host id, e.g. ``"a1b2c3d4..."``.
     :param session_id: Session to bind the runner to, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param host_store: Persistent host registrations.
     :param host_registry: In-memory live host connections (this replica).
     :param conversation_store: Conversation lookups (also used by the

@@ -756,7 +756,7 @@ def _agent_cache_dest(spec_cache_root: Path, agent_id: str, version: str) -> Pat
 
     :param spec_cache_root: Runner-local cache root for extracted bundles,
         e.g. ``Path("/tmp/runner-specs-xyz")``.
-    :param agent_id: Opaque agent identifier, e.g. ``"ag_abc123"``.
+    :param agent_id: Opaque agent identifier, e.g. ``"abc123"``.
     :param version: Bundle version from the ``X-Agent-Version`` header,
         e.g. ``"3"`` (defaults to ``"0"`` when the header is absent).
     :returns: The resolved cache directory, guaranteed inside
@@ -785,9 +785,9 @@ async def _resolve_agent_spec_from_server(
     :param spec_cache_root: Stable runner-local cache root for
         extracted agent bundles.
     :param agent_id: Opaque agent identifier to fetch, e.g.
-        ``"ag_abc123"``.
+        ``"abc123"``.
     :param session_id: Session identifier used to fetch the bundle
-        via the session-scoped endpoint, e.g. ``"conv_abc123"``.
+        via the session-scoped endpoint, e.g. ``"abc123"``.
         ``None`` means the runner cannot resolve the session-scoped
         bundle and returns ``None``.
     :returns: The parsed :class:`AgentSpec` plus its extracted bundle
@@ -961,7 +961,7 @@ def create_app(
         :param agent_id: Opaque agent identifier from the
             response-create body.
         :param session_id: Session identifier, e.g.
-            ``"conv_abc123"``. ``None`` for legacy callers.
+            ``"abc123"``. ``None`` for legacy callers.
         :returns: The parsed :class:`AgentSpec`, or ``None`` if
             the server doesn't have the agent.
         """

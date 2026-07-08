@@ -721,7 +721,7 @@ def bridge_dir_for_conversation_id(conversation_id: str) -> Path:
     Return the bridge directory for a legacy session id.
 
     :param conversation_id: Omnigent conversation id used as bridge id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: Absolute bridge directory under
         ``/tmp/omnigent-<UID>/claude-native``.
     """
@@ -737,7 +737,7 @@ def build_claude_native_spawn_env(
     Build spawn env for the ``claude-native`` harness process.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_id: Opaque bridge id from
         :data:`BRIDGE_ID_LABEL_KEY`, e.g. ``"bridge_abc123"``. ``None``
         normalizes old sessions by using *conversation_id*.
@@ -762,7 +762,7 @@ def prepare_bridge_dir(
     Create or refresh the bridge directory for a native Claude session.
 
     :param conversation_id: Omnigent conversation id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :param bridge_id: Opaque bridge id, e.g. ``"bridge_abc123"``.
         ``None`` normalizes old sessions by using *conversation_id*.
     :param workspace: Runner workspace/cwd used for local OS tools.
@@ -932,7 +932,7 @@ def read_active_session_id(bridge_dir: Path) -> str | None:
     Read the Omnigent session currently receiving bridge-originated events.
 
     :param bridge_dir: Bridge directory path.
-    :returns: Active Omnigent session id, e.g. ``"conv_abc123"``, or
+    :returns: Active Omnigent session id, e.g. ``"abc123"``, or
         ``None`` when the bridge config is absent or malformed.
     """
     config = _read_json_file(bridge_dir / _CONFIG_FILE)
@@ -982,7 +982,7 @@ def write_active_session_id(bridge_dir: Path, session_id: str) -> None:
 
     :param bridge_dir: Bridge directory path.
     :param session_id: New active Omnigent session id, e.g.
-        ``"conv_abc123"``.
+        ``"abc123"``.
     :returns: None.
     :raises RuntimeError: If the bridge config does not exist.
     """
@@ -1275,7 +1275,7 @@ def url_component(value: str) -> str:
     """
     Percent-encode one URL path component.
 
-    :param value: Raw path component, e.g. ``"conv_abc123"``.
+    :param value: Raw path component, e.g. ``"abc123"``.
     :returns: URL-safe component with slashes escaped.
     """
     return urllib.parse.quote(value, safe="")
@@ -2690,7 +2690,7 @@ def display_cost_approval_popup(
         ``/tmp/omnigent/claude-native/<digest>``. Supplies the tmux target
         (``tmux.json``); the AP-routing config comes from *config_file*.
     :param session_id: Omnigent session id that owns the elicitation, e.g.
-        ``"conv_abc123"``. Used in the resolve URL the popup POSTs to.
+        ``"abc123"``. Used in the resolve URL the popup POSTs to.
     :param elicitation_id: Outstanding elicitation correlation id, e.g.
         ``"elicit_deadbeef"``.
     :param message: Approval reason shown in the popup, e.g.

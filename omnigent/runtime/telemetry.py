@@ -6,10 +6,11 @@ is intentionally thin — it holds only the omnigent-specific
 concerns:
 
 * **Trace ID derivation from the response ID.** Agent-plane response
-  IDs are ``resp_<32-char hex>``. We reuse the hex suffix as the
-  W3C trace ID so operators can look up a trace by its response ID
-  without a lookup table. :func:`trace_context_for_response` injects
-  a synthetic ``traceparent`` via the W3C TraceContext propagator.
+  IDs are bare 32-char hex (a legacy ``resp_`` prefix is tolerated and
+  stripped). We reuse the hex as the W3C trace ID so operators can look
+  up a trace by its response ID without a lookup table.
+  :func:`trace_context_for_response` injects a synthetic ``traceparent``
+  via the W3C TraceContext propagator.
 
 * **Runtime init.** :func:`init` installs an OTLP ``TracerProvider``
   when ``OTEL_EXPORTER_OTLP_ENDPOINT`` is set. When the endpoint is
@@ -30,6 +31,7 @@ concerns:
 from __future__ import annotations
 
 import contextvars
+import hashlib
 import logging
 import os
 import re
@@ -504,37 +506,39 @@ def parse_provider_name(model: str) -> tuple[str, str]:
 
 def trace_id_from_response_id(response_id: str) -> str:
     """
-    Extract the 32-char hex trace ID from an omnigent response ID.
+    Derive a 32-char hex W3C trace ID from an omnigent response ID.
 
-    Response IDs have the format ``resp_<32-char hex>`` (generated
-    via ``generate_task_id``). The hex suffix is a valid 128-bit
-    W3C trace ID. Reusing it as the trace ID lets operators jump
-    from a response ID to its trace by stripping the ``resp_``
-    prefix — no lookup table, no search query.
+    Response IDs are bare 32-char hex (generated via ``generate_task_id``);
+    a legacy ``resp_`` prefix and short harness-allocated hex bodies are
+    tolerated. The hex is a valid 128-bit W3C trace ID, so reusing it lets
+    operators jump from a response ID to its trace with no lookup table.
+
+    Some response IDs are polymorphic harness turn IDs (e.g.
+    ``"resp_claude_<digest>"``, ``"kimi:..."``) with no usable hex body;
+    those derive a stable trace ID from a digest of the id rather than
+    failing, so tracing degrades gracefully instead of breaking a turn.
 
     :param response_id: The response/task ID, e.g.
-        ``"resp_d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3"``.
-    :returns: The 32-char lowercase hex trace ID.
-    :raises ValueError: If the response ID does not start with
-        ``"resp_"`` or the hex suffix is not exactly 32 chars.
+        ``"d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3"`` or a legacy
+        ``"resp_d8e9f0a1..."``.
+    :returns: A 32-char lowercase hex trace ID.
     """
-    if not response_id.startswith(_RESP_PREFIX):
-        raise ValueError(f"Expected {_RESP_PREFIX!r} prefix, got {response_id!r}")
-    hex_part = response_id[len(_RESP_PREFIX) :]
-    if len(hex_part) > _HEX_LEN:
-        raise ValueError(
-            f"Expected at most {_HEX_LEN} hex chars after prefix, "
-            f"got {len(hex_part)} in {response_id!r}"
-        )
-    # Zero-pad short hex suffixes (e.g. 24-char harness-allocated
-    # IDs) to a valid 128-bit W3C trace ID. The padding preserves
-    # uniqueness — the original hex is a prefix of the trace ID.
-    hex_part = hex_part.ljust(_HEX_LEN, "0")
-    try:
-        int(hex_part, 16)
-    except ValueError as exc:
-        raise ValueError(f"Invalid hex suffix in {response_id!r}: {exc}") from exc
-    return hex_part
+    candidate = response_id
+    if candidate.startswith(_RESP_PREFIX):
+        candidate = candidate[len(_RESP_PREFIX) :]
+    # A bare hex body (<= 32 chars) is directly usable: zero-pad short
+    # bodies (e.g. 24-char harness-allocated IDs) to a full 128-bit trace
+    # ID; the original hex stays a prefix, preserving uniqueness.
+    if candidate and len(candidate) <= _HEX_LEN:
+        try:
+            int(candidate, 16)
+        except ValueError:
+            pass
+        else:
+            return candidate.ljust(_HEX_LEN, "0")
+    # No usable hex body (polymorphic harness turn id): derive a stable
+    # synthetic trace ID from the full response id.
+    return hashlib.sha256(response_id.encode()).hexdigest()[:_HEX_LEN]
 
 
 @contextmanager
