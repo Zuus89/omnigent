@@ -184,12 +184,8 @@ databricks = [
 ]
 dev = [
     "pytest>=7.0",
-    # mlflow is now opt-in (the `tracing` / `databricks` extras), but the
-    # telemetry + tracing test suites need it, so keep it in the dev set.
-    "mlflow>=3,<4",
     # hindsight-client is opt-in (the `hindsight` extra), but the Hindsight
-    # memory tool tests import + mock it, so keep it in the dev set (same
-    # rationale as mlflow above).
+    # memory tool tests import + mock it, so keep it in the dev set.
     "hindsight-client>=0.4.0",
     "pytest-asyncio>=0.21",
     "pytest-xdist>=3.6",
