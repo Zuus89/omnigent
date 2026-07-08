@@ -102,6 +102,18 @@ jobs:
             exit 1
           }
 
+      # ktlint is invoked by the android-ktlint-* pre-commit hooks. The wrapper
+      # script (web/android/bin/ktlint.sh) exits 0 if ktlint is absent, so we
+      # install it here before pre-commit runs to ensure the check is enforced.
+      - name: Install ktlint
+        env:
+          KTLINT_VERSION: "1.8.0"
+        run: |
+          curl -sSL \
+            "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint" \
+            -o /usr/local/bin/ktlint
+          chmod +x /usr/local/bin/ktlint
+
       - name: Run formatting, lint, and typing checks
         run: uv run pre-commit run --all-files --show-diff-on-failure
 
