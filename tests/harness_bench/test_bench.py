@@ -122,6 +122,17 @@ def test_resolve_registered_harness_by_name() -> None:
     assert profile.harness == "acp"
     assert profile.transport == "sdk-inproc"
 
+    # acp:<slug> is a first-class id: base `acp` is registered and the slug
+    # selects a configured ACP agent at spawn. It binds, keeping the full id as
+    # the harness (so config.harness=acp:qwen reaches the runner) and a valid
+    # env-prefix stem. An empty slug ("acp:") is refused.
+    slug = resolve_profile("acp:qwen")
+    assert slug.harness == "acp:qwen"
+    assert slug.transport == "sdk-inproc"
+    assert slug.env_prefix == "HARNESS_ACP_QWEN_"
+    with pytest.raises(KeyError):
+        resolve_profile("acp:")
+
 
 def test_resolve_entry_point_plugin_and_alias() -> None:
     """An entry-point community plugin resolves by name AND by alias.

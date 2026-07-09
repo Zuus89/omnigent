@@ -286,10 +286,22 @@ def _registry_profile(name: str) -> BenchProfile | None:
     the harness runs on the existing drivers with no bench edit.
     """
     canonical = harness_aliases().get(name, name)
-    if canonical not in harness_modules():
+    # ``acp:<slug>`` is a first-class harness id: the base ``acp`` harness is
+    # registered, and the slug selects a user-configured ACP agent at spawn
+    # (resolved from the ~/.omnigent config ``acp:`` block, see
+    # onboarding/acp_auth.py). Look up caps/module by the base ``acp`` but keep
+    # the full id as the profile harness so ``config.harness=acp:<slug>`` reaches
+    # the runner. Lets ``--harness acp:qwen`` bind to a specific ACP agent.
+    if canonical.startswith("acp:"):
+        if not canonical[len("acp:") :]:
+            return None  # empty slug ("acp:") — use bare "acp" instead
+        registry_key = "acp"
+    else:
+        registry_key = canonical
+    if registry_key not in harness_modules():
         return None
 
-    caps = harness_capabilities().get(canonical)
+    caps = harness_capabilities().get(registry_key)
     mode = caps.integration_mode if caps is not None else None
     if mode is None:
         # No capabilities entry (a plain subprocess plugin like rovo): the bench
@@ -311,8 +323,11 @@ def _registry_profile(name: str) -> BenchProfile | None:
         # its builder so the two paths agree.
         return _native_profile(canonical)
 
-    env_prefix = "HARNESS_" + canonical.upper().replace("-", "_") + "_"
-    marker = canonical.upper().replace("-", "_") + "_OK"
+    # env_prefix / marker sanitize non-word chars (an acp:<slug> id has a colon)
+    # to a valid env-var stem, e.g. acp:qwen -> HARNESS_ACP_QWEN_.
+    stem = canonical.upper().replace("-", "_").replace(":", "_")
+    env_prefix = "HARNESS_" + stem + "_"
+    marker = stem + "_OK"
     # A model is always required: the omnigent executor spec mandates one
     # (spec/omnigent.py: "executor.type='omnigent' requires a model"), so an
     # empty model fails agent registration ("llm.model must be present"). For an
@@ -327,12 +342,14 @@ def _registry_profile(name: str) -> BenchProfile | None:
         model=_NATIVE_DEFAULT_MODEL,
         env_prefix=env_prefix,
         marker=marker,
-        cli_binary=_registry_cli_binary(canonical),
+        # install-spec + declared caps are keyed by the base harness, not the
+        # acp:<slug> id, so look them up by registry_key.
+        cli_binary=_registry_cli_binary(registry_key),
         transport=transport,
         owner="",
         auth=_auth_prose(caps),
         implementation=_implementation_prose(caps),
-        declared=_declared_from_capabilities(canonical),
+        declared=_declared_from_capabilities(registry_key),
     )
 
 
