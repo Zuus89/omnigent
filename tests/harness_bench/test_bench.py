@@ -168,7 +168,7 @@ def test_registry_profile_happy_path_no_plugin(monkeypatch: pytest.MonkeyPatch) 
     """
     from types import SimpleNamespace
 
-    import omnigent.harness_bench.manifest as man
+    from omnigent.harness_bench import manifest as man
     from omnigent.harness_capabilities import AuthModel, IntegrationMode
 
     class _Spec:
@@ -206,7 +206,7 @@ def test_registry_refuses_native_server_mode(monkeypatch: pytest.MonkeyPatch) ->
     """
     from types import SimpleNamespace
 
-    import omnigent.harness_bench.manifest as man
+    from omnigent.harness_bench import manifest as man
     from omnigent.harness_capabilities import AuthModel, IntegrationMode
 
     caps = SimpleNamespace(
