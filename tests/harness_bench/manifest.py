@@ -291,7 +291,20 @@ def _registry_profile(name: str) -> BenchProfile | None:
 
     caps = harness_capabilities().get(canonical)
     mode = caps.integration_mode if caps is not None else None
-    transport = _INTEGRATION_MODE_TRANSPORT.get(mode, "sdk-inproc") if mode else "sdk-inproc"
+    if mode is None:
+        # No capabilities entry (a plain subprocess plugin like rovo): the bench
+        # has no modeled transport, so assume the SDK-wrap family — the only
+        # thing a registered-but-unmodeled harness can plausibly run on.
+        transport = "sdk-inproc"
+    elif mode in _INTEGRATION_MODE_TRANSPORT:
+        transport = _INTEGRATION_MODE_TRANSPORT[mode]
+    else:
+        # A MODELED mode the bench has no driver for (e.g. NATIVE_SERVER /
+        # opencode-native). Refuse rather than silently degrade to the SDK
+        # family: return None so resolve_profile raises a clean KeyError. A
+        # bare "default to sdk-inproc" here would bind a native-server harness
+        # to the wrong driver and drop its skip-gate.
+        return None
 
     if transport == "native-tui":
         # A native-tui harness the auto-derivation would already cover; reuse
@@ -300,12 +313,17 @@ def _registry_profile(name: str) -> BenchProfile | None:
 
     env_prefix = "HARNESS_" + canonical.upper().replace("-", "_") + "_"
     marker = canonical.upper().replace("-", "_") + "_OK"
+    # Only a gateway-credential harness routes a databricks-* model; stamp the
+    # default for it. An own-auth harness (e.g. ACP/rovo) owns its model — the
+    # runner drops any databricks-* gateway id for it (ACP:
+    # workflow.py::_build_acp_spawn_env) — and a capless plugin's model is its
+    # own business, so leave the model empty in both cases rather than stamp a
+    # misleading gateway id.
+    gateway_auth = caps is not None and caps.auth is AuthModel.OMNIGENT_CREDENTIAL
+    model = _NATIVE_DEFAULT_MODEL if gateway_auth else ""
     return BenchProfile(
         harness=canonical,
-        # An own-auth subprocess harness owns its model (the gateway model id is
-        # dropped for it), so this is a placeholder the harness ignores; a
-        # gateway-routed one would take a real databricks-* id.
-        model=_NATIVE_DEFAULT_MODEL,
+        model=model,
         env_prefix=env_prefix,
         marker=marker,
         cli_binary=_registry_cli_binary(canonical),

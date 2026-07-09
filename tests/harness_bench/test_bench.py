@@ -142,6 +142,71 @@ def test_resolve_entry_point_plugin_and_alias() -> None:
     assert by_alias.harness == "rovo-cli" == by_name.harness
     assert by_alias.transport == "sdk-inproc"
     assert by_alias.cli_binary == "acli"  # skip-gates on the Atlassian CLI
+    # Own-auth harness owns its model; the bench must not stamp a gateway id.
+    assert by_alias.model == ""
+
+
+def test_registry_profile_happy_path_no_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The registry fallback's positive path, independent of any optional plugin.
+
+    Fakes a registered CLI-subprocess harness (+ alias + install-spec binary) so
+    the name/alias resolution, the integration_mode -> sdk-inproc mapping, and
+    the install-spec skip-gate are exercised even in a build without
+    omnigent-rovo. Guards the coverage the plugin tests skip-gate away.
+    """
+    from types import SimpleNamespace
+
+    import tests.harness_bench.manifest as man
+    from omnigent.harness_capabilities import AuthModel, IntegrationMode
+
+    class _Spec:
+        binary = "fakebin"
+
+    # A lightweight caps stand-in: _registry_profile + the prose/declared helpers
+    # only read integration_mode / auth / streaming / interrupt.
+    caps = SimpleNamespace(
+        integration_mode=IntegrationMode.CLI_SUBPROCESS,
+        auth=AuthModel.OWN_AUTH,
+        streaming=True,
+        interrupt=True,
+    )
+    monkeypatch.setattr(man, "harness_modules", lambda: {"fake-cli": "pkg.fake"})
+    monkeypatch.setattr(man, "harness_aliases", lambda: {"fake": "fake-cli"})
+    monkeypatch.setattr(man, "harness_capabilities", lambda: {"fake-cli": caps})
+    monkeypatch.setattr(man, "harness_install_keys", lambda: {"fake-cli": "fake"})
+    monkeypatch.setattr(man, "install_specs", lambda: {"fake": _Spec()})
+
+    for name in ("fake-cli", "fake"):
+        p = man._registry_profile(name)
+        assert p is not None and p.harness == "fake-cli"
+        assert p.transport == "sdk-inproc"
+        assert p.cli_binary == "fakebin"
+        assert p.model == ""  # own-auth -> no gateway model
+
+
+def test_registry_refuses_native_server_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A MODELED mode the bench has no driver for is refused, not mis-bound.
+
+    NATIVE_SERVER (e.g. opencode-native) has no bench driver. The fallback must
+    return None (-> resolve_profile KeyError) rather than silently degrade to
+    the sdk-inproc default, which would bind a vendor-server harness to the SDK
+    drivers and drop its skip-gate.
+    """
+    from types import SimpleNamespace
+
+    import tests.harness_bench.manifest as man
+    from omnigent.harness_capabilities import AuthModel, IntegrationMode
+
+    caps = SimpleNamespace(
+        integration_mode=IntegrationMode.NATIVE_SERVER,
+        auth=AuthModel.OWN_AUTH,
+        streaming=False,
+        interrupt=False,
+    )
+    monkeypatch.setattr(man, "harness_modules", lambda: {"srv": "pkg.srv"})
+    monkeypatch.setattr(man, "harness_aliases", dict)
+    monkeypatch.setattr(man, "harness_capabilities", lambda: {"srv": caps})
+    assert man._registry_profile("srv") is None
 
 
 def test_infra_failure_reason_classifies_auth_and_ignores_capability_gaps() -> None:
