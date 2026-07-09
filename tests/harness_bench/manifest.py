@@ -313,17 +313,18 @@ def _registry_profile(name: str) -> BenchProfile | None:
 
     env_prefix = "HARNESS_" + canonical.upper().replace("-", "_") + "_"
     marker = canonical.upper().replace("-", "_") + "_OK"
-    # Only a gateway-credential harness routes a databricks-* model; stamp the
-    # default for it. An own-auth harness (e.g. ACP/rovo) owns its model — the
-    # runner drops any databricks-* gateway id for it (ACP:
-    # workflow.py::_build_acp_spawn_env) — and a capless plugin's model is its
-    # own business, so leave the model empty in both cases rather than stamp a
-    # misleading gateway id.
-    gateway_auth = caps is not None and caps.auth is AuthModel.OMNIGENT_CREDENTIAL
-    model = _NATIVE_DEFAULT_MODEL if gateway_auth else ""
+    # A model is always required: the omnigent executor spec mandates one
+    # (spec/omnigent.py: "executor.type='omnigent' requires a model"), so an
+    # empty model fails agent registration ("llm.model must be present"). For an
+    # own-auth harness (e.g. ACP/rovo) the value is inert — the runner drops any
+    # databricks-* gateway model for it (ACP: workflow.py::_build_acp_spawn_env)
+    # and the agent authenticates + picks its own model — but it must still be a
+    # valid non-empty id to register. So stamp the databricks default in all
+    # cases: real for a gateway harness, an accepted-but-ignored placeholder for
+    # an own-auth one.
     return BenchProfile(
         harness=canonical,
-        model=model,
+        model=_NATIVE_DEFAULT_MODEL,
         env_prefix=env_prefix,
         marker=marker,
         cli_binary=_registry_cli_binary(canonical),

@@ -142,8 +142,9 @@ def test_resolve_entry_point_plugin_and_alias() -> None:
     assert by_alias.harness == "rovo-cli" == by_name.harness
     assert by_alias.transport == "sdk-inproc"
     assert by_alias.cli_binary == "acli"  # skip-gates on the Atlassian CLI
-    # Own-auth harness owns its model; the bench must not stamp a gateway id.
-    assert by_alias.model == ""
+    # A model is always stamped (agent registration requires a non-empty one);
+    # it is inert for an own-auth harness, which uses its own.
+    assert by_alias.model
 
 
 def test_registry_profile_happy_path_no_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -181,7 +182,7 @@ def test_registry_profile_happy_path_no_plugin(monkeypatch: pytest.MonkeyPatch) 
         assert p is not None and p.harness == "fake-cli"
         assert p.transport == "sdk-inproc"
         assert p.cli_binary == "fakebin"
-        assert p.model == ""  # own-auth -> no gateway model
+        assert p.model  # always non-empty (agent registration requires a model)
 
 
 def test_registry_refuses_native_server_mode(monkeypatch: pytest.MonkeyPatch) -> None:
