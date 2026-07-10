@@ -1,16 +1,4 @@
-"""Derive the bench's server+runner environment the way ``omni run`` does.
-
-``omni run`` resolves credentials through the canonical
-:func:`omnigent.runtime.credentials.databricks.resolve_databricks_workspace`,
-takes its profile from ``~/.omnigent/config.yaml``'s ``auth:``/``profile`` block,
-and lets an ambient ``OPENAI_*`` env win when present. This module mirrors that
-layering for the bench so a no-flag run behaves like ``omni run``, while an
-explicit ``--profile`` overrides the config-derived profile.
-
-The old bench path always minted its own bearer via a ``databricks auth token``
-subprocess (which did not handle OAuth profiles) and required ``--profile``;
-this replaces it.
-"""
+"""Resolve the runtime environment used by harness bench processes."""
 
 from __future__ import annotations
 
@@ -63,11 +51,7 @@ def _profile_from_config() -> str | None:
     if cfg_profile:
         return str(cfg_profile)
 
-    # Tier 3: the configured ``providers:`` block. Reuse ``omni``'s own resolver
-    # (``default_provider_for_harness`` — the same call ``resolve_credential``
-    # and the runtime spawn-env builder use) so the bench picks exactly the
-    # provider a launch would, with no reinvented selection logic. When that
-    # provider is a Databricks profile, its ``profile`` is the gateway route.
+    # Reuse the runtime resolver so bench and normal launches select identically.
     try:
         from omnigent.onboarding.provider_config import (
             DATABRICKS_KIND,

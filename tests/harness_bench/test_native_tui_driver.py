@@ -76,8 +76,6 @@ class _FakeClient:
 
     def get(self, url: str, params: dict | None = None, timeout: float | None = None):
         if url.endswith("/items"):
-            # First call is the pre-turn baseline (empty); later calls see the
-            # item the turn produced.
             self._items_calls += 1
             data = [] if self._items_calls == 1 else self._items
             return _FakeResponse(200, {"data": data})
@@ -121,7 +119,6 @@ def test_tool_turn_observes_function_call_item() -> None:
     assert [tc["name"] for tc in result.tool_calls] == ["Bash"]
     assert result.completed
     assert not result.tool_call_denied
-    # No deny policy is attached on the allow path.
     assert client.attached_policies == []
 
 
@@ -136,8 +133,6 @@ def test_tool_turn_deny_attaches_policy_and_observes_denied_event() -> None:
     result = driver._drive_tool_turn(deny=True)
 
     assert result.tool_call_denied
-    # The attached policy denies at the tool_call phase (name-agnostic, so it
-    # blocks whatever tool the vendor calls regardless of its wire name).
     assert len(client.attached_policies) == 1
     attached = client.attached_policies[0]
     assert attached["handler"] == "omnigent.policies.builtins.cel.cel_policy"
@@ -180,7 +175,6 @@ def test_tool_turn_deny_skips_when_policy_enforcement_inactive() -> None:
     assert result.error and "inactive" in result.error
     assert not result.tool_call_denied
     assert not result.tool_calls
-    # No policy is attached when enforcement is known-inactive.
     assert client.attached_policies == []
 
 
@@ -237,6 +231,5 @@ def test_format_matches_server_wire_name() -> None:
     from tests.harness_bench.native_tui_driver import _POLICY_DENIED_EVENT
 
     sse = _format_sse(_POLICY_DENIED_EVENT, {"type": _POLICY_DENIED_EVENT})
-    # The reader parses `event: <name>`; assert the driver's key is that name.
     assert sse.startswith(f"event: {_POLICY_DENIED_EVENT}\n")
     assert json.loads(sse.split("data: ", 1)[1])["type"] == _POLICY_DENIED_EVENT

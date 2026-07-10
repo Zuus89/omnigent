@@ -16,8 +16,6 @@ from tests.harness_bench.runtime_env import (
     resolve_bench_env,
 )
 
-# Captured before the autouse _clean_env fixture stubs the module attribute, so
-# the tier-3 test can drive the real resolver.
 _REAL_PROFILE_FROM_CONFIG = runtime_env._profile_from_config
 
 
@@ -71,7 +69,6 @@ def test_ambient_openai_wins_and_skips_resolver(monkeypatch: pytest.MonkeyPatch)
 
 
 def test_config_profile_used_when_no_flag(monkeypatch: pytest.MonkeyPatch) -> None:
-    # No --profile, but ~/.omnigent config yields a profile (like `omni run`).
     monkeypatch.setattr(runtime_env, "_profile_from_config", lambda: "from-config")
     seen: dict[str, str | None] = {}
 
@@ -150,7 +147,6 @@ def test_skip_reason_none_when_ambient(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_skip_reason_when_no_creds_anywhere() -> None:
-    # _clean_env stubbed _profile_from_config -> None and cleared OPENAI_*.
     reason = bench_creds_skip_reason(None)
     assert reason is not None
     assert "--profile" in reason

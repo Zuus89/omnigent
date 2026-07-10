@@ -1,30 +1,4 @@
-"""Full-server transport driver (phase-2).
-
-Unlike :class:`tests.harness_bench.driver.SdkInprocDriver` (which drives a
-harness wrap subprocess directly), this driver spins up a REAL Omnigent
-``server`` + ``runner`` pair, registers an agent, and drives turns through
-the full session path — so policy enforcement and server-dispatched tools
-are exercised the way production does, not simulated at the wrap boundary.
-
-It reuses the exact spawn recipe of the e2e ``live_server`` fixture
-(``tests/e2e/conftest.py``) via the shared compat helpers, but packaged as
-a plain async context manager so the bench CLI can drive it without pytest.
-
-Status (live-verified): server+runner lifecycle, a basic turn, and the
-payoff this transport exists for — a real **server-dispatched tool call**
-(a read-only builtin) and **tool-call policy enforcement** (a spec-baked
-``tool_call`` deny policy blocks the call the way production does). Ad-hoc
-request-level function tools are NOT used here: the SDK harnesses handle
-tools internally, so they never round-trip as a server-dispatched, policy-
-gated call — a builtin does.
-
-Interrupt/cancel is verified (a long turn is interrupted mid-flight and the
-server's cancellation marker confirms it stopped), and delta-level
-streaming is measured via the ``/v1/sessions/{id}/stream`` SSE subscribe.
-
-Follow-up (stacked PR): a ``--transport`` selector + driver registry so the
-bench's probes run through this driver, not just its gated tests.
-"""
+"""Full-server transport driver."""
 
 from __future__ import annotations
 
@@ -57,14 +31,12 @@ from tests.harness_bench.session_items import (
 
 _TOOL_PROMPT = f"List the files using the {_TOOL_NAME} tool, then tell me how many there are."
 
-# The server persists an interrupted turn as a synthetic user message whose
-# text contains this marker (see tests/e2e/test_cancel_history.py).
+# Interrupted turns persist this marker in session history.
 _CANCELLATION_MARKER = "interrupted"
 _LONG_PROMPT = (
     "Write a very detailed 600-word essay about the history of computing, in full paragraphs."
 )
 
-# Prompt long enough that a streaming harness emits clearly many deltas.
 _STREAM_PROMPT = (
     "Count from 1 to 30 in words, one number per line, and add a short note after each."
 )
@@ -72,13 +44,7 @@ _TERMINAL_EVENTS = frozenset({"response.completed", "response.failed", "response
 
 
 class FullServerDriver:
-    """Drive turns through a live Omnigent server + runner.
-
-    Async context manager: on enter it spawns the server and runner,
-    waits for both to report healthy, registers *profile*'s harness as an
-    agent, and creates a runner-bound session. ``run_turn`` drives one turn
-    through that session.
-    """
+    """Drive turns through a live Omnigent server and runner."""
 
     transport = "full-server"
 
@@ -91,16 +57,9 @@ class FullServerDriver:
     ) -> None:
         self._profile = profile
         self._db_profile = databricks_profile
-        # When *shared* is given (a parallel run), this driver registers its
-        # agent + session on that one server+runner and spawns nothing itself.
-        # When None (a solo / --jobs 1 run), it owns a private SharedFullServer
-        # for back-compat with the original one-server-per-harness behavior.
         self._shared = shared
         self._owns_shared = shared is None
-        # Per-action agent+session cache for the policy probes. Each bakes a
-        # fixed-action tool_call policy into its agent spec (the REST policy
-        # endpoint's allowlist excludes make_fixed_action_callable, so the
-        # policy must ride in the spec). Created lazily, keyed by action.
+        # Fixed-action policies must be baked into separate agent specs.
         self._policy_session_ids: dict[str, str] = {}
         self._session_id: str | None = None
 
@@ -110,11 +69,8 @@ class FullServerDriver:
 
     @staticmethod
     def unavailable(profile: BenchProfile, *, databricks_profile: str | None) -> str | None:
-        """Return a skip reason if this driver cannot run *profile*, else ``None``."""
-        # full-server registers the harness via an agent bundle (the SDK-wrap
-        # path); a native harness needs the host-daemon/tmux provisioning only
-        # the native-tui driver does, so it cannot run here even under an
-        # explicit --transport full-server override.
+        """Return why this driver cannot run the profile, if applicable."""
+        # Native harnesses require host-daemon provisioning.
         if profile.transport == "native-tui":
             return (
                 f"{profile.harness!r} is a native-tui harness; the full-server transport "
@@ -123,9 +79,6 @@ class FullServerDriver:
         creds_skip = bench_creds_skip_reason(databricks_profile)
         if creds_skip is not None:
             return creds_skip
-        # Same CLI gate as the wrap driver (same binary requirement), but skip
-        # its transport check — that is sdk-inproc-specific and would misreport
-        # the driver name; the native case is already handled above.
         if profile.cli_binary is not None:
             return cli_unavailable_reason(profile.cli_binary)
         return None
@@ -139,16 +92,10 @@ class FullServerDriver:
         return self
 
     def __exit__(self, *exc: object) -> None:
-        # Only tear down the server we own; an injected shared server is the
-        # orchestrator's to close after all harnesses finish.
         if self._owns_shared and self._shared is not None:
             self._shared.__exit__(*exc)
 
-    # ── async driver protocol ────────────────────────────────
-    # This driver's provisioning and turns are synchronous (subprocess spawn,
-    # blocking snapshot polls, a threaded SSE reader). Bridge to the bench's
-    # async Driver protocol by running the blocking work in a worker thread so
-    # the event loop is never blocked.
+    # Blocking server operations run off the event loop.
 
     async def __aenter__(self) -> FullServerDriver:
         return await asyncio.to_thread(self.__enter__)
@@ -172,14 +119,8 @@ class FullServerDriver:
     async def run_interrupt_turn(self) -> TurnResult:
         return await asyncio.to_thread(self.interrupt_probe_turn)
 
-    # ── agent + session ──────────────────────────────────────
-    # The server/runner lifecycle and agent/session registration live on
-    # SharedFullServer now; this driver delegates so a solo run and a parallel
-    # (shared-server) run go through the same path.
-
     def _ensure_policy_session(self, action: str) -> str:
-        """Lazily register a session whose agent bakes a fixed *action* tool_call
-        policy (``"allow"`` / ``"deny"`` / ``"ask"``); return the session id."""
+        """Return a session whose agent bakes in the requested policy action."""
         assert self._shared is not None
         if action not in self._policy_session_ids:
             name = self._shared.register_agent(self._profile, policy_action=action)
@@ -226,8 +167,6 @@ class FullServerDriver:
         result.timed_out = True
         return result
 
-    # ── tool / policy probe ──────────────────────────────────
-
     def tool_probe_turn(self, *, deny: bool, timeout: float = 180.0) -> TurnResult:
         """Drive a turn that calls the builtin tool; return a :class:`TurnResult`.
 
@@ -251,8 +190,6 @@ class FullServerDriver:
         self._client.post(f"/v1/sessions/{sid}/events", json=body).raise_for_status()
 
         return self._poll_session(sid, result, timeout=timeout, scan_tools=True)
-
-    # ── policy ALLOW / ASK probe ─────────────────────────────
 
     def policy_probe_turn(self, *, action: str, timeout: float = 90.0) -> TurnResult:
         """Drive a tool turn under a fixed tool_call policy *action*.
@@ -350,8 +287,6 @@ class FullServerDriver:
                 },
             )
 
-    # ── streaming probe ──────────────────────────────────────
-
     def streaming_probe_turn(self, *, timeout: float = 120.0) -> TurnResult:
         """Measure token-level streaming via the session SSE subscribe stream.
 
@@ -403,8 +338,6 @@ class FullServerDriver:
             result.timed_out = True
         return result
 
-    # ── interrupt probe ──────────────────────────────────────
-
     def interrupt_probe_turn(self, *, timeout: float = 120.0) -> TurnResult:
         """Start a long turn, interrupt it mid-flight, and report the outcome.
 
@@ -446,8 +379,6 @@ class FullServerDriver:
         else:
             result.timed_out = True
         return result
-
-    # ── turn ─────────────────────────────────────────────────
 
     def run_turn(self, prompt: str, *, timeout: float = 180.0) -> TurnResult:
         """Drive one basic turn through the full server, return a :class:`TurnResult`.
