@@ -200,7 +200,7 @@ Model tiers (cheapest → most capable within each family):
 - Claude: haiku < sonnet < opus
 - GPT: *-nano < *-mini < base (e.g. gpt-5-4-nano < gpt-5-4-mini < gpt-5-4 < gpt-5-5)
 
-Classify the task as one of three complexity tiers and pick the corresponding model:
+Trade-off guidance — classify the task and pick the corresponding model:
 
   SIMPLE   → cheapest available model (haiku for Claude; nano for GPT)
              Examples: greetings, quick lookups, one-line fixes, trivial Q&A.
