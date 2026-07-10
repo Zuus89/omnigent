@@ -1160,7 +1160,15 @@ async def _auto_create_opencode_terminal(
         _policy_factory = _make_auth_token_factory()
         _policy_token = _policy_factory() if _policy_factory is not None else None
         if _policy_token:
-            policy_env["OMNIGENT_POLICY_AUTH"] = f"Bearer {_policy_token}"
+            from omnigent.cli_auth import databricks_request_headers
+
+            # Bake the FULL routing header map (bearer + workspace / deployment
+            # selectors), not a bare bearer: the plugin POSTs /policies/evaluate
+            # to the omnigent server out-of-process, so without the selectors it
+            # could land on a different server instance than the runner's.
+            policy_env["OMNIGENT_POLICY_HEADERS"] = json.dumps(
+                databricks_request_headers(runner_server_url, bearer_token=_policy_token)
+            )
 
     # Merge the user's global provider definitions (e.g. OpenAI-compatible
     # endpoints with custom base URLs) into the synthesized config so the
@@ -1910,7 +1918,15 @@ async def _auto_create_pi_terminal(
     session_dir = pi_session_dir(bridge_dir)
     auth_factory = _make_auth_token_factory()
     auth_token = auth_factory() if auth_factory is not None else None
-    auth_headers = {"Authorization": f"Bearer {auth_token}"} if auth_token else {}
+    # Route the extension's out-of-process POSTs (/events, /mcp,
+    # /policies/evaluate) through the shared header builder so they carry the
+    # workspace / deployment routing selectors, not just a bare bearer. A bare
+    # bearer skips those selectors and can land on a different server instance
+    # than the one the runner (and the web UI) are on, so live-streamed items
+    # never reach the browser's in-process event stream (they only appear on reload).
+    from omnigent.cli_auth import databricks_request_headers
+
+    auth_headers = databricks_request_headers(launch_config.server_url, bearer_token=auth_token)
     # Build the Omnigent tool surface (sys_* tools) the Pi extension registers
     # via pi.registerTool. Reuses the same schema set the claude-native /
     # codex-native relay advertises, gated by the session's spec. Each tool's
