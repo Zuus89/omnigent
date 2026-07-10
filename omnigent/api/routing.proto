@@ -5,10 +5,7 @@ syntax = "proto3";
 // This schema is versioned independently of any particular gateway
 // implementation so that the request and response contracts can evolve
 // (v1, v2, ...) without being coupled to a gateway's release cycle, while
-// still being served under a gateway's existing API scope. The reference
-// endpoint is:
-//
-//   POST https://<workspace-url>/ai-gateway/routing/v1/routes:select
+// still being served under a gateway's existing API scope.
 package omnigent.api.routing.v1;
 
 import "google/protobuf/struct.proto";
@@ -106,7 +103,7 @@ message SelectRouteRequest {
 // Response containing the selected route.
 message SelectRouteResponse {
   // The routing decision.
-  optional RouteSelection route_selection = 1;
+  repeated RouteSelection route_selection = 1;
 
   // Human-readable explanation of why this route was selected.
   optional string rationale = 2;
