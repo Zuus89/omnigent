@@ -321,13 +321,15 @@ class FullServerDriver:
         """Accept an outstanding elicitation via an ``approval`` event so an ASK
         turn settles (best-effort; a raced resolve is harmless)."""
         assert self._client is not None
+        # The server reads the id from inside `data` (SessionEventInput has no
+        # top-level elicitation_id field), so it must be nested there or the
+        # resolve is a silent no-op and the park dangles.
         with contextlib.suppress(httpx.HTTPError):
             self._client.post(
                 f"/v1/sessions/{sid}/events",
                 json={
                     "type": "approval",
-                    "elicitation_id": elicitation_id,
-                    "data": {"action": "accept"},
+                    "data": {"elicitation_id": elicitation_id, "action": "accept"},
                 },
             )
 

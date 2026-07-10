@@ -101,3 +101,28 @@ async def test_ask_skipped_when_no_elicitation_but_completed() -> None:
     # never a false UNSUPPORTED.
     r = await _ask(TurnResult(completed=True, tool_calls=[{"name": "list_files"}]))
     assert r.verdict is Verdict.SKIPPED
+
+
+def test_resolve_elicitation_nests_id_in_data() -> None:
+    """The approval event must carry elicitation_id INSIDE data (SessionEventInput
+    has no top-level elicitation_id field, so a top-level id is dropped and the
+    resolve is a silent no-op). Guards the payload shape the server reads."""
+    from tests.harness_bench.full_server_driver import FullServerDriver
+
+    posted: dict[str, object] = {}
+
+    class _Client:
+        def post(self, url, json):
+            posted["url"] = url
+            posted["json"] = json
+
+    class _Shared:
+        client = _Client()
+
+    driver = FullServerDriver(_PROFILE, databricks_profile=None, shared=_Shared())
+    driver._resolve_elicitation("sess-1", "elicit_abc")
+
+    body = posted["json"]
+    assert body["type"] == "approval"
+    assert "elicitation_id" not in body, "id must not be top-level (server ignores it there)"
+    assert body["data"] == {"elicitation_id": "elicit_abc", "action": "accept"}
