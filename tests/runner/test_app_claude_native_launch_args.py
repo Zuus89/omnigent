@@ -227,3 +227,51 @@ def test_build_native_claude_terminal_env_rejects_raw_key_on_helper_path() -> No
     )
     with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
         build_native_claude_terminal_env(leaking)
+
+
+def test_claude_terminal_env_databricks_gateway_helper_path() -> None:
+    """The Databricks ucode/profile gateway session, end to end through the env seams.
+
+    A Databricks-gateway session has an ``apiKeyHelper`` (the Databricks auth
+    command), ``ANTHROPIC_BASE_URL`` at the Databricks endpoint, a ucode model,
+    and NO raw ``ANTHROPIC_API_KEY``; the runner also carries an ambient
+    ``DATABRICKS_CONFIG_PROFILE``. This pins the real-user shape (not just a
+    generic gateway): the terminal child must drop the Databricks profile and
+    the raw key / nested-session marker, while ``apiKeyHelper`` +
+    ``ANTHROPIC_BASE_URL`` + the model override survive so Claude Code still
+    authenticates against Databricks via the helper.
+    """
+    config = ClaudeNativeUcodeConfig(
+        env={"ANTHROPIC_BASE_URL": "https://dbc-example.cloud.databricks.com/anthropic"},
+        api_key_helper="databricks auth token --host https://dbc-example.cloud.databricks.com",
+        model="databricks-claude-opus-4-8",
+    )
+
+    # The terminal child strips the ambient Databricks profile plus the raw
+    # key / nested-session marker on the helper path.
+    env_unset = _claude_terminal_env_unset(config)
+    assert "DATABRICKS_CONFIG_PROFILE" in env_unset
+    assert "ANTHROPIC_API_KEY" in env_unset
+    assert "CLAUDECODE" in env_unset
+
+    # The built terminal env preserves the gateway endpoint and never emits a
+    # raw key (routing is via ANTHROPIC_BASE_URL + apiKeyHelper). The Databricks
+    # profile is intentionally absent from the child: it's dropped via
+    # env_unset, not the built env, and Claude routes without it.
+    terminal_env = build_native_claude_terminal_env(config)
+    assert terminal_env["ANTHROPIC_BASE_URL"] == (
+        "https://dbc-example.cloud.databricks.com/anthropic"
+    )
+    assert "ANTHROPIC_API_KEY" not in terminal_env
+    assert "DATABRICKS_CONFIG_PROFILE" not in terminal_env
+
+    # The gateway model reaches the launch as ``--model`` so Claude Code
+    # doesn't start on an Anthropic-direct default the gateway rejects; the
+    # apiKeyHelper survives on the config for augment_claude_args to register.
+    args = _build_claude_native_base_args(
+        reasoning_effort=None,
+        model_override=config.model,
+        terminal_launch_args=None,
+    )
+    assert args == ("--model", "databricks-claude-opus-4-8")
+    assert config.api_key_helper
