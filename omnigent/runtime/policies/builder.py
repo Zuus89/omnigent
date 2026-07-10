@@ -78,6 +78,14 @@ _ASK_ON_ADD_POLICY_SPEC = FunctionPolicySpec(
 # transient single-user/pre-grant state, not worth caching).
 _SESSION_OWNER_CACHE: cachetools.LRUCache[str, str] = cachetools.LRUCache(maxsize=4096)
 
+# TTL cache of ``workspace_id -> list[PolicySpec]`` for DB-stored default
+# policies. Default policies are admin-managed and change infrequently, so
+# a short TTL (30 s) avoids one ``list_defaults()`` DB query per tool-call
+# evaluation while still propagating changes within half a minute.
+_DEFAULT_POLICY_SPECS_CACHE: cachetools.TTLCache[int, list[PolicySpec]] = cachetools.TTLCache(
+    maxsize=256, ttl=30
+)
+
 
 def _needs_user_daily_cost(specs: list[PolicySpec]) -> bool:
     """
@@ -929,6 +937,13 @@ def _load_default_policy_specs(
     NULL``). They run after agent-spec policies and before YAML-based
     admin policies in the evaluation order.
 
+    Results are cached per workspace for 30 s (see
+    :data:`_DEFAULT_POLICY_SPECS_CACHE`) to avoid a ``list_defaults()``
+    DB round-trip on every tool-call evaluation. The cache is keyed by
+    workspace id so multi-tenant deployments never share results across
+    tenants. Call :func:`invalidate_default_policy_specs_cache` after any
+    mutation to make changes visible before the TTL expires.
+
     :param policy_store: The policy store. ``None`` returns an empty list.
     :returns: List of :class:`FunctionPolicySpec` for enabled default
         policies, in ``created_at ASC`` order.
@@ -936,12 +951,33 @@ def _load_default_policy_specs(
     """
     if policy_store is None:
         return []
+    from omnigent.db.db_models import current_workspace_id
+
+    workspace_id = current_workspace_id()
+    cached = _DEFAULT_POLICY_SPECS_CACHE.get(workspace_id)
+    if cached is not None:
+        return cached
     specs: list[PolicySpec] = []
     for policy in policy_store.list_defaults():
         if not policy.enabled:
             continue
         specs.append(_stored_policy_to_spec(policy))
+    _DEFAULT_POLICY_SPECS_CACHE[workspace_id] = specs
     return specs
+
+
+def invalidate_default_policy_specs_cache() -> None:
+    """
+    Evict the current workspace's entry from the default-policy specs cache.
+
+    Call this after any mutation (create, update, delete) of a default
+    policy so the next :func:`build_policy_engine` call re-reads from the
+    DB rather than serving a stale TTL entry. Scoped to the current
+    workspace context via :func:`~omnigent.db.db_models.current_workspace_id`.
+    """
+    from omnigent.db.db_models import current_workspace_id
+
+    _DEFAULT_POLICY_SPECS_CACHE.pop(current_workspace_id(), None)
 
 
 def _load_session_policy_specs(
@@ -1021,4 +1057,4 @@ def _stored_policy_to_spec(policy: StoredPolicy) -> PolicySpec:
     )
 
 
-__all__ = ["build_policy_engine"]
+__all__ = ["build_policy_engine", "invalidate_default_policy_specs_cache"]

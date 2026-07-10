@@ -25,6 +25,7 @@ from sqlalchemy.exc import IntegrityError
 from omnigent.entities import Policy
 from omnigent.errors import ErrorCode, OmnigentError
 from omnigent.policies.registry import is_registered_handler, validate_factory_params
+from omnigent.runtime.policies.builder import invalidate_default_policy_specs_cache
 from omnigent.server.auth import AuthProvider
 from omnigent.server.routes._auth_helpers import get_user_id
 from omnigent.server.schemas import (
@@ -177,6 +178,7 @@ def create_default_policies_router(
                 f"Default policy with name '{body.name}' already exists",
                 code=ErrorCode.CONFLICT,
             ) from exc
+        invalidate_default_policy_specs_cache()
         return _entity_to_response(policy)
 
     @router.get("/policies")
@@ -291,6 +293,7 @@ def create_default_policies_router(
             ) from exc
         if policy is None:
             raise OmnigentError("Policy not found", code=ErrorCode.NOT_FOUND)
+        invalidate_default_policy_specs_cache()
         return _entity_to_response(policy)
 
     @router.delete("/policies/{policy_id}")
@@ -313,6 +316,7 @@ def create_default_policies_router(
         """
         await _require_admin(request, auth_provider, permission_store)
         store.delete_default(policy_id)
+        invalidate_default_policy_specs_cache()
         return {"deleted": True}
 
     return router
