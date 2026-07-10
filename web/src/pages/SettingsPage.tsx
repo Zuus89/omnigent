@@ -105,14 +105,20 @@ import {
 } from "@/lib/uiFontPreferences";
 import {
   clampCodeFontSizePx,
+  clampCodeFontWeight,
   CODE_FONT_FAMILY_DEFAULT,
   CODE_FONT_SIZE_MAX,
   CODE_FONT_SIZE_MIN,
   CODE_FONT_SIZE_STEP,
+  CODE_FONT_WEIGHT_MAX,
+  CODE_FONT_WEIGHT_MIN,
+  CODE_FONT_WEIGHT_STEP,
   readCodeFontFamily,
   readCodeFontSizePx,
+  readCodeFontWeight,
   writeCodeFontFamily,
   writeCodeFontSizePx,
+  writeCodeFontWeight,
 } from "@/lib/codeFontPreferences";
 import {
   readTerminalThemeMode,
@@ -605,6 +611,8 @@ function AppearanceSection() {
         <UiCodeFontSizeControl />
 
         <UiCodeFontFamilyControl />
+
+        <UiCodeFontWeightControl />
       </div>
     </Section>
   );
@@ -979,6 +987,76 @@ function UiCodeFontFamilyControl() {
           value={family}
           onChange={(e) => update(e.target.value)}
         />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Code font weight stepper. Sets the normal-text weight (CSS numeric 100–900)
+ * of the code editor (Monaco) and terminal (xterm) via the code-font pub/sub
+ * (see lib/codeFontPreferences.ts). Values snap to steps of 100, so — unlike
+ * the size control — there's no free-text draft: each step commits a valid,
+ * clamped weight directly.
+ */
+function UiCodeFontWeightControl() {
+  const [weight, setWeight] = useState(() => readCodeFontWeight());
+
+  const commit = useCallback((next: number) => {
+    const clamped = clampCodeFontWeight(next);
+    setWeight(clamped);
+    writeCodeFontWeight(clamped);
+  }, []);
+
+  const atMin = weight <= CODE_FONT_WEIGHT_MIN;
+  const atMax = weight >= CODE_FONT_WEIGHT_MAX;
+
+  return (
+    <div
+      className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3"
+      data-testid="code-font-weight-control"
+    >
+      <div className="flex flex-col">
+        <span className="text-sm font-medium">Code font weight</span>
+        <span className="text-sm text-muted-foreground">
+          Weight of code in the editor and terminal.
+        </span>
+      </div>
+      {/* One cohesive pill: [ −  | value |  + ] — same shell as the code
+          font-size control, but the value is read-only (weights snap to 100s). */}
+      <div
+        role="group"
+        aria-label="Code font weight"
+        className={cn(
+          "inline-flex h-9 items-stretch overflow-hidden rounded-lg border border-input bg-background transition-colors dark:bg-input/30",
+          "focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
+        )}
+      >
+        <StepperButton
+          label="Decrease code font weight"
+          testId="code-font-weight-dec"
+          disabled={atMin}
+          onClick={() => commit(weight - CODE_FONT_WEIGHT_STEP)}
+        >
+          <MinusIcon className="size-4" />
+        </StepperButton>
+        <div className="flex items-center border-x border-input px-2 tabular-nums">
+          <span
+            aria-label="Code font weight"
+            data-testid="code-font-weight-value"
+            className="w-8 text-center text-sm font-medium tabular-nums"
+          >
+            {weight}
+          </span>
+        </div>
+        <StepperButton
+          label="Increase code font weight"
+          testId="code-font-weight-inc"
+          disabled={atMax}
+          onClick={() => commit(weight + CODE_FONT_WEIGHT_STEP)}
+        >
+          <PlusIcon className="size-4" />
+        </StepperButton>
       </div>
     </div>
   );

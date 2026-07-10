@@ -14,6 +14,7 @@
 
 const SIZE_STORAGE_KEY = "omnigent:code-font-size";
 const FAMILY_STORAGE_KEY = "omnigent:code-font-family";
+const WEIGHT_STORAGE_KEY = "omnigent:code-font-weight";
 
 // Code widgets read smaller than the chrome by convention, and a monospaced
 // grid tolerates a wider useful range than body text — hence bounds distinct
@@ -22,6 +23,15 @@ export const CODE_FONT_SIZE_DEFAULT = 13;
 export const CODE_FONT_SIZE_MIN = 10;
 export const CODE_FONT_SIZE_MAX = 24;
 export const CODE_FONT_SIZE_STEP = 1;
+
+// Normal-text weight for code widgets, stored as a CSS numeric weight (100–900
+// in steps of 100). 400 is the effective default — xterm's own default normal
+// weight is 'normal' (≈400) and Monaco's is likewise 400 — so an unset pref
+// leaves both widgets rendering exactly as they do today.
+export const CODE_FONT_WEIGHT_DEFAULT = 400;
+export const CODE_FONT_WEIGHT_MIN = 100;
+export const CODE_FONT_WEIGHT_MAX = 900;
+export const CODE_FONT_WEIGHT_STEP = 100;
 
 /** Empty string = "editor default": no override, falls back to the mono stack. */
 export const CODE_FONT_FAMILY_DEFAULT = "";
@@ -40,6 +50,20 @@ export const CODE_FONT_FAMILY_FALLBACK =
 /** Clamp an arbitrary number into the supported px range. */
 export function clampCodeFontSizePx(px: number): number {
   return Math.min(CODE_FONT_SIZE_MAX, Math.max(CODE_FONT_SIZE_MIN, Math.round(px)));
+}
+
+/**
+ * Clamp an arbitrary number into the supported weight range and snap it to the
+ * nearest step, so a stored/typed value is always a valid CSS numeric weight.
+ */
+export function clampCodeFontWeight(weight: number): number {
+  const snapped = Math.round(weight / CODE_FONT_WEIGHT_STEP) * CODE_FONT_WEIGHT_STEP;
+  return Math.min(CODE_FONT_WEIGHT_MAX, Math.max(CODE_FONT_WEIGHT_MIN, snapped));
+}
+
+/** Bold weight derived from the normal weight: +300, capped at the max. */
+export function codeFontBoldWeight(weight: number): number {
+  return Math.min(CODE_FONT_WEIGHT_MAX, weight + 300);
 }
 
 function isValidPx(value: unknown): value is number {
@@ -83,7 +107,47 @@ export function writeCodeFontSizePx(px: number): void {
   // Broadcast the intended value, not a storage re-read: if the write above
   // failed (quota/denied), mounted editors/terminals must still re-font to the
   // new size now rather than snapping back to the stale/default stored value.
-  emit({ sizePx, family: readCodeFontFamily() });
+  emit({ sizePx, family: readCodeFontFamily(), weight: readCodeFontWeight() });
+}
+
+/**
+ * Read the persisted code font weight (CSS numeric, 100–900).
+ *
+ * Returns the default when nothing is stored, on a server render (no `window`),
+ * or when the stored value is missing/malformed — never throws, so a corrupt
+ * entry can't break app boot. A stored value outside the range is clamped and
+ * snapped to the nearest step.
+ */
+export function readCodeFontWeight(): number {
+  if (typeof window === "undefined") return CODE_FONT_WEIGHT_DEFAULT;
+  try {
+    const raw = window.localStorage.getItem(WEIGHT_STORAGE_KEY);
+    if (!raw) return CODE_FONT_WEIGHT_DEFAULT;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isValidPx(parsed)) return CODE_FONT_WEIGHT_DEFAULT;
+    return clampCodeFontWeight(parsed);
+  } catch {
+    return CODE_FONT_WEIGHT_DEFAULT;
+  }
+}
+
+/**
+ * Persist the code font weight, clamped/snapped to the supported range, then
+ * notify subscribers so mounted editors/terminals re-apply it live. Swallows
+ * quota/access errors so a failed write can't break the app.
+ */
+export function writeCodeFontWeight(weight: number): void {
+  const clamped = clampCodeFontWeight(weight);
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(clamped));
+    } catch {
+      // localStorage quota or access errors shouldn't break the app.
+    }
+  }
+  // Broadcast the intended value, not a storage re-read: a failed write must
+  // still live-apply the new weight to mounted editors/terminals.
+  emit({ sizePx: readCodeFontSizePx(), family: readCodeFontFamily(), weight: clamped });
 }
 
 /**
@@ -143,7 +207,7 @@ export function writeCodeFontFamily(name: string): void {
   }
   // Broadcast the intended value, not a storage re-read: a failed write must
   // still live-apply the new family to mounted editors/terminals.
-  emit({ sizePx: readCodeFontSizePx(), family });
+  emit({ sizePx: readCodeFontSizePx(), family, weight: readCodeFontWeight() });
 }
 
 /**
@@ -159,17 +223,23 @@ export function codeFontFamilyForEditor(family: string): string {
   return normalized ? `${normalized}, ${CODE_FONT_FAMILY_FALLBACK}` : CODE_FONT_FAMILY_FALLBACK;
 }
 
-/** The current code font size + family, read together for widget construction. */
+/** The current code font size + family + weight, read together for widget construction. */
 export interface CodeFont {
   /** Font size in px, already clamped to the supported range. */
   sizePx: number;
   /** Custom family, or "" for the editor/terminal default. */
   family: string;
+  /** Normal-text weight (CSS numeric 100–900), already clamped. */
+  weight: number;
 }
 
-/** Read both code font preferences at once. Handy on editor/terminal mount. */
+/** Read all code font preferences at once. Handy on editor/terminal mount. */
 export function readCodeFont(): CodeFont {
-  return { sizePx: readCodeFontSizePx(), family: readCodeFontFamily() };
+  return {
+    sizePx: readCodeFontSizePx(),
+    family: readCodeFontFamily(),
+    weight: readCodeFontWeight(),
+  };
 }
 
 type CodeFontListener = (font: CodeFont) => void;

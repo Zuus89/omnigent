@@ -24,6 +24,7 @@ import {
   codeFontFamilyForEditor,
   readCodeFontFamily,
   readCodeFontSizePx,
+  readCodeFontWeight,
   subscribeCodeFont,
 } from "@/lib/codeFontPreferences";
 import type { Comment } from "@/hooks/useComments";
@@ -404,6 +405,8 @@ function MonacoCodeEditorInner({
       // rather than falling back to Monaco's own platform default.
       fontSize: readCodeFontSizePx(),
       fontFamily: codeFontFamilyForEditor(readCodeFontFamily()),
+      // Monaco's fontWeight takes a string; the stored numeric weight maps 1:1.
+      fontWeight: String(readCodeFontWeight()),
       automaticLayout: true,
       renderLineHighlight: canEdit ? "line" : "none",
       // Read-only buffers still allow selection + copy; just hide the caret.
@@ -421,6 +424,7 @@ function MonacoCodeEditorInner({
       editorInstanceRef.current?.updateOptions({
         fontSize: font.sizePx,
         fontFamily: codeFontFamilyForEditor(font.family),
+        fontWeight: String(font.weight),
       });
     });
   }, []);

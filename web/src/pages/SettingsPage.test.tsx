@@ -403,6 +403,35 @@ describe("SettingsPage", () => {
     expect(localStorage.getItem("omnigent:code-font-family")).toBeNull();
   });
 
+  it("shows the default code font weight and steps it up, persisting the choice", () => {
+    localStorage.clear();
+    renderPage("/settings/appearance");
+    const value = screen.getByTestId("code-font-weight-value");
+    // No stored preference → 400 (normal) default, matching the widget defaults.
+    expect(value.textContent).toBe("400");
+
+    fireEvent.click(screen.getByTestId("code-font-weight-inc"));
+    expect(value.textContent).toBe("500");
+    // Persisted under the code-font weight key so it survives a refresh and
+    // reaches the editor/terminal imperatively via the pub/sub.
+    expect(localStorage.getItem("omnigent:code-font-weight")).toBe("500");
+  });
+
+  it("disables the code font weight steppers at the min and max bounds", () => {
+    localStorage.setItem("omnigent:code-font-weight", "900");
+    renderPage("/settings/appearance");
+    // At the 900 max, only the increase button is disabled.
+    expect(screen.getByTestId("code-font-weight-inc")).toBeDisabled();
+    expect(screen.getByTestId("code-font-weight-dec")).not.toBeDisabled();
+
+    cleanup();
+    localStorage.setItem("omnigent:code-font-weight", "100");
+    renderPage("/settings/appearance");
+    // At the 100 min, only the decrease button is disabled.
+    expect(screen.getByTestId("code-font-weight-dec")).toBeDisabled();
+    expect(screen.getByTestId("code-font-weight-inc")).not.toBeDisabled();
+  });
+
   it("defaults bare /settings to Account when a login session exists, else Appearance", async () => {
     // Login session (accounts OR OIDC) → Account leads, so /settings lands on it.
     renderPage("/settings");
