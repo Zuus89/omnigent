@@ -33,6 +33,10 @@ from omnigent._platform import IS_WINDOWS, resolve_repo_symlink
 from omnigent._startup_profile import StartupProfiler
 from omnigent.cli_sandbox import lakebox as _lakebox_alias_group
 from omnigent.cli_sandbox import sandbox as _sandbox_group
+from omnigent.config import (
+    load_global_config,
+    load_local_config,
+)
 from omnigent.harness_aliases import canonicalize_harness
 from omnigent.host.local_server import (
     _DEFAULT_LOCAL_PORT,
@@ -360,12 +364,7 @@ def _load_global_config() -> dict[str, Any]:  # type: ignore[explicit-any]
         ``{"default_agent": "examples/hello_world.yaml",
         "auth": {"type": "databricks", "profile": "oss"}}``.
     """
-    path = _effective_global_config_path()
-    if not path.exists():
-        return {}
-    with open(path) as f:
-        raw: dict[str, Any] = yaml.safe_load(f) or {}  # type: ignore[explicit-any]
-        return raw
+    return load_global_config(_effective_global_config_path())
 
 
 def _load_local_config() -> dict[str, Any]:  # type: ignore[explicit-any]
@@ -376,12 +375,7 @@ def _load_local_config() -> dict[str, Any]:  # type: ignore[explicit-any]
 
     :returns: Parsed YAML as a dict.
     """
-    path = Path.cwd() / _LOCAL_CONFIG_RELPATH
-    if not path.exists():
-        return {}
-    with open(path) as f:
-        raw: dict[str, Any] = yaml.safe_load(f) or {}  # type: ignore[explicit-any]
-        return raw
+    return load_local_config(Path.cwd() / _LOCAL_CONFIG_RELPATH)
 
 
 def _load_effective_config() -> dict[str, Any]:  # type: ignore[explicit-any]

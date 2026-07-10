@@ -50,22 +50,14 @@ def _profile_from_config() -> str | None:
     All imports are lazy so importing this module never drags in ``omnigent.cli``
     at load time.
     """
-    try:
-        from omnigent.runtime.workflow import _load_global_auth
+    from omnigent.config import load_effective_config
 
-        auth = _load_global_auth()
-    except Exception:
-        auth = None
-    profile = getattr(auth, "profile", None)
-    if profile:
-        return str(profile)
-
-    try:
-        from omnigent.cli import _load_effective_config
-
-        config = _load_effective_config()
-    except Exception:
-        return None
+    config = load_effective_config()
+    raw_auth = config.get("auth")
+    if isinstance(raw_auth, dict) and raw_auth.get("type") == "databricks":
+        profile = raw_auth.get("profile")
+        if profile:
+            return str(profile)
 
     cfg_profile = config.get("profile")
     if cfg_profile:

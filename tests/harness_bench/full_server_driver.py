@@ -33,6 +33,7 @@ import contextlib
 import json
 import threading
 import time
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -47,6 +48,12 @@ from tests.harness_bench.full_server import (
 )
 from tests.harness_bench.profile import BenchProfile
 from tests.harness_bench.runtime_env import bench_creds_skip_reason, resolve_bench_env
+from tests.harness_bench.session_items import (
+    assistant_text,
+    contains_user_text,
+    function_calls,
+    tool_output_states,
+)
 
 _TOOL_PROMPT = f"List the files using the {_TOOL_NAME} tool, then tell me how many there are."
 
@@ -179,6 +186,46 @@ class FullServerDriver:
             self._policy_session_ids[action] = self._shared.create_session(name)
         return self._policy_session_ids[action]
 
+    def _poll_session(
+        self,
+        sid: str,
+        result: TurnResult,
+        *,
+        timeout: float,
+        scan_tools: bool = False,
+        fill_cost: bool = False,
+        stop_when: Callable[[], bool] | None = None,
+    ) -> TurnResult:
+        """Poll a session until it settles, fails, times out, or is stopped."""
+        assert self._client is not None
+        deadline = time.monotonic() + timeout
+        seen_running = False
+        while time.monotonic() < deadline:
+            if stop_when is not None and stop_when():
+                return result
+            response = self._client.get(f"/v1/sessions/{sid}")
+            response.raise_for_status()
+            snapshot = response.json()
+            status = snapshot.get("status")
+            items = snapshot.get("items", [])
+            if scan_tools:
+                _scan_tool_items(items, result)
+            if status in ("running", "waiting"):
+                seen_running = True
+            elif status == "failed":
+                result.failed = True
+                result.error = snapshot.get("last_task_error") or snapshot.get("error")
+                return result
+            elif status == "idle" and seen_running:
+                result.completed = True
+                result.text = assistant_text(items)
+                if fill_cost:
+                    fill_snapshot_cost(result, snapshot)
+                return result
+            time.sleep(_POLL_INTERVAL_S)
+        result.timed_out = True
+        return result
+
     # ── tool / policy probe ──────────────────────────────────
 
     def tool_probe_turn(self, *, deny: bool, timeout: float = 180.0) -> TurnResult:
@@ -203,27 +250,7 @@ class FullServerDriver:
         }
         self._client.post(f"/v1/sessions/{sid}/events", json=body).raise_for_status()
 
-        deadline = time.monotonic() + timeout
-        seen_running = False
-        while time.monotonic() < deadline:
-            snap = self._client.get(f"/v1/sessions/{sid}").json()
-            status = snap.get("status")
-            items = snap.get("items", [])
-            if status in ("running", "waiting"):
-                seen_running = True
-            if status == "failed":
-                result.failed = True
-                result.error = snap.get("last_task_error") or snap.get("error")
-                break
-            if status == "idle" and seen_running:
-                result.completed = True
-                _scan_tool_items(items, result)
-                result.text = _assistant_text(items)
-                break
-            time.sleep(_POLL_INTERVAL_S)
-        else:
-            result.timed_out = True
-        return result
+        return self._poll_session(sid, result, timeout=timeout, scan_tools=True)
 
     # ── policy ALLOW / ASK probe ─────────────────────────────
 
@@ -288,32 +315,20 @@ class FullServerDriver:
         }
         self._client.post(f"/v1/sessions/{sid}/events", json=body).raise_for_status()
 
-        deadline = time.monotonic() + timeout
-        seen_running = False
-        while time.monotonic() < deadline:
-            # ASK verdict is decided once the elicitation fires: resolve it (so
-            # no park dangles) and stop — no need to poll the turn to idle.
+        def _elicitation_observed() -> bool:
             if action == "ask" and result.elicitation_requested:
                 if "id" in elicitation_id:
                     self._resolve_elicitation(sid, elicitation_id.pop("id"))
-                break
-            snap = self._client.get(f"/v1/sessions/{sid}").json()
-            status = snap.get("status")
-            items = snap.get("items", [])
-            _scan_tool_items(items, result)
-            if status in ("running", "waiting"):
-                seen_running = True
-            if status == "failed":
-                result.failed = True
-                result.error = snap.get("last_task_error") or snap.get("error")
-                break
-            if status == "idle" and seen_running:
-                result.completed = True
-                result.text = _assistant_text(items)
-                break
-            time.sleep(_POLL_INTERVAL_S)
-        else:
-            result.timed_out = True
+                return True
+            return False
+
+        self._poll_session(
+            sid,
+            result,
+            timeout=timeout,
+            scan_tools=True,
+            stop_when=_elicitation_observed,
+        )
         stop.set()
         if watcher is not None:
             watcher.join(timeout=5.0)
@@ -420,12 +435,12 @@ class FullServerDriver:
                 interrupted = True
             if _has_cancellation_marker(items):
                 result.cancelled = True
-                result.text = _assistant_text(items)
+                result.text = assistant_text(items)
                 break
             if status == "idle" and interrupted:
                 # Settled after the interrupt; the marker lands just after.
                 result.cancelled = _has_cancellation_marker(items)
-                result.text = _assistant_text(items)
+                result.text = assistant_text(items)
                 break
             time.sleep(_POLL_INTERVAL_S)
         else:
@@ -437,15 +452,8 @@ class FullServerDriver:
     def run_turn(self, prompt: str, *, timeout: float = 180.0) -> TurnResult:
         """Drive one basic turn through the full server, return a :class:`TurnResult`.
 
-        Foundation scope: posts the user message and polls the session
-        snapshot to a terminal state, filling ``text`` / ``completed`` /
-        ``failed`` / ``timed_out``. A synchronous (request-phase) policy
-        DENY short-circuits to ``failed``.
-
-        The dimensions that motivated this transport — server-dispatched
-        tools, tool-call policy enforcement, delta streaming, interrupt —
-        are follow-ups (see the module docstring); they extend this
-        signature and are not implemented yet.
+        Posts the user message and polls the session snapshot to a terminal
+        state, filling text, completion, failure, timeout, and usage fields.
         """
         assert self._client is not None and self._session_id is not None
         result = TurnResult()
@@ -460,73 +468,22 @@ class FullServerDriver:
             return result
         posted.raise_for_status()
 
-        deadline = time.monotonic() + timeout
-        seen_running = False
-        while time.monotonic() < deadline:
-            snap = self._client.get(f"/v1/sessions/{self._session_id}")
-            snap.raise_for_status()
-            body = snap.json()
-            status = body.get("status")
-            if status in ("running", "waiting"):
-                seen_running = True
-            if status == "failed":
-                result.failed = True
-                result.error = body.get("last_task_error") or body.get("error")
-                break
-            if status == "idle" and seen_running:
-                result.completed = True
-                result.text = _assistant_text(body.get("items", []))
-                fill_snapshot_cost(result, body)
-                break
-            time.sleep(_POLL_INTERVAL_S)
-        else:
-            result.timed_out = True
-        return result
+        return self._poll_session(
+            self._session_id,
+            result,
+            timeout=timeout,
+            fill_cost=True,
+        )
 
 
-def _scan_tool_items(items: list[dict], result: TurnResult) -> None:
+def _scan_tool_items(items: list[dict[str, Any]], result: TurnResult) -> None:
     """Populate tool_calls and tool_call_denied from session items."""
-    for raw in items:
-        data = raw.get("data", raw)
-        itype = raw.get("type") or data.get("type")
-        if itype == "function_call":
-            result.tool_calls.append(
-                {
-                    "call_id": data.get("call_id"),
-                    "name": data.get("name"),
-                    "arguments": data.get("arguments"),
-                }
-            )
-        elif itype == "function_call_output":
-            out = str(data.get("output", ""))
-            if data.get("status") == "blocked" or _DENY_REASON in out:
-                result.tool_call_denied = True
-            else:
-                # The call produced a real (non-blocked) output — it proceeded,
-                # the signal an ALLOW policy let it through.
-                result.tool_call_allowed = True
+    result.tool_calls = function_calls(items)
+    result.tool_call_allowed, result.tool_call_denied = tool_output_states(
+        items, deny_marker=_DENY_REASON
+    )
 
 
-def _has_cancellation_marker(items: list[dict]) -> bool:
+def _has_cancellation_marker(items: list[dict[str, Any]]) -> bool:
     """Whether items include the synthetic 'interrupted' user message."""
-    for raw in items:
-        data = raw.get("data", raw)
-        if (raw.get("type") == "message") and (data.get("role") == "user"):
-            if any(
-                _CANCELLATION_MARKER in (b.get("text", "") or "")
-                for b in data.get("content", []) or []
-            ):
-                return True
-    return False
-
-
-def _assistant_text(items: list[dict]) -> str:
-    """Concatenate assistant output_text from session items."""
-    out: list[str] = []
-    for item in items:
-        data = item.get("data", item)
-        if data.get("role") == "assistant" or item.get("role") == "assistant":
-            for block in data.get("content", []) or []:
-                if block.get("type") in ("output_text", "text"):
-                    out.append(block.get("text", ""))
-    return "\n".join(t for t in out if t)
+    return contains_user_text(items, _CANCELLATION_MARKER)

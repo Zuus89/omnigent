@@ -58,7 +58,6 @@ import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import httpx
 
@@ -72,18 +71,17 @@ from omnigent.host.daemon_launch import (
 from omnigent.native_terminal import bind_session_runner
 from omnigent.runner.identity import OMNIGENT_INTERNAL_WS_ORIGIN
 from tests._helpers.compat import apply_runner_env, compat_runner_cwd, runner_executable
+from tests._helpers.live_server import find_free_port
 from tests.e2e._harness_probes import cli_unavailable_reason
 from tests.harness_bench.driver import ProvisioningError, TurnResult, fill_snapshot_cost
-from tests.harness_bench.full_server import (
-    _find_free_port,
-    spawn_omnigent_server,
-)
+from tests.harness_bench.full_server import spawn_omnigent_server
 from tests.harness_bench.profile import BenchProfile
 from tests.harness_bench.runtime_env import (
     BenchRuntimeEnv,
     bench_creds_skip_reason,
     resolve_bench_env,
 )
+from tests.harness_bench.session_items import assistant_text, function_calls, item_role, item_type
 
 _HEALTH_TIMEOUT_S = 90.0
 _HOST_ONLINE_TIMEOUT_S = 45.0
@@ -341,7 +339,7 @@ class NativeTuiDriver:
     def _provision(self) -> None:
         self._tmp.mkdir(mode=0o700, parents=True, exist_ok=True)
         assert self._vendor is not None
-        port = _find_free_port()
+        port = find_free_port()
         self._base_url = f"http://localhost:{port}"
         binding_token = uuid.uuid4().hex
 
@@ -773,7 +771,7 @@ class NativeTuiDriver:
         resp = self._client.get(f"/v1/sessions/{self._session_id}/items", params={"order": "asc"})
         if resp.status_code != 200:
             return 0
-        return sum(1 for it in resp.json().get("data", []) if _item_type(it) == "function_call")
+        return sum(1 for it in resp.json().get("data", []) if item_type(it) == "function_call")
 
     def _poll_new_tool_calls(
         self, baseline: int, result: TurnResult, timeout: float = _TOOL_TURN_TIMEOUT_S
@@ -791,19 +789,9 @@ class NativeTuiDriver:
                 f"/v1/sessions/{self._session_id}/items", params={"order": "asc"}
             )
             if resp.status_code == 200:
-                calls = [
-                    it for it in resp.json().get("data", []) if _item_type(it) == "function_call"
-                ]
+                calls = function_calls(resp.json().get("data", []))
                 if len(calls) > baseline:
-                    for raw in calls[baseline:]:
-                        data = raw.get("data", raw)
-                        result.tool_calls.append(
-                            {
-                                "call_id": data.get("call_id"),
-                                "name": data.get("name"),
-                                "arguments": data.get("arguments"),
-                            }
-                        )
+                    result.tool_calls.extend(calls[baseline:])
                     return
             # On a deny the tool never runs, so no new function_call item will
             # appear — stop waiting once the stream already reported the block.
@@ -817,7 +805,7 @@ class NativeTuiDriver:
         resp = self._client.get(f"/v1/sessions/{self._session_id}/items", params={"order": "asc"})
         if resp.status_code != 200:
             return 0
-        return sum(1 for it in resp.json().get("data", []) if it.get("role") == "assistant")
+        return sum(1 for it in resp.json().get("data", []) if item_role(it) == "assistant")
 
     def _poll_new_assistant_text(
         self, baseline: int, timeout: float = _TURN_TIMEOUT_S
@@ -835,10 +823,10 @@ class NativeTuiDriver:
             )
             if resp.status_code == 200:
                 assistants = [
-                    it for it in resp.json().get("data", []) if it.get("role") == "assistant"
+                    it for it in resp.json().get("data", []) if item_role(it) == "assistant"
                 ]
                 if len(assistants) > baseline:
-                    return _assistant_text(assistants[-1])
+                    return assistant_text(assistants[-1], separator=" ")
             time.sleep(_POLL_INTERVAL_S)
         return None
 
@@ -908,26 +896,3 @@ class NativeTuiDriver:
                 result.error = repr(exc)
         reader.join(timeout=_TURN_TIMEOUT_S)
         return result
-
-
-def _assistant_text(item: dict[str, Any]) -> str:
-    """Concatenate assistant output_text blocks from a session item."""
-    content = item.get("content")
-    if not isinstance(content, list):
-        return ""
-    return " ".join(
-        block["text"]
-        for block in content
-        if isinstance(block, dict) and isinstance(block.get("text"), str)
-    )
-
-
-def _item_type(item: dict[str, Any]) -> str | None:
-    """The item's type, tolerant of a top-level or nested-``data`` shape.
-
-    A native ``function_call`` item may carry ``type`` at the top level or under
-    ``data`` depending on the items-endpoint serialization, so check both (mirrors
-    full_server_driver._scan_tool_items).
-    """
-    data = item.get("data", item)
-    return item.get("type") or (data.get("type") if isinstance(data, dict) else None)

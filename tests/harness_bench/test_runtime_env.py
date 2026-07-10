@@ -111,9 +111,8 @@ def test_profile_from_providers_block(monkeypatch: pytest.MonkeyPatch) -> None:
     Exercises the real ``_profile_from_config`` (captured before the autouse
     stub) by monkeypatching the two upstream config sources it reads.
     """
-    monkeypatch.setattr("omnigent.runtime.workflow._load_global_auth", lambda: None)
     monkeypatch.setattr(
-        "omnigent.cli._load_effective_config",
+        "omnigent.config.load_effective_config",
         lambda: {
             "providers": {
                 "databricks": {"kind": "databricks", "default": True, "profile": "DEFAULT"}
@@ -121,6 +120,27 @@ def test_profile_from_providers_block(monkeypatch: pytest.MonkeyPatch) -> None:
         },
     )
     assert _REAL_PROFILE_FROM_CONFIG() == "DEFAULT"
+
+
+def test_profile_from_auth_block(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "omnigent.config.load_effective_config",
+        lambda: {"auth": {"type": "databricks", "profile": "AUTH_PROFILE"}},
+    )
+    assert _REAL_PROFILE_FROM_CONFIG() == "AUTH_PROFILE"
+
+
+def test_top_level_profile_precedes_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "omnigent.config.load_effective_config",
+        lambda: {
+            "profile": "TOP_LEVEL",
+            "providers": {
+                "databricks": {"kind": "databricks", "default": True, "profile": "PROVIDER"}
+            },
+        },
+    )
+    assert _REAL_PROFILE_FROM_CONFIG() == "TOP_LEVEL"
 
 
 def test_skip_reason_none_when_ambient(monkeypatch: pytest.MonkeyPatch) -> None:
