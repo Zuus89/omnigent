@@ -428,6 +428,42 @@ def test_load_default_policy_specs_none_store() -> None:
     assert _load_default_policy_specs(None) == []
 
 
+def test_load_default_policy_specs_skips_url_type(db_uri: str) -> None:
+    """A default policy with ``type='url'`` is skipped, not raised.
+
+    Unlike session policies (where an unsupported type raises loudly),
+    unsupported-type default policies must not crash engine construction
+    globally — they are logged and skipped so a stale row can't cause a
+    server-wide outage.
+
+    :param db_uri: Per-test SQLite URI from the root conftest.
+    """
+    store = SqlAlchemyPolicyStore(db_uri)
+    # Insert a url-type default directly via the store (bypassing the route
+    # guard that rejects url defaults at creation time).
+    store.create_default(
+        policy_id="dpol_url",
+        name="url_default",
+        type="url",
+        handler="https://example.com/eval",
+        enabled=True,
+    )
+    store.create_default(
+        policy_id="dpol_ok",
+        name="python_default",
+        type="python",
+        handler="myorg.policies.allow_all",
+        enabled=True,
+    )
+    _DEFAULT_POLICY_SPECS_CACHE.clear()
+
+    # Should not raise — url policy is skipped, python policy is included.
+    specs = _load_default_policy_specs(store)
+
+    assert len(specs) == 1
+    assert specs[0].name == "python_default"
+
+
 def test_load_default_policy_specs_filters_disabled(db_uri: str) -> None:
     """Disabled default policies are excluded from the loaded specs.
 

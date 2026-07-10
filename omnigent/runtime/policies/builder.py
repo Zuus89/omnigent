@@ -17,6 +17,7 @@ will start instantiating them as those phases ship.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import cachetools
@@ -45,6 +46,8 @@ from omnigent.spec.types import (
 )
 from omnigent.stores.conversation_store import ConversationStore
 from omnigent.stores.policy_store import PolicyStore
+
+_logger = logging.getLogger(__name__)
 
 # Dotted path of the per-user daily cost-budget factory. The engine is
 # seeded with the session owner's daily-cost rollup ONLY when a policy
@@ -960,6 +963,21 @@ def _load_default_policy_specs(
     specs: list[PolicySpec] = []
     for policy in policy_store.list_defaults():
         if not policy.enabled:
+            continue
+        if policy.type != "python":
+            # Skip unsupported types with a warning rather than raising.
+            # A session-scoped policy of unsupported type fails loudly (blast
+            # radius: one session); a default policy of unsupported type would
+            # crash engine construction for every session server-wide. Log and
+            # skip so a stale or manually-inserted row can't cause an outage.
+            _logger.warning(
+                "Skipping default policy %r (id=%r): unsupported type %r — "
+                "only type='python' can be evaluated. Disable or delete this "
+                "policy to suppress this warning.",
+                policy.name,
+                policy.id,
+                policy.type,
+            )
             continue
         specs.append(_stored_policy_to_spec(policy))
     _DEFAULT_POLICY_SPECS_CACHE[workspace_id] = specs

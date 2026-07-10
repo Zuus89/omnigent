@@ -146,6 +146,12 @@ def create_default_policies_router(
             already exists.
         """
         user_id = await _require_admin(request, auth_provider, permission_store)
+        if body.type != "python":
+            raise OmnigentError(
+                f"Default policies only support type='python'; type={body.type!r} "
+                f"cannot be evaluated. URL policy evaluation is a future extension.",
+                code=ErrorCode.INVALID_INPUT,
+            )
         if body.type == "python":
             # Restrict handlers to the registry allowlist.
             # Admins are not exempt: a custom handler must be added via
