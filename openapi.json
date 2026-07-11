@@ -193,6 +193,53 @@
         "title": "Body_upload_session_file_v1_sessions__session_id__resources_files_post",
         "type": "object"
       },
+      "BrowserActionRequestEvent": {
+        "description": "Request that the desktop renderer perform one browser action.\n\nEmitted by the server `POST /v1/sessions/{id}/browser/action_request`\nroute when a runner-side `browser_*` tool dispatch needs the\nOmnigent desktop app's embedded browser to act. The event fans out\non the session stream to every subscribed renderer; each renderer\nfirst POSTs `/browser/action_claim/{action_id}` and only the\nwinning claimant executes the action and POSTs the result back to\n`/browser/action_result/{action_id}`. The claim lease prevents\ndouble execution when more than one renderer is subscribed.",
+        "properties": {
+          "action": {
+            "description": "The browser action to perform \u2014 the `browser_` tool name with the prefix stripped, e.g. `\"navigate\"`, `\"snapshot\"`, `\"click\"`, `\"type\"`, `\"screenshot\"`.",
+            "title": "Action",
+            "type": "string"
+          },
+          "action_id": {
+            "description": "Unique correlation id for this request, e.g. `\"baction_abc123\"`. Echoed on the claim and result routes.",
+            "title": "Action Id",
+            "type": "string"
+          },
+          "args": {
+            "additionalProperties": true,
+            "description": "Action arguments forwarded from the tool call, e.g. `{\"url\": \"https://example.com\"}`.",
+            "title": "Args",
+            "type": "object"
+          },
+          "sequence_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sequence Number"
+          },
+          "type": {
+            "const": "browser.action_request",
+            "description": "Always `\"browser.action_request\"`.",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "action_id",
+          "action",
+          "args"
+        ],
+        "title": "BrowserActionRequestEvent",
+        "type": "object"
+      },
       "CancelledEvent": {
         "description": "Terminal event for a turn cancelled before completion.",
         "properties": {
@@ -2948,6 +2995,7 @@
       "ServerStreamEvent": {
         "discriminator": {
           "mapping": {
+            "browser.action_request": "#/components/schemas/BrowserActionRequestEvent",
             "response.cancelled": "#/components/schemas/CancelledEvent",
             "response.client_task.cancel": "#/components/schemas/ClientTaskCancelEvent",
             "response.compaction.completed": "#/components/schemas/CompactionCompletedEvent",
@@ -3097,6 +3145,9 @@
           },
           {
             "$ref": "#/components/schemas/ElicitationResolvedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/BrowserActionRequestEvent"
           },
           {
             "$ref": "#/components/schemas/PolicyDeniedEvent"
