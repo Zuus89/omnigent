@@ -210,6 +210,7 @@ project already found and fixed one violation: an embedded GitHub token in this 
 | `.claude/agents/*.md` | Role definitions — can/cannot, model, mandate. | normal |
 | `.claude/skills/*/SKILL.md` | Native skill implementations (ours) + `cli-setup-verify` (upstream's, kept). | normal |
 | `CONTRIBUTING.md` (upstream's own) | Kept for reference; not actively followed since this fork doesn't send PRs upstream. | reference only |
+| `AGENTS.md` (upstream's own) | Guidance for third-party agents (Copilot, Cursor, …) — **not read by Claude Code**, which loads `CLAUDE.md` only. Its useful parts are already merged into §8; kept unmodified so future upstream merges stay clean. | reference only |
 
 ---
 

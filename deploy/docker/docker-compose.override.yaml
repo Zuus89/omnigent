@@ -1,0 +1,10 @@
+# Additive loopback publish so the Omnigent VS Code extension's localhost
+# auto-discovery finds the server -- code-server now runs on this same box.
+# The existing tailnet-only publish (100.116.27.33:8000) in the base compose
+# file is untouched; this only ADDS a second, loopback-only bind. A loopback
+# bind is never reachable from outside this machine, so it doesn't reopen
+# anything the earlier hardening closed.
+services:
+  omnigent:
+    ports:
+      - "127.0.0.1:8000:8000"
