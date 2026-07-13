@@ -26,10 +26,12 @@ Status markers: `Ready` · `In Progress` · `Blocked` · `Done`
 | Done | Create the Linear initiative ("Personal AI Platform") and connect it as this project's tracker. | — |
 | Done | Author native governance (`CLAUDE.md`, `.claude/agents/`, `.claude/skills/`, `FRAMEWORK.md`) for this repo; consolidated to a single root `CLAUDE.md` and dropped 7 unrelated upstream dev skills. | — |
 | Done | Confirm the coordinator/per-agent model picker exists in `omnigent config` (Claude-only today); checked project grouping + background visibility — see `project_chronicle.md` 2026-07-13 for the live-UI findings (Omnigent's own "workspace" ≠ our Workspace; no mobile project creation; git is bound per-chat not per-project). | — |
-| Ready | Stand up `code-server` on the VPS — tailnet-only, password-protected, workspace at `/root/repos/`. | — |
-| Ready | Build and install the Omnigent VS Code extension (from this fork's `editors/vscode`) + the Claude Code extension inside `code-server`; add the loopback compose override so the Omnigent extension's auto-discovery works. | Stand up code-server |
-| Ready | Test the full code-server setup from a second device (tablet/phone) over the tailnet. | Extensions installed |
-| Ready | Mirror the new deployment config into `vps-infra`, update its inventory doc, log, and commit — closing V1. | Second-device test passes |
+| Done | Stand up `code-server` on the VPS — tailnet-only (`network_mode: host` + `--bind-addr`), password-protected, real TLS via `tailscale cert`, workspace at `/root/repos/` + this fork. | — |
+| Done | Build and install the Omnigent VS Code extension (from this fork's `editors/vscode`) + the Claude Code extension inside `code-server`; added the loopback compose override + mounted the `claude` CLI binary onto PATH (extension needs it, wasn't bundled). | Stand up code-server |
+| Done | Tested from a second device — Android tablet with keyboard/trackpad: Claude Code session opens via the activity-bar icon. Command Palette input doesn't respond on that device (non-blocking quirk, parked). Omnigent's own panel left unfixed by decision (see chronicle 2026-07-13) — not used day to day, only its code as a base. | Extensions installed |
+| Done | Mirrored the new deployment config into `vps-infra` (`vps-omnigent/opt/code-server/`, `vps-omnigent/opt/omnigent/deploy/docker/`), updated its inventory doc + `vps_ops_gotchas.md` with 3 reusable findings, logged, committed. | Second-device test passes |
+
+**V1 closed 2026-07-13.** Full debugging narrative in `project_chronicle.md`.
 
 ## Phase 2 — Workspace hierarchy + KB curator (not started, scope confirmed by V1 step 3)
 
@@ -52,6 +54,7 @@ Status markers: `Ready` · `In Progress` · `Blocked` · `Done`
 
 ## Next up
 
-1. Stand up `code-server`.
-2. Extensions + second-device test.
-3. Close V1 (mirror config into `vps-infra`).
+V1 is done. Next: pick Phase 2 (workspace hierarchy + KB curator) or Phase 3 (native project
+lifecycle) as the first real custom-development task — both are "Blocked by V1 complete",
+now unblocked. Neither started yet; needs a fresh Brief (Step 1) to pick which one first and
+scope it.

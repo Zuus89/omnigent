@@ -133,3 +133,50 @@ especially for anything UI/UX-shaped.
 **Alpha test:** N/A — investigation, no behavioral change.
 
 **Next action:** continue V1 — stand up code-server.
+
+## 2026-07-13 — V1 closed: code-server deployed, verified from two devices
+
+**Context:** V1's remaining steps (4-7) — stand up `code-server`, install both VS Code
+extensions, verify from a second device, document + commit — executed end to end this
+session.
+
+**Summary:**
+
+- `code-server` deployed at `/opt/code-server` (VPS), tailnet-only, password-protected,
+  serving all 5 repos (the 4 personal clones + this fork) as one multi-project workspace.
+- Node.js 22 installed (was missing); the Omnigent VS Code extension built from this fork's
+  own source and installed alongside the Claude Code extension.
+- Three real infra bugs found and fixed, each general enough to be written to `vps-infra`'s
+  `vps_ops_gotchas.md` rather than just here:
+  1. Container network namespace isolation blocked the Omnigent extension's localhost
+     server discovery — fixed with `network_mode: host`.
+  2. `/root` isn't traversable by the container's non-root user, so mounting the `claude`
+     CLI under `/root/.local/bin` silently failed — fixed by mounting the binary directly
+     onto a normal PATH location.
+  3. The big one: VS Code webviews (any extension's visual panel) render silently blank
+     without a real secure context (HTTPS or literal `localhost`) — browsers withhold
+     `crypto.subtle`, which webview rendering depends on, over plain HTTP on a tailnet
+     IP/hostname. Fixed by enabling Tailscale HTTPS certs and serving `code-server` with a
+     real `tailscale cert`-issued certificate. Learned the cert only covers the full
+     MagicDNS FQDN, not the short alias — the short alias fails hostname verification.
+- **Decision:** did not patch the Omnigent extension's own "localhost-only" iframe
+  restriction (a real, separate limitation, understood and documented) — not worth it, this
+  project doesn't plan to use Omnigent's own UI day to day, only its code as a base.
+- Verified from two devices: the notebook (full pass) and an Android tablet with a physical
+  keyboard/trackpad (Claude Code session opens correctly via the activity-bar icon; the
+  Command Palette search doesn't respond to that device's input for unclear reasons — a
+  known, non-blocking quirk, not investigated further since the direct-icon path works).
+
+**Key findings:** captured above; the ops-level ones live in `vps-infra`'s
+`vps_ops_gotchas.md` for reuse beyond this project.
+
+**Questions raised / resolved:** resolved — code-server's viability as the multi-project
+editor engine, now proven end to end on two devices.
+Open — the Command Palette input quirk on the tablet; not blocking, parked.
+
+**Alpha test:** N/A — infra deployment, no user-facing app behavior yet to test against a
+frozen spec.
+
+**Next action:** V1 is closed. Next up is Phase 2 (the workspace hierarchy + KB curator) or
+Phase 3 (native project lifecycle) — the custom VS Code extension work, per `plan.md`'s
+"Delivery vehicle" section. Not started.
