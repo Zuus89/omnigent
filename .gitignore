@@ -29,6 +29,7 @@ omnigent/_build_info.py
 !.claude/
 .claude/*
 !.claude/skills/
+!.claude/agents/
 
 # Local helper scripts
 run-ap-chat.sh
