@@ -71,3 +71,65 @@ background-agent visibility (V1 step 3, not yet run).
 **Next action:** V1 step 3 — confirm the coordinator/agent picker in `omnigent config`, and
 check session grouping + background visibility before deciding what Phase 2 actually needs
 to build.
+
+## 2026-07-13 — V1 step 3: live UI testing corrects the source-reading over-read
+
+**Context:** V1 step 3 asked to confirm the coordinator/agent picker and check whether
+Omnigent already provides project-grouped sessions and background-agent visibility, before
+deciding what Phase 2 actually needs to build. A source-code read (web/src/shell/, the
+server API docs) found WorkspacePicker.tsx, WorkspacePanel.tsx, SubagentsPanel.tsx with a
+RunningDot, and a workspace field on the session object — read as strong evidence that most
+of Phase 2 might already exist. The human then opened the live UI and corrected this.
+
+**Findings (live UI, ground truth over source-reading):**
+
+1. **Omnigent's workspace is our Project, not our Workspace.** It's a filesystem path
+   on a session, not an identity/credential boundary spanning multiple projects. Project →
+   Session grouping does exist in the live UI. Our Workspace layer (multiple projects under
+   one identity — git/model/MCP credentials) does not exist anywhere in Omnigent — **Phase 2
+   is still fully needed**, not redundant as the source read suggested.
+2. **Creating a new project from a tablet or phone is effectively not possible today** in
+   the live UI. Directly validates the Phase 3 native-project wizard's mobile-friendliness
+   requirement.
+3. **Git/repo binding lives on the chat/session, not on a persistent project entity.**
+   Today two sessions under the same Omnigent workspace (= our project) can point at
+   different repos. This contradicts Phase 3's core rule (every project always has a git
+
+## 2026-07-13 — V1 step 3: live UI testing corrects the source-reading over-read
+
+**Context:** V1 step 3 asked to confirm the coordinator/agent picker and check whether
+Omnigent already provides project-grouped sessions and background-agent visibility, before
+deciding what Phase 2 actually needs to build. A source-code read (web/src/shell/, the
+server API docs) found WorkspacePicker.tsx, WorkspacePanel.tsx, SubagentsPanel.tsx with a
+RunningDot, and a workspace field on the session object — read as strong evidence that most
+of Phase 2 might already exist. The human then opened the live UI and corrected this.
+
+**Findings (live UI, ground truth over source-reading):**
+
+1. **Omnigent's "workspace" is our "Project", not our "Workspace".** It's a filesystem path
+   on a session, not an identity/credential boundary spanning multiple projects. Project →
+   Session grouping does exist in the live UI. Our Workspace layer (multiple projects under
+   one identity — git/model/MCP credentials) does not exist anywhere in Omnigent — **Phase 2
+   is still fully needed**, not redundant as the source read suggested.
+2. **Creating a new project from a tablet or phone is effectively not possible today** in
+   the live UI. Directly validates the Phase 3 native-project wizard's mobile-friendliness
+   requirement.
+3. **Git/repo binding lives on the chat/session, not on a persistent project entity.**
+   Today two sessions under the "same" Omnigent workspace (= our project) can point at
+   different repos. This contradicts Phase 3's core rule ("every project always has a git
+   connection, no exceptions") — Omnigent does not enforce project-repo as a stable 1:1
+   binding. This is now the sharpest concrete requirement for Phase 3's project entity: a
+   Project must own its git binding, and every Session under it inherits that binding rather
+   than choosing its own.
+
+**Decision:** proceed with V1 (code-server) as planned — it solves a different need (a real
+multi-project code editor) than what Omnigent's own session UI provides. Phase 2/3 scope is
+confirmed, not shrunk; finding 3 sharpens Phase 3's project-entity design specifically.
+
+**Lesson for future sessions:** reading source code is evidence of capability, not of actual
+UX — the two diverged here. Verify live before treating a source-code find as settled,
+especially for anything UI/UX-shaped.
+
+**Alpha test:** N/A — investigation, no behavioral change.
+
+**Next action:** continue V1 — stand up code-server.
