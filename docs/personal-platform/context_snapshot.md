@@ -15,6 +15,8 @@ updated: "2026-07-13"
 **V1 is closed.** `code-server` is live on the Omnigent VPS, tailnet-only, real TLS,
 serving all 5 repos as one multi-project workspace, with the Claude Code + Omnigent VS Code
 extensions installed and working — verified from the notebook and from an Android tablet.
+This fork's git push access is also now fully confirmed working (see Flags/gotchas —
+the auth-method fix that closed this out).
 
 ## Access
 
@@ -22,6 +24,8 @@ extensions installed and working — verified from the notebook and from an Andr
   the short alias `omnigent-vps` fails certificate hostname verification, always use the
   full name). Password in `/opt/code-server/.env` on the VPS (gitignored).
 - This fork: `/opt/omnigent` on `omni-vps` (tailnet `100.116.27.33`), `ssh omni-vps`.
+  Git push to `origin` (`Zuus89/omnigent`) confirmed working via `gh` OAuth auth
+  (`gho_...`, scopes `repo`/`read:org`/`gist`) — no PAT in use anymore.
 - Full plan: `docs/personal-platform/plan.md`. Full debugging narrative for V1's close:
   `project_chronicle.md`, entry "2026-07-13 — V1 closed".
 - Design reference (mockup): `https://claude.ai/code/artifact/e0c98989-9fc7-4f2a-ad85-8f3de5f15232`.
@@ -37,9 +41,18 @@ from-scratch app. Needs a fresh Brief to scope which one first.
 
 ## Flags / gotchas
 
-- The embedded token that was in `origin`'s URL (fixed 2026-07-13) should still be
-  **revoked on GitHub's side** — stripping the URL doesn't invalidate the token itself.
-  Human action, not yet confirmed done.
+- **Resolved 2026-07-13:** the embedded GitHub token originally found in `origin`'s URL was
+  revoked on GitHub's side (confirmed by the user). Separately, a fine-grained PAT that
+  briefly replaced it as the `gh` credential turned out to have read-only `Contents`
+  permission on this repo — pushes failed with a 403 (`Permission ... denied to Zuus89`)
+  even though `gh api` reads and the repo's user-level permissions both looked fine
+  (the API's `permissions` field reflects the *user's* role, not the *token's* granted
+  scope — a real fine-grained-PAT gotcha, not a bug). Fixed by deleting the PAT and
+  re-authenticating `gh` via OAuth device flow instead, which carries the full `repo`
+  scope. Also fixed while diagnosing this: `branch.main.remote` was pointed at `upstream`,
+  not `origin` — a bare `git push`/`git pull` would have silently targeted the read-only
+  upstream repo instead of this fork (violates this repo's own Hard Rule 8). Now tracks
+  `origin/main`.
 - `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is **not yet set** for this repo (no
   `.claude/settings.json` committed yet) — full multi-agent orchestration (`pm` spawning
   teammates) won't actually work until that's wired.

@@ -180,3 +180,47 @@ frozen spec.
 **Next action:** V1 is closed. Next up is Phase 2 (the workspace hierarchy + KB curator) or
 Phase 3 (native project lifecycle) — the custom VS Code extension work, per `plan.md`'s
 "Delivery vehicle" section. Not started.
+
+## 2026-07-13 — Git push to origin was silently broken; fixed via OAuth re-auth
+
+**Context:** Confirming this fork's remote setup (`origin` = the user's own
+`Zuus89/omnigent`, `upstream` = the read-only `omnigent-ai/omnigent`) surfaced 6
+same-day commits that had never actually been pushed. `git push origin main` failed with:
+
+```
+remote: Permission to Zuus89/omnigent.git denied to Zuus89.
+fatal: unable to access 'https://github.com/Zuus89/omnigent.git/': The requested URL returned error: 403
+```
+
+**Root cause:** the `gh` credential helper was correctly wired
+(`credential.https://github.com.helper=!/usr/bin/gh auth git-credential`) and using a
+fine-grained PAT (`github_pat_...`) that could read the repo fine — `gh api
+repos/Zuus89/omnigent` returned `permissions.push: true`. But that field reflects the
+**user's** role on the repo, not the **token's** granted scope. Direct curl testing against
+the actual push endpoint (`.../info/refs?service=git-receive-pack`) confirmed: read (`GET`
+the repo) → 200, push endpoint → 403, same token. The fine-grained PAT's `Contents`
+repository-permission was not set to read-write for this repo (it predates this fork;
+originally scoped only to `saga-voice`/`vps-infra`/`zuus89.github.io`). An in-place edit
+to the token's permissions did not resolve it on the first attempt (identical 403 after the
+user reported updating it) — the reliable fix was deleting the PAT entirely and
+re-authenticating `gh` via OAuth device flow, which carries a durable `repo`-scope grant
+not tied to a per-repo allowlist.
+
+**Secondary finding while diagnosing:** `branch.main.remote` was `upstream`, not `origin`
+— a bare `git push`/`git pull` on `main` would have targeted the read-only upstream repo
+by default, which this repo's own `CLAUDE.md` (Hard Rule 8) explicitly forbids pushing to.
+Fixed with `git branch --set-upstream-to=origin/main main`.
+
+**Outcome:** the 6 pending commits pushed cleanly; git operations on this fork now use OAuth
+end to end (no PAT); the original embedded-token loose end from V1 (flagged in
+`context_snapshot.md` since V1's close) is now confirmed revoked by the user — closing that
+flag.
+
+**Key findings:** the GitHub REST API's `permissions` field on a repo describes the
+*authenticated user's* access, not the *token's* granted scope — a fine-grained PAT can read
+a repo it can't push to, with no error until the actual write-capable endpoint is hit. Worth
+remembering for any future fine-grained-PAT setup on this project.
+
+**Alpha test:** N/A — credential/config troubleshooting, no behavioral change to the product.
+
+**Next action:** unchanged — Phase 2 or Phase 3, per `plan.md`'s "Delivery vehicle" section.
