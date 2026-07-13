@@ -62,11 +62,14 @@ Schema in `.claude/skills/log-activity/SKILL.md`.
 
 ## D. Configuration
 
-### `docs/personal-platform/CLAUDE.md`
-The per-session operating contract. **Not at repo root** — the real root `CLAUDE.md` is a
-symlink to upstream's own `AGENTS.md`, left untouched; a one-line pointer was added there
-instead of overwriting it. Native, not plugin-resident — see `plan.md` Phase 3 for why that
-distinction matters here specifically.
+### `CLAUDE.md` (repo root)
+The per-session operating contract. Originally kept out of root (the real root `CLAUDE.md`
+was a symlink to upstream's own `AGENTS.md`) to avoid touching upstream content while this
+fork still looked like a PR-staging area. Once it was clear this fork is for building this
+project, not sending PRs upstream, the symlink was broken and this became a real, unified
+file at root — merging in the still-useful parts of `AGENTS.md` (the pre-commit/comment-style
+guidance) and dropping the PR-ceremony parts. Native, not plugin-resident — see `plan.md`
+Phase 3 for why that distinction matters here specifically.
 
 ### `.claude/agents/*.md`
 Role definitions — mandate, model, can/cannot. Committed, not plugin-installed.

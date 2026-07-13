@@ -41,11 +41,3 @@ Keep comments short and focused on the code, not on the change history.
   *why* it exists, in terms a future reader needs. Don't reference PR numbers,
   issue numbers, or ticket IDs (e.g. `#1646`, `fixes JIRA-123`); the scenario
   should be clear without chasing external links.
-
-## Personal AI Platform additions
-
-This fork also carries a personal project layered on top of upstream Omnigent — its own
-governance lives at `docs/personal-platform/CLAUDE.md` (native agents/skills under
-`.claude/agents/` and `.claude/skills/`, alongside upstream's own). Read that file when
-working on anything under `docs/personal-platform/`. Does not change anything above this
-section — upstream's own contributor guidance is unaffected.
