@@ -177,6 +177,22 @@ one exists today), so this phase slots in without rework.
 Everything in V1 is assembly of existing pieces. This is the first genuinely custom feature
 — the reason to fork rather than just consume Omnigent as-is.
 
+## Delivery vehicle: a custom VS Code extension running inside `code-server`
+
+**`code-server` (V1) is the engine, not the product.** Deployed as-is, it's plain VS Code —
+the default activity bar (Explorer, Search, Source Control), no custom UI. That's expected
+and fine for V1 (assembly only, no custom code). The design locked in by the mock
+(`https://claude.ai/code/artifact/e0c98989-9fc7-4f2a-ad85-8f3de5f15232` — the activity bar
+with Sessions / Filesystem / Background / Knowledge base / Agentes & config, the persistent
+right-rail progress panel) becomes real in Phase 2 as **a custom VS Code extension** that
+adds its own activity-bar icon and webview panel implementing that design, running inside
+`code-server`. This is deliberate: reuse VS Code's actual editing engine (Monaco, the
+terminal, the extension host — the genuinely hard parts, already built and battle-tested),
+and spend Phase 2's real development effort on the product layer that's actually ours, not
+on rebuilding a code editor from scratch. Confirmed with the human 2026-07-13: the goal was
+never "give me VS Code" or "give me Omnigent's UI" — it's a platform of our own, and this is
+the concrete path to it without reinventing the editor.
+
 ## Workspace hierarchy
 
 A **workspace** is a full identity context, not just a folder: its own git identity, its own
