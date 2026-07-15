@@ -3,6 +3,10 @@ build/
 dist/
 node_modules/
 reviews/
+# Exception: this fork's governed lifecycle artifacts (see CLAUDE.md §10) live
+# in a directory upstream's generic "reviews/" pattern would otherwise swallow.
+!docs/personal-platform/claude_tasks/reviews/
+!docs/personal-platform/claude_tasks/reviews/**
 
 # Generated artifact; never committed.
 .pytest_cache/
