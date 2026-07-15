@@ -11,9 +11,10 @@ related_decisions: ["plan.md §Phase 2 (workspace hierarchy)", "kb-three-tier (k
 
 > **Lifecycle state:** Step 1 (Brief) approved 2026-07-14. Step 2 (da state profile)
 > complete — `workspace-layer_step2-profile.md`. Step 3 (this spec) expanded 2026-07-15
-> from a 3-candidate × 3-judge design panel. Pending: human rulings on the open decisions
-> below, Step 4 (alpha test), Step 5 (de + devils-advocate reviews, with mandatory
-> executed probes), Step 6 (freeze). NOT frozen yet.
+> from a 3-candidate × 3-judge design panel; the 7 open decisions were ruled by the human
+> the same day (see "Human rulings"). Pending: Step 4 (alpha test), Step 5 (de +
+> devils-advocate reviews, with mandatory executed probes), Step 6 (freeze). NOT frozen
+> yet. **Human priority note: optimize for speed to a first working POC.**
 
 ## Brief (Step 1 — human-approved, 2026-07-14)
 
@@ -118,6 +119,10 @@ column in any way**. Workspace switcher UI = Stage 2a (successor task).
   rejected sentinel before any read-side filtering ships. Nothing in Stage 1/2 may assume
   "id 0 = personal". Proposed trigger: client audit / data-at-rest requirement (or the
   stack-per-client escape valve for that one client).
+- **Data-at-rest gate (human-added, binding):** before the FIRST client workspace is
+  added, the data-at-rest posture must be resolved explicitly — commingled DB accepted
+  for that client, escape-valve stack, or accelerated Stage 3. Onboarding a client
+  workspace without this ruling is a governance violation.
 
 ## Acceptance criteria (seeds — da designs the alpha test from this spec alone)
 
@@ -155,31 +160,20 @@ verify no server-global leak via `managed_hosts.py` env injection.
   script), SSOT rule in open decision 4.
 - All clients' transcripts/metadata commingle in one DB until Stage 3 (open decision 5).
 
-## Open decisions for the human (before Step 6 freeze)
+## Human rulings (2026-07-15 — all 7 decisions resolved, question by question)
 
-1. **Locked-constraint interpretation (Hard Rule 9 sensitive):** does Stage 1 satisfy
-   "nothing crosses this boundary by default" when control-plane metadata commingles and
-   workspace membership is convention until Stage 2b? Judges split 2–1.
-   **pm recommendation:** yes — the locked text enumerates git identity, model
-   credentials, MCP grants, filesystem, and all four are kernel-isolated in Stage 1;
-   Stage 2b closes the misuse gap under a binding trigger. If you read it stricter,
-   Stage 2b moves into this task's scope (or `/council`).
-2. **Are the escalation triggers binding?** pm recommendation: yes, written into
-   TODO.md at close.
-3. **If Step-5 probe (a) fails:** (a) pull Stage 2b into the immediate successor task,
-   (b) reopen the candidate decision, or (c) accept interim risk while personal-only.
-   **pm recommendation:** (a).
-4. **Registry SSOT rule:** registry (fork) owns product semantics — names, identity
-   metadata, pointers; `vps-infra` owns all runnable config — compose, env values,
-   volumes; on conflict, deployment facts defer to `vps-infra`, product semantics to the
-   registry; validate script arbitrates. **pm recommendation:** adopt as stated.
-5. **Data-at-rest posture:** is one commingled control-plane DB acceptable for the client
-   contracts you actually anticipate? If any client will demand data-at-rest isolation:
-   escape valve (dedicated stack) or accelerated Stage 3.
-6. **Personal migration depth:** retro-point existing sessions to the new personal host,
-   or leave history as-is and apply the pattern to new sessions only?
-   **pm recommendation:** new sessions only — cheaper, and the alpha test baselines on
-   the new pattern.
-7. **Interim mobile surface:** VS Code extension switcher only (Stage 2a) — acceptable,
-   or move a minimal web-UI affordance into Stage 1? **pm recommendation:** extension
-   only; the web UI stays workspace-blind until Stage 2a.
+1. **Locked-constraint interpretation:** Stage 1 SUFFICES. The locked text's enumerated
+   identity elements (git, model credentials, MCP grants, filesystem) are kernel-isolated
+   from day one; the control-plane misuse gap is closed by Stage 2b under a binding
+   trigger. No `/council` needed.
+2. **Escalation triggers are BINDING** — written into TODO.md at close; a fired trigger
+   creates a mandatory task.
+3. **If Step-5 probe (a) fails:** Stage 2b is pulled into the immediate successor task.
+4. **Registry SSOT rule adopted as stated:** registry owns product semantics; `vps-infra`
+   owns runnable config; the validate script arbitrates loudly.
+5. **Data-at-rest:** no client requiring physical separation is anticipated, BUT the
+   posture must be explicitly resolved BEFORE the first client workspace is added — added
+   above as a binding gate. Escape valve stays documented.
+6. **Personal migration:** new sessions only; existing history stays where it is.
+7. **Interim mobile surface:** the VS Code extension switcher suffices (Stage 2a);
+   priority is speed to a first working POC — no web-UI scope now.
