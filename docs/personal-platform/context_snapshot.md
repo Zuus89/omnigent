@@ -3,7 +3,7 @@ type: doc
 title: "Context Snapshot — Personal AI Platform"
 status: snapshot
 created: "2026-07-13"
-updated: "2026-07-13"
+updated: "2026-07-15"
 ---
 
 # Context Snapshot — Personal AI Platform
@@ -12,56 +12,74 @@ updated: "2026-07-13"
 
 ## Where we are
 
-**V1 is closed.** `code-server` is live on the Omnigent VPS, tailnet-only, real TLS,
-serving all 5 repos as one multi-project workspace, with the Claude Code + Omnigent VS Code
-extensions installed and working — verified from the notebook and from an Android tablet.
-This fork's git push access is also now fully confirmed working (see Flags/gotchas —
-the auth-method fix that closed this out).
+**Phase 2 is underway.** Task `workspace-layer` is mid-lifecycle (transitory close
+2026-07-15): Steps 1–4 done, Step 5 half done, Step 6 pending. All artifacts committed
+and pushed through `ceeb8e10`.
+
+- **Done:** brief approved → da state profile (`workspace-layer_step2-profile.md`; star
+  finding: dormant `workspace_id` partition key on all 12 tables, never activated) →
+  spec from a 3-candidate × 3-judge panel, winner **platform-registry-hybrid**
+  (workspace = one `omnigent host` container holding all identity; server stripped of
+  creds; `workspaces.yaml` registry; staged escalation 2a/2b/3) → 7 human rulings in the
+  spec → da alpha test designed (17 binary checks, draft, seals at Step 6) →
+  devils-advocate review: **2 BLOCKERs + 5 MAJORs** (headline: the architecture isolates
+  the omnigent-host plane while the user's real workflow — code-server + Claude Code
+  extension — spans all workspaces as one user; ruling 1 arguably narrowed locked plan
+  text past Hard Rule 9's `/council` gate; ruling 6 contradicts the Stage-3 precondition).
+- **Two sibling briefs captured** (own sessions later, blocked by this task):
+  `kb-three-tier` (3 tiers as git repos, curator promotion, SilverBullet access layer —
+  human-approved design direction) and `secrets-manager` (workspace-scoped, managed from
+  the platform UI, engine-not-product).
+
+## Resume exactly here
+
+1. **Re-run the de Step-5 feasibility review** — two attempts died (one silent stall,
+   one killed by a client disconnect). Fresh spawn, READ-ONLY mode: no server/host/runner
+   processes (human consent for ephemeral probes is **still pending**); the spec's 3
+   probes become code-analysis verdicts with file:line evidence. Full prompt pattern in
+   this session's transcript; essentials: read CLAUDE.md → `.claude/agents/de.md` → spec
+   → profile; write `claude_tasks/reviews/workspace-layer_de.md`.
+2. **Step 6 package for the human:** resolve all 8 devils-advocate objections — the big
+   one likely needs `/council` (re-centering Stage-1 scope on the code-server plane the
+   user actually works in vs. the omnigent-host plane; also fix the ruling-6 ↔ Stage-3
+   contradiction) — plus ratify 3 da items (pin BASE commit for the governance diff,
+   whether `web/` is in it, agents-table lint gating). Then freeze spec + seal test.
+3. **Resume the secrets deep-research** (paused mid-verify, cache intact):
+   `Workflow({scriptPath: <session workflows dir>/deep-research-wf_7943ab35-6a7.js,
+   resumeFromRunId: "wf_7943ab35-6a7", args: <same>})` — only AFTER lifecycle agents
+   finish (VPS load rule). Its verdict feeds the `secrets-manager` spec, not this task.
+4. **vps-infra architect response pending:** the human carries infra prompts to the
+   separate vps-infra Claude session ("Arquitecto de Datos"). Delivered so far: the
+   4-defect provisioning prompt (root-owned repos, stale-snapshot clobber, root git
+   objects, missing gh/git identity) + load-limits consult. Await rulings before any
+   system-level change.
 
 ## Access
 
-- `code-server`: **`https://omnigent-vps.tail05ae76.ts.net:8443`** (full MagicDNS FQDN —
-  the short alias `omnigent-vps` fails certificate hostname verification, always use the
-  full name). Password in `/opt/code-server/.env` on the VPS (gitignored).
-- This fork: `/opt/omnigent` on `omni-vps` (tailnet `100.116.27.33`), `ssh omni-vps`.
-  Git push to `origin` (`Zuus89/omnigent`) confirmed working via `gh` OAuth auth
-  (`gho_...`, scopes `repo`/`read:org`/`gist`) — no PAT in use anymore.
-- Full plan: `docs/personal-platform/plan.md`. Full debugging narrative for V1's close:
-  `project_chronicle.md`, entry "2026-07-13 — V1 closed".
-- Design reference (mockup): `https://claude.ai/code/artifact/e0c98989-9fc7-4f2a-ad85-8f3de5f15232`.
-- Linear: `https://linear.app/cristobal-workspace/initiative/personal-ai-platform-01e1bba23249`.
-
-## Next action
-
-Pick Phase 2 (workspace hierarchy + KB curator) or Phase 3 (native project lifecycle,
-sharpened by V1's live-UI findings — a Project must own a stable git binding) as the next
-task. Both are custom development against `code-server`'s extension host — see `plan.md`'s
-"Delivery vehicle" section: the product layer is a custom VS Code extension, not a
-from-scratch app. Needs a fresh Brief to scope which one first.
+- code-server: `https://omnigent-vps.tail05ae76.ts.net:8443` (full MagicDNS name;
+  password in `/opt/code-server/.env` on the VPS).
+- This fork: `/home/coder/repos/omnigent` (dev container) and `/opt/omnigent` (VPS,
+  `ssh omni-vps`). Push to `origin` (`Zuus89/omnigent`) via `gh` OAuth — works.
+- Linear: initiative "Personal AI Platform"; milestone comments posting again (connector
+  re-connected under the user's NEW claude.ai account).
+- Design mock: `https://claude.ai/code/artifact/e0c98989-9fc7-4f2a-ad85-8f3de5f15232`.
 
 ## Flags / gotchas
 
-- **Resolved 2026-07-13:** the embedded GitHub token originally found in `origin`'s URL was
-  revoked on GitHub's side (confirmed by the user). Separately, a fine-grained PAT that
-  briefly replaced it as the `gh` credential turned out to have read-only `Contents`
-  permission on this repo — pushes failed with a 403 (`Permission ... denied to Zuus89`)
-  even though `gh api` reads and the repo's user-level permissions both looked fine
-  (the API's `permissions` field reflects the *user's* role, not the *token's* granted
-  scope — a real fine-grained-PAT gotcha, not a bug). Fixed by deleting the PAT and
-  re-authenticating `gh` via OAuth device flow instead, which carries the full `repo`
-  scope. Also fixed while diagnosing this: `branch.main.remote` was pointed at `upstream`,
-  not `origin` — a bare `git push`/`git pull` would have silently targeted the read-only
-  upstream repo instead of this fork (violates this repo's own Hard Rule 8). Now tracks
-  `origin/main`.
-- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is **not yet set** for this repo (no
-  `.claude/settings.json` committed yet) — full multi-agent orchestration (`pm` spawning
-  teammates) won't actually work until that's wired.
-- The Omnigent VS Code extension's own panel is left non-functional by decision — its
-  "localhost-only" iframe restriction isn't compatible with remote `code-server` access, and
-  patching it wasn't worth it since this project doesn't use Omnigent's UI day to day.
-- The Command Palette doesn't respond to input on at least one tested tablet (Android, with
-  keyboard/trackpad) — non-blocking (the activity-bar icon works fine as the direct path),
-  not investigated further.
-- Tailscale-issued TLS cert (`/opt/code-server/tls/`) is Let's Encrypt-backed, ~90-day
-  lifetime — needs periodic renewal (`tailscale cert` again + `chmod 644` the new key file,
-  same permission gotcha as the first time — see `vps-infra`'s `vps_ops_gotchas.md`).
+- **Session-start protocol applies** (CLAUDE.md §3). Also read the Claude memory dir
+  (auto-loaded): environment hazards live there — provisioning clobbers (root ownership,
+  stale snapshots, root-owned `.git/objects`), VPS load limits (stagger agents vs
+  workflows), and the infra-consent protocol.
+- **Infra protocol (human-ruled 2026-07-15):** no system-level changes without explicit
+  consent; infra changes/questions go to the human AS A READY-TO-PASTE PROMPT for the
+  vps-infra session. Ephemeral-server consent for de probes: PENDING.
+- **Client disconnects kill the Claude Code process and all background agents/workflows**
+  (three times this session: 2 internet cuts + 1 VPS hang). Transcripts and workflow
+  caches survive — resume via SendMessage (agents) / resumeFromRunId (workflows). Push
+  early; only pushed work provably survives.
+- `.gitignore`: upstream's `reviews/` pattern swallowed `claude_tasks/reviews/` — scoped
+  exception added in `ceeb8e10`.
+- TODO.md needs a human-approved content update to add the `secrets-manager` item (not a
+  status-sync; it's a new row).
+- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` note in FRAMEWORK.md Part 3 is stale in
+  practice: subagent spawning works in this harness (da/de/devils-advocate all ran).

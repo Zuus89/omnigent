@@ -37,7 +37,7 @@ Status markers: `Ready` · `In Progress` · `Blocked` · `Done`
 
 | Status | Item | Blocked by |
 |--------|------|------------|
-| Blocked | Build the Workspace layer for real — Omnigent has no equivalent (its "workspace" is a filesystem path on a session, i.e. our Project, not an identity/credential boundary over multiple projects). | V1 complete |
+| In Progress | Build the Workspace layer for real — Omnigent has no equivalent (its "workspace" is a filesystem path on a session, i.e. our Project, not an identity/credential boundary over multiple projects). Steps 1–4 done + devils-advocate review; de review + Step-6 resolution pending — see `context_snapshot.md`. | V1 complete |
 | Blocked | Implement the three-tier knowledge base (Global / Workspace / Project) with the promotion flow. | V1 complete |
 | Blocked | Build the KB curator agent + review panel. | Three-tier KB |
 | Done (already native to Omnigent) | ~~Background-agent status view~~ — confirmed live: `SubagentsPanel.tsx` + `RunningDot` + session `idle`/`running` states already exist. Nothing to build here. | — |
@@ -54,7 +54,8 @@ Status markers: `Ready` · `In Progress` · `Blocked` · `Done`
 
 ## Next up
 
-V1 is done. Next: pick Phase 2 (workspace hierarchy + KB curator) or Phase 3 (native project
-lifecycle) as the first real custom-development task — both are "Blocked by V1 complete",
-now unblocked. Neither started yet; needs a fresh Brief (Step 1) to pick which one first and
-scope it.
+Phase 2 started 2026-07-14 with the Workspace-layer task (full 10-step lifecycle, In
+Progress above — resume point in `context_snapshot.md`). Briefs are also captured for
+`kb-three-tier` and `secrets-manager` (see `claude_tasks/`), both blocked by the
+Workspace layer; the `secrets-manager` item still needs a human-approved row in this
+roadmap.
