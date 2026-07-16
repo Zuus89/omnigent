@@ -29,9 +29,14 @@ the human (2026-07-16). Its asks, in summary:
 2. Restate the threat model to include the resident prompt-injection vector (autonomous
    web-enabled agents run daily with the operator's uid) — or state plainly that plain
    A2's default plane has no boundary against the platform's own daily activity.
-3. Rule on the zombie Omnigent/Postgres stack (council MAJOR 8 vs de condition 3):
-   decommission (frees ~240MB, kills the runtime secret-persistence vector, forfeits the
-   live partition-seam path) or keep (preserves Stage-3 seam + background-visibility
-   path) — now an explicit decision, not a default.
+3. Rule on the Omnigent/Postgres stack (council MAJOR 8 vs de condition 3) — **context
+   changed 2026-07-16:** the human declared collaboration a post-Phase-2 objective
+   (`collaboration-vision.md`): a second user joins shared projects with their OWN
+   harness credentials via their own registered host — which is exactly the machinery
+   this stack provides (multi-user auth, session_permissions, live status, 11
+   harnesses). Decommissioning is therefore no longer a neutral RAM reclaim; it
+   forfeits the collaboration engine. Decide keep-vs-stop with that weight, plus the
+   unchanged counterweights (runtime secret-persistence vector into the shared agents
+   table; ~240MB idle on a box whose A1 valve needs RAM).
 4. Confirm the A1 escalation capacity bound is documented as **≤1 escalated workspace**
    on current hardware.
