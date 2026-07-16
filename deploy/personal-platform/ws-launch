@@ -1,0 +1,150 @@
+#!/bin/sh
+# ws-launch — per-workspace privilege-drop launcher for the code-server plane (A2').
+#
+# SECURITY CONTROL. Invoked by the Claude Code extension as claudeCode.claudeProcessWrapper.
+# It resolves the workspace that owns the current directory, drops to that workspace's Unix
+# user, and execs claude — so an agent acquires the workspace uid and the kernel (not
+# convention) confines it to that workspace's files.
+#
+# FAIL CLOSED is the whole contract: any doubt about which workspace owns cwd => exit non-zero,
+# NEVER a fallback to the shared editor user (coder). That fallback would be the bypass — an
+# injected agent on the editor plane must not be able to run claude with cross-workspace reach.
+#
+# Deployment (vps-infra): COPY -> /usr/local/bin/ws-launch, owner root:root, mode 0755. The
+# narrow sudoers rule authorizes exactly that literal, root-owned path as the Runas target,
+# which is why the drop re-execs THIS path (never claude directly, never a mutable/mounted
+# path): sudo authorizes a command by path, so the path must be one coder cannot rewrite.
+
+set -u
+
+# The trusted registry: root-owned, read-only, mounted; one <slug>.conf per workspace declaring
+# SLUG/UID/GID. This is the SECURITY-AUTHORITATIVE source and is hardcoded in the launch path —
+# NOT the fork's coder-writable workspaces.yaml, and NOT env-overridable when launching. A
+# coder-movable registry in the launch path would let a coder-set env choose the drop target.
+REGISTRY_DEFAULT=/etc/code-server-workspaces
+
+# The literal path the sudoers NOPASSWD rule authorizes as the drop target. The drop re-execs
+# this exact immutable path; sudo — not this script — is the authority that performs the drop.
+SELF=/usr/local/bin/ws-launch
+
+PROG=ws-launch
+
+fail() {
+	# One exit for every doubt: always stderr + non-zero, and it never reaches an exec. The
+	# message names the refusal so an operator sees WHY claude did not start (no silent fallback).
+	printf '%s: %s\n' "$PROG" "$1" >&2
+	exit "${2:-1}"
+}
+
+conf_get() {
+	# Print the value of KEY from a KEY=VALUE file (first match), trimming surrounding blanks and
+	# a trailing CR. No eval / no sourcing: a security control never executes its data files, even
+	# root-owned ones. Returns 1 if KEY is absent.
+	_f=$1 _k=$2 _v= _line=
+	while IFS= read -r _line || [ -n "$_line" ]; do
+		case "$_line" in
+			"$_k"=*)
+				_v=${_line#*=}
+				while case "$_v" in *[[:space:]]) true ;; *) false ;; esac; do _v=${_v%?}; done
+				while case "$_v" in [[:space:]]*) true ;; *) false ;; esac; do _v=${_v#?}; done
+				printf '%s' "$_v"
+				return 0
+				;;
+		esac
+	done < "$_f"
+	return 1
+}
+
+resolve() {
+	# resolve REG_DIR CWD -> on success prints "slug uid gid" and returns 0; else returns 1.
+	#
+	# The workspace is the SHALLOWEST cwd-ancestor whose basename is a registered slug AND whose
+	# directory is really OWNED by that slug's registered UID. The ownership check is the anchor
+	# that ties resolution to the real workspace tree without hardcoding a workspaces-root path
+	# (which may differ per host): a coder-made look-alike (e.g. /tmp/clientb) is owned by coder,
+	# not by ws-clientb, so it FAILS CLOSED. coder holds no root, so it cannot forge the owner.
+	# Shallowest wins because the workspace dir sits directly under the (inferred) root; a nested
+	# look-alike deeper in another workspace's tree is owned by that other workspace, not matched.
+	_reg=$1 _dir=$2
+	_slug= _uid= _gid=
+	while [ -n "$_dir" ] && [ "$_dir" != "/" ]; do
+		_base=${_dir##*/}
+		_conf=$_reg/$_base.conf
+		if [ -f "$_conf" ] && [ -r "$_conf" ]; then
+			_cslug=$(conf_get "$_conf" SLUG) || _cslug=
+			_cuid=$(conf_get "$_conf" UID) || _cuid=
+			_cgid=$(conf_get "$_conf" GID) || _cgid=
+			# Well-formed entry: slug is a safe token equal to the filename, UID/GID are positive
+			# non-root integers. Any deviation => treat as no match (malformed => fail closed).
+			if printf '%s' "$_base" | grep -Eq '^[a-zA-Z0-9][a-zA-Z0-9._-]*$' && \
+			   [ "$_cslug" = "$_base" ] && \
+			   printf '%s' "$_cuid" | grep -Eq '^[0-9]+$' && [ "$_cuid" -gt 0 ] && \
+			   printf '%s' "$_cgid" | grep -Eq '^[0-9]+$' && [ "$_cgid" -gt 0 ]; then
+				_owner=$(stat -c '%u' "$_dir" 2>/dev/null) || _owner=
+				if [ -n "$_owner" ] && [ "$_owner" = "$_cuid" ]; then
+					_slug=$_base _uid=$_cuid _gid=$_cgid
+				fi
+			fi
+		fi
+		_parent=${_dir%/*}
+		[ -n "$_parent" ] || _parent=/
+		_dir=$_parent
+	done
+	[ -n "$_slug" ] || return 1
+	printf '%s %s %s' "$_slug" "$_uid" "$_gid"
+}
+
+# --- arguments ---------------------------------------------------------------
+# --resolve-only: a no-exec diagnostic. Resolve, print "slug=.. uid=.. gid=..", exit 0; on any
+# doubt fail closed. It drops no privilege and execs nothing, so the resolution + fail-closed
+# logic is testable non-circularly (offline, before A2' is active and without ws-* users).
+resolve_only=0
+if [ "${1:-}" = "--resolve-only" ]; then
+	resolve_only=1
+	shift
+fi
+
+cwd=$(pwd -P 2>/dev/null) || fail "cannot determine current directory"
+case "$cwd" in
+	/*) ;;
+	*) fail "current directory is not an absolute path: $cwd" ;;
+esac
+
+# Registry selection. The launch path ALWAYS uses the hardcoded root-owned registry. The
+# WS_LAUNCH_REGISTRY override is honored ONLY under --resolve-only (the no-exec diagnostic used
+# by the offline harness) — deliberately never in the launch path, so no env can move the
+# authority that decides the drop target.
+if [ "$resolve_only" = "1" ]; then
+	registry=${WS_LAUNCH_REGISTRY:-$REGISTRY_DEFAULT}
+else
+	registry=$REGISTRY_DEFAULT
+fi
+[ -d "$registry" ] && [ -r "$registry" ] || fail "registry unreadable: $registry"
+
+resolved=$(resolve "$registry" "$cwd") \
+	|| fail "no registered workspace owns $cwd (fail-closed; refusing to run as $(id -un 2>/dev/null))"
+
+slug=${resolved%% *}
+_rest=${resolved#* }
+uid=${_rest%% *}
+gid=${_rest##* }
+
+if [ "$resolve_only" = "1" ]; then
+	printf 'slug=%s uid=%s gid=%s\n' "$slug" "$uid" "$gid"
+	exit 0
+fi
+
+# --- launch ------------------------------------------------------------------
+umask 007
+
+if [ "$(id -u)" = "$uid" ]; then
+	# Already the workspace user: post-drop re-entry (below), or invoked directly as the owner.
+	# Replace this process with claude so nothing lingers between the extension and claude.
+	exec claude "$@"
+fi
+
+# Drop to the workspace user via the narrow, path-pinned sudo rule, then re-enter: the re-exec
+# runs as the target uid, re-resolves the (unchanged) cwd, and takes the branch above. The euid
+# check — not a forgeable flag — is what gates that branch, so a forged re-entry as coder can
+# never reach `exec claude`.
+exec sudo -u "ws-$slug" "$SELF" "$@"
