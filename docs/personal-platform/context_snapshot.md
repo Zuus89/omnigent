@@ -3,7 +3,7 @@ type: doc
 title: "Context Snapshot — Personal AI Platform"
 status: snapshot
 created: "2026-07-13"
-updated: "2026-07-15"
+updated: "2026-07-16"
 ---
 
 # Context Snapshot — Personal AI Platform
@@ -12,88 +12,93 @@ updated: "2026-07-15"
 
 ## Where we are
 
-**Phase 2 is underway.** Task `workspace-layer` is mid-lifecycle (transitory close
-2026-07-15): Steps 1–4 done, Step 5 half done, Step 6 pending. All artifacts committed
-and pushed through `ceeb8e10`.
+**Phase 2, task `workspace-layer` — deep in Step 7 (implementation), nearly ready for
+Step 8.** Everything committed and pushed to `main` (HEAD `b5dc1fd4`). This session is
+expected to be **killed by the architect's container-recreate window** (see resume point);
+the next session starts fresh.
 
-- **Done:** brief approved → da state profile (`workspace-layer_step2-profile.md`; star
-  finding: dormant `workspace_id` partition key on all 12 tables, never activated) →
-  spec from a 3-candidate × 3-judge panel, winner **platform-registry-hybrid**
-  (workspace = one `omnigent host` container holding all identity; server stripped of
-  creds; `workspaces.yaml` registry; staged escalation 2a/2b/3) → 7 human rulings in the
-  spec → da alpha test designed (17 binary checks, draft, seals at Step 6) →
-  devils-advocate review: **2 BLOCKERs + 5 MAJORs** (headline: the architecture isolates
-  the omnigent-host plane while the user's real workflow — code-server + Claude Code
-  extension — spans all workspaces as one user; ruling 1 arguably narrowed locked plan
-  text past Hard Rule 9's `/council` gate; ruling 6 contradicts the Stage-3 precondition).
-- **Two sibling briefs captured** (own sessions later, blocked by this task):
-  `kb-three-tier` (3 tiers as git repos, curator promotion, SilverBullet access layer —
-  human-approved design direction) and `secrets-manager` (workspace-scoped, managed from
-  the platform UI, engine-not-product).
+**The task in one paragraph:** build the Workspace entity — a per-client identity boundary.
+After Steps 1–5, a `/council` overturned the original design (it isolated Omnigent's dead
+host plane, not the code-server plane the user actually works in). Resolution, all
+human-approved: **A2′** — each workspace is its own **Unix user** (`ws-<slug>`, own group
+gid 2001+) inside the single code-server container; kernel-enforced isolation on the agent
+path; **no root inside the container** (blanket sudo removed — the "master-key principle":
+root belongs only to the vps-infra architect, host-side); editor access via **POSIX ACLs**;
+per-workspace `CLAUDE_CONFIG_DIR`; secrets `0700`; audit trail via host `auditd`. A1
+(a dedicated code-server instance) is the ≤1 escalation for a client that earns it. The
+Omnigent server is **stopped-but-preserved** as the future collaboration engine.
+
+**Done and on main:**
+- `plan.md` §Phase 2 amended (protected file, human-approved) to the A2′ isolation model.
+- Spec FROZEN (`claude_tasks/workspace-layer.md`), with a post-freeze correction banner
+  pointing to the infra report as the authoritative permission model.
+- Alpha test SEALED, then RE-SEALED **mechanism-agnostic** (`alpha_tests/workspace-layer.md`,
+  BASE for G9 = commit `220f2db8`) — it asserts observable BEHAVIOR (which uid reads what,
+  is the denial recorded), never modes/ACLs/groups. Human ruling: tests assert behavior,
+  not mechanism.
+- Architect built + live-tested infra deliverables 1–7 (`reviews/workspace-layer_infra-report.md`
+  + `…_vps-infra-ruling.md` + `…_vps-infra-ruling-2.md`): image layer (uids/gh/git/acl),
+  blanket sudo removed, provisioning script, mem_limit 4g / cpus 1.5, Omnigent stack
+  stopped, auditd rules active, own-group+ACL permission model (which corrected the sealed
+  test's original setgid/group-coder model — measured to leak code).
+- **`ws-launch`** (the fork's privilege-drop wrapper — a security control) built, passed the
+  code-reviewer gate (iter 1 NOT SAFE: PATH-hijack C-1 → fixed → iter 2 SAFE), merged to
+  main at `deploy/personal-platform/ws-launch` (+ 19-check security harness). Resolves
+  cwd→slug against the architect's **root-owned** registry with an ownership anchor;
+  fail-closed, never falls back to `coder`.
 
 ## Resume exactly here
 
-1. **Re-run the de Step-5 feasibility review** — two attempts died (one silent stall,
-   one killed by a client disconnect). Fresh spawn, READ-ONLY mode: no server/host/runner
-   processes (human consent for ephemeral probes is **still pending**); the spec's 3
-   probes become code-analysis verdicts with file:line evidence. Full prompt pattern in
-   this session's transcript; essentials: read CLAUDE.md → `.claude/agents/de.md` → spec
-   → profile; write `claude_tasks/reviews/workspace-layer_de.md`.
-2. **Step 6 package for the human:** resolve all 8 devils-advocate objections — the big
-   one likely needs `/council` (re-centering Stage-1 scope on the code-server plane the
-   user actually works in vs. the omnigent-host plane; also fix the ruling-6 ↔ Stage-3
-   contradiction) — plus ratify 3 da items (pin BASE commit for the governance diff,
-   whether `web/` is in it, agents-table lint gating). Then freeze spec + seal test.
-3. **Resume the secrets deep-research** (paused mid-verify, cache intact):
-   `Workflow({scriptPath: <session workflows dir>/deep-research-wf_7943ab35-6a7.js,
-   resumeFromRunId: "wf_7943ab35-6a7", args: <same>})` — only AFTER lifecycle agents
-   finish (VPS load rule). Its verdict feeds the `secrets-manager` spec, not this task.
-4. **vps-infra architect: full architecture ruling delivered on the workspace-layer
-   isolation redesign** (2026-07-16) — see
-   `claude_tasks/reviews/workspace-layer_vps-infra-ruling.md`. Answers all 6 question
-   groups (A-F) from `workspace-layer_vps-infra-questions.md`. Headline ruling: **A2**
-   (single code-server, isolation by filesystem convention + git includeIf + path-scoped
-   credential files) as the default topology, with a documented per-workspace escalation
-   to a dedicated code-server instance (A1) reserved for clients that actually need a
-   kernel boundary (contract requirement or higher trust risk) — not a platform-wide
-   default. The Omnigent server plays NO role in the Workspace concept going forward
-   (confirmed dead per the omnigent-host.service finding). Concrete E2 numbers given:
-   `mem_limit: 4g`, `cpus: "1.5"` on code-server, concurrency ceiling ~3-4 concurrent
-   Claude Code processes on this box (the 2026-07-15 hard-lock was ~13 concurrent
-   processes on 2 vCPU/7.8GB — a circuit breaker, not new capacity). This should resolve
-   devils-advocate BLOCKER 1 and MAJOR 4/5 directly for Step 6; BLOCKER 2 (the /council
-   question on Ruling 1) is unaddressed — that's a lifecycle-governance call, not an
-   infra one. Provisioning defects #1-3 from the earlier report remain fixed (see prior
-   entry below, now superseded in relevance by this ruling); #4 (bake gh+git identity)
-   and #5 (resource limits) are still not implemented in docker-compose.yml — next up
-   from the infra side once this design re-centers.
+1. **Architect handoff for `ws-launch`** (prompt delivered to the human 2026-07-16): bake
+   `COPY → /usr/local/bin/ws-launch root:root 0755`; **confirm `claude` is installed
+   root-owned at `/usr/local/bin/claude`** (the wrapper fail-closes otherwise — hard
+   requirement); confirm the registry mount `/etc/code-server-workspaces` + SLUG/UID/GID
+   format; path-only sudoers Cmnd; sudo preserves cwd; wire
+   `claudeCode.claudeProcessWrapper = /usr/local/bin/ws-launch`.
+2. **The ONE recreate window** (architect + human): deliverables 1+2+4+7 + baking ws-launch
+   take effect only on container recreate, which **kills the session**; also migrate
+   `personal` → `ws-personal` (A2′) in that window (precondition for Step 8). Until
+   ws-launch is baked, A2′ is NOT active — agents still run as `coder` ("deployed" ≠
+   "protected").
+3. **Two fork pieces still to build** (needed for Step 8, NOT for the recreate window;
+   each needs the code-reviewer gate): the product registry `workspaces.yaml` + schema,
+   and its validate script (loud-fail on registry/live-state mismatch). These back alpha
+   checks C7 (registry derivability) and C8 (validator). The pm offered to build them
+   before the recreate window; the human chose to pass the architect prompt first.
+4. **Step 8:** `da` runs the sealed alpha test against the live VPS after A2′ is active —
+   needs a host-side operator window (architect) for provisioning + `docker exec --user`
+   probes (master-key principle). Then **Step 9: human validation**, **Step 10: close**.
 
 ## Access
 
-- code-server: `https://omnigent-vps.tail05ae76.ts.net:8443` (full MagicDNS name;
-  password in `/opt/code-server/.env` on the VPS).
-- This fork: `/home/coder/repos/omnigent` (dev container) and `/opt/omnigent` (VPS,
-  `ssh omni-vps`). Push to `origin` (`Zuus89/omnigent`) via `gh` OAuth — works.
-- Linear: initiative "Personal AI Platform"; milestone comments posting again (connector
-  re-connected under the user's NEW claude.ai account).
-- Design mock: `https://claude.ai/code/artifact/e0c98989-9fc7-4f2a-ad85-8f3de5f15232`.
+- code-server: `https://omnigent-vps.tail05ae76.ts.net:8443` (full MagicDNS; pw in
+  `/opt/code-server/.env` on the VPS). **After the recreate the container is new** — the
+  bind mount `/opt/omnigent → /home/coder/repos/omnigent` must re-establish (a known boot
+  race; if the repo looks empty, `docker compose restart code-server`, verify from the
+  host `/opt/omnigent` before assuming data loss).
+- Fork: `/home/coder/repos/omnigent`; push to `origin` (`Zuus89/omnigent`) via `gh` OAuth.
+- Linear initiative "Personal AI Platform"; design mock
+  `https://claude.ai/code/artifact/e0c98989-9fc7-4f2a-ad85-8f3de5f15232`.
 
 ## Flags / gotchas
 
-- **Session-start protocol applies** (CLAUDE.md §3). Also read the Claude memory dir
-  (auto-loaded): environment hazards live there — provisioning clobbers (root ownership,
-  stale snapshots, root-owned `.git/objects`), VPS load limits (stagger agents vs
-  workflows), and the infra-consent protocol.
-- **Infra protocol (human-ruled 2026-07-15):** no system-level changes without explicit
-  consent; infra changes/questions go to the human AS A READY-TO-PASTE PROMPT for the
-  vps-infra session. Ephemeral-server consent for de probes: PENDING.
-- **Client disconnects kill the Claude Code process and all background agents/workflows**
-  (three times this session: 2 internet cuts + 1 VPS hang). Transcripts and workflow
-  caches survive — resume via SendMessage (agents) / resumeFromRunId (workflows). Push
-  early; only pushed work provably survives.
-- `.gitignore`: upstream's `reviews/` pattern swallowed `claude_tasks/reviews/` — scoped
-  exception added in `ceeb8e10`.
-- TODO.md needs a human-approved content update to add the `secrets-manager` item (not a
-  status-sync; it's a new row).
-- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` note in FRAMEWORK.md Part 3 is stale in
-  practice: subagent spawning works in this harness (da/de/devils-advocate all ran).
+- **Session-start protocol** (CLAUDE.md §3) + read the Claude memory dir (env hazards,
+  infra-consent + master-key principle, VPS load limits).
+- **Master-key principle:** after A2′ ships, there is NO passwordless sudo in the
+  container — the `sudo chown` workaround for root-owned files is GONE by design; any such
+  issue is a host-side architect handoff, never self-served.
+- **Infra work = a ready-to-paste prompt for the vps-infra architect session**, carried by
+  the human; never self-serve system-level changes.
+- **VPS load:** 2 vCPU / ~8 GB shared with the editor; one heavy agent/workflow at a time;
+  wide multi-agent workflows run OFF this box (notebook).
+- Client disconnects / VPS hangs kill the session + background agents; transcripts and
+  workflow caches survive (resume via SendMessage / resumeFromRunId). Push early.
+- Root-owned files inside the fork are the **architect's** host-side deliveries (now fixed:
+  they go via `docker exec -u coder`), not provisioning — report, don't self-diagnose.
+- The `da`/`de`/`code-reviewer` roles run as spawnable subagents here (the
+  `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` note in FRAMEWORK.md is stale — spawning works).
+- `TODO.md` still needs a human-approved content row for the `secrets-manager` task
+  (a new row, not a status-sync).
+- Sibling briefs blocked by this task: `kb-three-tier` (SilverBullet access layer) and
+  `secrets-manager`. The secrets deep-research workflow is paused/resumable
+  (`resumeFromRunId wf_7943ab35-6a7`) — run it OFF this box.
