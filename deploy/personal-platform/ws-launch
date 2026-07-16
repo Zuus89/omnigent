@@ -3,7 +3,7 @@
 #
 # SECURITY CONTROL. Invoked by the Claude Code extension as claudeCode.claudeProcessWrapper.
 # It resolves the workspace that owns the current directory, drops to that workspace's Unix
-# user, and execs claude — so an agent acquires the workspace uid and the kernel (not
+# user, and runs claude — so an agent acquires the workspace uid and the kernel (not
 # convention) confines it to that workspace's files.
 #
 # FAIL CLOSED is the whole contract: any doubt about which workspace owns cwd => exit non-zero,
@@ -14,6 +14,17 @@
 # narrow sudoers rule authorizes exactly that literal, root-owned path as the Runas target,
 # which is why the drop re-execs THIS path (never claude directly, never a mutable/mounted
 # path): sudo authorizes a command by path, so the path must be one coder cannot rewrite.
+
+# SECURITY (C-1): set a TRUSTED PATH as the very first action, before ANY external command runs.
+# The single-command sudo grant is only safe if, after the drop, this script runs *claude* and
+# *its own helpers* — not attacker code. coder controls its own PATH, and across sudo's env_reset
+# PATH is preserved unless sudoers secure_path overrides it (secure_path lives in vps-infra and
+# cannot be verified here). Setting PATH here hardens every helper lookup (id/stat/getent/sudo) in
+# BOTH phases — the drop re-execs THIS same script, so phase 2 re-runs this line too — so the
+# control never depends on external config for its core guarantee. Belt-and-suspenders with a
+# root-owned absolute exec of claude below.
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
 
 set -u
 
@@ -26,6 +37,11 @@ REGISTRY_DEFAULT=/etc/code-server-workspaces
 # The literal path the sudoers NOPASSWD rule authorizes as the drop target. The drop re-execs
 # this exact immutable path; sudo — not this script — is the authority that performs the drop.
 SELF=/usr/local/bin/ws-launch
+
+# Workspace uids are real per-workspace accounts, never root/system/editor. Reject any UID below
+# this floor (self-defence in the wrapper); the root-owned registry still owns the finer invariant
+# (only genuine workspace uids, 2001+ in the deployed model).
+UID_FLOOR=1000
 
 PROG=ws-launch
 
@@ -55,6 +71,20 @@ conf_get() {
 	return 1
 }
 
+owner_uid() {
+	# Numeric owner uid of a path. Portable (S-3): coreutils and BusyBox both accept `stat -c`;
+	# fall back to POSIX `ls -n` (field 3) so a base-image swap does not silently flip the
+	# ownership anchor to fail-closed. Returns 1 if the uid cannot be determined.
+	_o=$(stat -c '%u' "$1" 2>/dev/null)
+	case "$_o" in
+		''|*[!0-9]*)
+			_o=$(ls -dn "$1" 2>/dev/null | { read -r _m _l _u _rest; printf '%s' "${_u:-}"; })
+			;;
+	esac
+	case "$_o" in ''|*[!0-9]*) return 1 ;; esac
+	printf '%s' "$_o"
+}
+
 resolve() {
 	# resolve REG_DIR CWD -> on success prints "slug uid gid" and returns 0; else returns 1.
 	#
@@ -74,13 +104,16 @@ resolve() {
 			_cslug=$(conf_get "$_conf" SLUG) || _cslug=
 			_cuid=$(conf_get "$_conf" UID) || _cuid=
 			_cgid=$(conf_get "$_conf" GID) || _cgid=
-			# Well-formed entry: slug is a safe token equal to the filename, UID/GID are positive
-			# non-root integers. Any deviation => treat as no match (malformed => fail closed).
-			if printf '%s' "$_base" | grep -Eq '^[a-zA-Z0-9][a-zA-Z0-9._-]*$' && \
-			   [ "$_cslug" = "$_base" ] && \
-			   printf '%s' "$_cuid" | grep -Eq '^[0-9]+$' && [ "$_cuid" -gt 0 ] && \
-			   printf '%s' "$_cgid" | grep -Eq '^[0-9]+$' && [ "$_cgid" -gt 0 ]; then
-				_owner=$(stat -c '%u' "$_dir" 2>/dev/null) || _owner=
+			# Well-formed entry, validated with `case` globs (newline-proof, unlike a per-line
+			# `grep -q`, W-2): slug a safe single token equal to the filename; UID/GID all-digit;
+			# UID at/above the workspace floor (=> non-root, non-system, S-1); GID non-root.
+			_ok=1
+			case "$_base"  in ''|[.-]*|*[!A-Za-z0-9._-]*) _ok=0 ;; esac
+			[ "$_cslug" = "$_base" ] || _ok=0
+			case "$_cuid" in ''|*[!0-9]*) _ok=0 ;; esac
+			case "$_cgid" in ''|*[!0-9]*) _ok=0 ;; esac
+			if [ "$_ok" = 1 ] && [ "$_cuid" -ge "$UID_FLOOR" ] && [ "$_cgid" -gt 0 ]; then
+				_owner=$(owner_uid "$_dir") || _owner=
 				if [ -n "$_owner" ] && [ "$_owner" = "$_cuid" ]; then
 					_slug=$_base _uid=$_cuid _gid=$_cgid
 				fi
@@ -138,13 +171,36 @@ fi
 umask 007
 
 if [ "$(id -u)" = "$uid" ]; then
-	# Already the workspace user: post-drop re-entry (below), or invoked directly as the owner.
+	# Phase 2 (post-drop) or a direct owner invocation: about to run claude AS the workspace uid.
+	#
+	# Make per-workspace Claude state deterministic (S-2): point HOME at the workspace user's own
+	# home so claude defaults to <home>/.claude, instead of inheriting coder's HOME across the drop.
+	_home=$(getent passwd "$uid" 2>/dev/null | { IFS=: read -r _a _b _c _d _e _h _f; printf '%s' "${_h:-}"; })
+	case "$_home" in /*) HOME=$_home; export HOME ;; esac
+
+	# Run claude by a TRUSTED ABSOLUTE, root-owned path (C-1) — never a bare-name PATH lookup. The
+	# trusted PATH already prevents a coder dir from winning `command -v`; the root-owner check is
+	# defence-in-depth so even a coder-writable claude on a trusted dir is refused. This closes the
+	# "single-command grant becomes arbitrary code as a workspace uid" hole WITHOUT depending on an
+	# unverifiable sudoers secure_path.
+	claude_bin=/usr/local/bin/claude
+	[ -x "$claude_bin" ] || claude_bin=$(command -v claude 2>/dev/null || true)
+	case "$claude_bin" in
+		/*) ;;
+		*) fail "claude not found on the trusted PATH (fail-closed)" ;;
+	esac
+	[ -x "$claude_bin" ] || fail "claude is not an executable file: $claude_bin"
+	claude_owner=$(owner_uid "$claude_bin") || claude_owner=
+	[ "$claude_owner" = "0" ] \
+		|| fail "refusing to run a non-root-owned claude: $claude_bin (owner uid='$claude_owner'; install claude root-owned)"
 	# Replace this process with claude so nothing lingers between the extension and claude.
-	exec claude "$@"
+	exec "$claude_bin" "$@"
 fi
 
 # Drop to the workspace user via the narrow, path-pinned sudo rule, then re-enter: the re-exec
 # runs as the target uid, re-resolves the (unchanged) cwd, and takes the branch above. The euid
 # check — not a forgeable flag — is what gates that branch, so a forged re-entry as coder can
-# never reach `exec claude`.
-exec sudo -u "ws-$slug" "$SELF" "$@"
+# never reach the claude exec. -n (non-interactive) makes any sudoers/registry mismatch exit
+# non-zero immediately instead of hanging on a pty password prompt (W-1: the "exit non-zero" half
+# of fail-closed).
+exec sudo -n -u "ws-$slug" "$SELF" "$@"
