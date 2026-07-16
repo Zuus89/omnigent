@@ -196,10 +196,37 @@ the concrete path to it without reinventing the editor.
 ## Workspace hierarchy
 
 A **workspace** is a full identity context, not just a folder: its own git identity, its own
-Claude/model credentials, its own MCP OAuth grants, its own filesystem — isolated by
-container (or equivalent OS-level boundary). Nothing crosses this boundary by default. Today
-there is exactly one workspace (personal). More get added later only when a real distinct
+Claude/model credentials, its own MCP OAuth grants, its own filesystem. Today there is
+exactly one workspace (personal); more get added only when a real distinct
 identity/credential need shows up (e.g. a client with their own accounts) — not speculatively.
+
+**Isolation model (resolved by council 2026-07-16, see
+`claude_tasks/council/workspace-isolation-amendment.md`).** The boundary is enforced by the
+**operating system**, not by convention, and not by a full container per workspace
+(rejected — a 2 vCPU / 8 GB VPS cannot hold N editor stacks). Each workspace is a distinct
+**Unix user** (`ws-<slug>`) inside the shared code-server container:
+
+- **Agent path — kernel-enforced.** Agents run as their workspace's user; the kernel blocks
+  a cross-workspace read of another workspace's `600` secrets and *logs the denial* (the
+  observable trigger). This requires that **no one inside the container holds root** — the
+  blanket passwordless `sudo` is removed; the **only master key belongs to the vps-infra
+  architect, operating from the host.**
+- **Human-terminal path — convention-enforced** until a later hardening stage (a user can
+  still open a `coder` shell by choosing a non-default terminal profile). This is a known,
+  documented gap, not a hidden one.
+- **"Nothing crosses by default" holds for the agent path once this model ships.** Until it
+  ships, the honest statement is: *the default plane has no boundary against the platform's
+  own daily activity — an agent that ingests hostile web content executes as the editor
+  user and can read every workspace's credentials.* That exposure is the reason this model
+  is being built.
+
+A workspace that earns stronger isolation (a client contract, a data-at-rest requirement)
+**escalates to its own dedicated code-server instance** — a real kernel boundary including
+data at rest. This escalation is bounded at **≤1** on current hardware and buys *isolation,
+not capacity*: both instances share the same 2 vCPUs, so the concurrency ceiling is global.
+The **Omnigent server is not part of this boundary** (it authorizes by owner, not
+workspace); it is stopped-but-preserved as the future collaboration engine, with each
+workspace reserving a partition id for that day.
 
 Inside a workspace, the hierarchy goes **Workspace → Project → Session**: a workspace holds
 several projects (repos), and each project holds many sessions (chats) — not one session per
