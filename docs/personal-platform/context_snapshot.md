@@ -48,11 +48,39 @@ and pushed through `ceeb8e10`.
    `Workflow({scriptPath: <session workflows dir>/deep-research-wf_7943ab35-6a7.js,
    resumeFromRunId: "wf_7943ab35-6a7", args: <same>})` — only AFTER lifecycle agents
    finish (VPS load rule). Its verdict feeds the `secrets-manager` spec, not this task.
-4. **vps-infra architect response pending:** the human carries infra prompts to the
-   separate vps-infra Claude session ("Arquitecto de Datos"). Delivered so far: the
-   4-defect provisioning prompt (root-owned repos, stale-snapshot clobber, root git
-   objects, missing gh/git identity) + load-limits consult. Await rulings before any
-   system-level change.
+4. **vps-infra architect: rulings delivered on defects #1-3, #4-5 still pending.**
+   The 4-defect provisioning prompt got investigated end to end from the vps-infra
+   session (2026-07-15) via direct SSH — root cause for #1 (root-owned repos), #2
+   (silent resync clobbering the working tree) and #3 (root-owned `.git/objects`)
+   all traced to the SAME thing: `omnigent-host.service` (systemd, runs as root,
+   registers this VPS as an `omni host` runner for the Omnigent SERVER to dispatch
+   sessions to) — a leftover from the original parked Omnigent pilot, never actually
+   used since the code-server pivot. It was ALSO found actively crash-looping (403
+   registering with the server, ~270 restarts since the last VPS reboot) — directly
+   relevant to the #5 capacity question. **Ruling: disabled + stopped
+   (`systemctl disable`).** This removes the write path entirely rather than patching
+   around it — no cron/timer was ever the cause (checked, clean). Host-level ownership
+   on all 5 repos already `coder:coder` (1000:1000), durable. Sudo-without-password in
+   the container confirmed to be default upstream `codercom/code-server` image
+   behavior (file mtime matches the image's own build date) — ruling: keep it,
+   tailnet+password-gated is enough. **#4 (bake gh+git identity, persist
+   `~/.config/gh`) and #5 (mem_limit/cpus + concurrency guidance) are designed but not
+   yet implemented** — paused for a live-session check before touching
+   docker-compose.yml further. Full writeup: vps-infra's own `docs/context_snapshot.md`
+   (gitignored, OneDrive-synced only — read this file's summary if on a different
+   device).
+   **Also found + fixed along the way (unrelated to the report, discovered live):**
+   the Claude Code VS Code extension auto-updated to 2.1.210, which bundles a musl
+   native binary incompatible with this glibc container — fixed via
+   `claudeCode.claudeProcessWrapper` pointing at `/usr/local/bin/claude` in
+   `settings.json`. Right after that fix, the omnigent bind mount
+   (`/opt/omnigent:/home/coder/repos/omnigent`) turned out to have never actually
+   established when the container restarted post-reboot (Docker bind-mount race on
+   boot) — host data was always intact, fixed with `docker compose restart
+   code-server`. If `/home/coder/repos/omnigent` ever looks empty/missing again after
+   a VPS reboot, this is the fix: restart the code-server container, don't panic about
+   data loss first — verify from the HOST (`/opt/omnigent`) before assuming anything's
+   gone.
 
 ## Access
 
