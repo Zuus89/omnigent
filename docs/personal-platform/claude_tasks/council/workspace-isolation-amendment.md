@@ -117,6 +117,62 @@ Missing, explicitly:
 the human for validation now; Decision 2 returns to council-resolution (no second full
 council needed — this doc's missing-list is the gate) once items 1–4 land.
 
+## Decision 2 — RESOLVED 2026-07-16 (all four gates cleared)
+
+vps-infra ruling 2 (`workspace-layer_vps-infra-ruling-2.md`, live-measured) + the human's
+choice closed every gate:
+
+1. **A2′ scored and CHOSEN** as the default isolation model — but **as an indivisible
+   bundle**, per the architect and accepted by the human: per-workspace Unix uids +
+   **deletion of the blanket `coder ALL=(ALL) NOPASSWD:ALL` sudo** (without which the uid
+   boundary is void — an injected agent just `sudo`s past it) + the `claudeProcessWrapper`
+   privilege-drop (`exec sudo -u ws-<x> claude`) **treated and tested as a security
+   control, not a convenience**. Group-based layout (owner `ws-x`, group `coder`, dirs
+   `750`, code `640`, secrets `600`) keeps the editor able to browse code while only the
+   workspace uid reads that workspace's secrets. Honest scope: A2′ hardens the **agent**
+   path; the human-terminal path stays convention-enforced (profile-selectable). RAM cost
+   ~0 (uids are free); needs a custom image layer (merges with E1's `gh`/identity bake).
+2. **Threat model re-declared** (architect: "I was wrong") — prompt injection is in scope
+   **today**. Observable trigger: A2′'s **kernel permission-denied** is the signal, emitted
+   as a side effect of blocking (pure A2 has none — the requirement it could not meet).
+   Until A2′ ships, the plan states the exposure verbatim.
+3. **`CLAUDE_CONFIG_DIR`** full-state isolation verified product-side (empirical probe:
+   scratch dir → "Not logged in"; global credential invisible); architect's `strings`
+   probe was inconclusive (packaged SEA), empirical test outranks it.
+4. **A1 ceiling = ≤1** escalated workspace, confirmed by measurement (one code-server =
+   807 MiB idle). Critical correction for the plan text: **A1 = isolation, not capacity;
+   the 2 vCPUs bind before RAM** — both containers share the same two cores, so the
+   ~3–4 concurrent-Claude ceiling is global.
+
+**Also settled:** Q3 stack disposition = **stop-but-preserve** (`docker compose stop`,
+never `down -v`; ~10 s reactivation), strong reason = an injected agent reaches
+`127.0.0.1:8000` via `network_mode: host` while the stack runs. E2 (`mem_limit: 4g`,
+`cpus: "1.5"` on code-server) is overdue and now doubles as a containment control.
+
+**Both decisions now enactable.** The pm rewrites the spec around A2′-default + A1-≤1
+escalation + Omnigent-decoupled-but-preserved, then presents the exact `plan.md` amendment
+(protected file) to the human for approval before any edit. B3 (Anthropic credential
+global) is superseded — per-uid `CLAUDE_CONFIG_DIR` means N logins, and the collaboration
+model has each user bring their own; the plan text must be made consistent.
+
+### Master-key principle (human, 2026-07-16) — binding
+
+**The only master key belongs to the architect.** Removing `NOPASSWD:ALL` from `coder`
+is not just "take the key off the wall" — it is "root on this box lives ONLY with the
+vps-infra architect, operating from the HOST." Inside the code-server container, nobody
+holds root: not `coder`, not any agent (injected or not), not the pm/de lifecycle agents.
+This is the positive form of the A2′ sudo-removal, and it composes with the existing
+infra-consent protocol — infra-level changes don't just *need consent*, they become
+*technically impossible from inside the container* and must route to the architect at the
+host level (where the architect's own ruling already places ownership/backups/root).
+
+**Direct consequence for the lifecycle agents:** the `sudo chown -R coder:coder …`
+workaround used repeatedly this session for the root-owned-files provisioning defect
+**will no longer be available** post-A2′ — which is correct: those defects must be fixed
+durably in host-side provisioning (the architect confirmed host ownership is already
+`coder:coder`), never patched from inside the container. Any residual root-owned-file
+situation becomes an architect handoff, not a self-service `sudo`.
+
 ## Reopen criteria
 
 - **For Decision 1 (decoupling):** reopen if Omnigent's multi-user collaboration model
