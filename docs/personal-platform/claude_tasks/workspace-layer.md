@@ -2,8 +2,9 @@
 type: spec
 title: "Workspace layer — per-workspace identity boundary on the code-server plane (A2′)"
 task: "workspace-layer"
-status: draft
+status: frozen
 created: "2026-07-14"
+frozen_at: "2026-07-16"
 related_decisions: ["plan.md §Phase 2 (workspace hierarchy — amendment pending)", "council/workspace-isolation-amendment.md (both decisions resolved)", "workspace-layer_vps-infra-ruling.md", "workspace-layer_vps-infra-ruling-2.md", "workspace-layer_de.md", "workspace-layer_devils-advocate.md", "workspace-layer_step2-profile.md", "collaboration-vision.md", "kb-three-tier", "secrets-manager"]
 ---
 
