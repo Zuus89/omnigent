@@ -63,10 +63,17 @@ boundary without the sudo removal is theatre):
    exact layer that broke twice in one month — so it is validated as a security control,
    never treated as a convenience.
 
-**File layout** (keeps the editor working while the kernel guards secrets): each
-workspace tree is owner `ws-<slug>`, **group `coder`**, dirs `750`, code `640`, secrets
-`600` owner-only. code-server (as `coder`, in group) browses code; only the workspace uid
-reads that workspace's secrets; a cross-workspace read hits `other=0` → denied+logged.
+**File layout** — **⚠ POST-FREEZE CORRECTION (2026-07-16): the illustrative mechanism
+below was DISPROVEN by live measurement during Step-7 infra build and is SUPERSEDED. The
+authoritative permission model is the measured table in
+`reviews/workspace-layer_infra-report.md`** (own per-workspace group `ws-<slug>` — never
+`coder`; dirs `2770`; code `660`; secrets `0700` ACL-stripped; editor access via POSIX
+ACL `u:coder:rwx`, not group membership; audit trail via host `auditd`). The behaviors
+this spec requires (editor works, cross-workspace reads denied and recorded, secrets
+invisible to the editor) are UNCHANGED; only the how changed. The `de` builds `ws-launch`
+against the infra report's model, and the sealed alpha test asserts these behaviors
+mechanism-agnostically. Original (disproven) text, kept for history: *each workspace tree
+is owner `ws-<slug>`, group `coder`, dirs `750`, code `640`, secrets `600` owner-only.*
 
 **Full Claude Code state isolation:** each workspace launches with
 `CLAUDE_CONFIG_DIR=<workspace>/.claude` (owned by its uid). Verified: this relocates the
