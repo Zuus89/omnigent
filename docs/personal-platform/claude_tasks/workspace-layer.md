@@ -200,6 +200,31 @@ Omnigent server has no role).
 - **Wrapper layer fragility:** it lives in the pty/stdio path that broke twice this month;
   the test harness must cover restart/reload.
 
+## Seal-prep resolutions (pm, 2026-07-16 — da's 5 alpha-test findings)
+
+1. **"Denied + logged" needs an auditd rule — it is NOT free (load-bearing).** The da is
+   correct: a plain DAC `EACCES` is returned only to the caller; the kernel does not log
+   it. This matters beyond wording — the council's decisive advantage of A2′ over plain
+   A2, and its answer to devils-advocate BLOCKER 2, was an **observable** trigger. Without
+   a log there is no observable trigger and the council's resolution is undermined.
+   **Resolution: add an `auditd` rule as a vps-infra deliverable** (watch each workspace's
+   `.credentials`/secret paths, log denied *and* successful cross-uid reads with
+   pid/exe/cwd). This keeps the amended `plan.md` "logs the denial" accurate — its
+   observability now *depends on* the auditd deliverable. The alpha test's auditd
+   sub-check (C2) becomes **mandatory**, not informational.
+2. **Wrapper testability:** the launch wrapper ships with a `--resolve-only` dry-run mode
+   (prints the resolved `cwd → workspace → uid` decision without exec), so a check can
+   assert the privilege-drop logic non-circularly. Added as a fork deliverable requirement.
+3. **Personal migration confirmed in Step-7 scope:** `ws-personal` is migrated to A2′
+   before Step 8, else C2/C4/C5 have no counterpart. Already in Scope ("Personal migrates
+   first"); reaffirmed as a hard Step-7 precondition.
+4. **Governance diff gates `omnigent/` AND `web/`** (both — Out of scope says neither
+   changes; seed 9 said only `omnigent/`, now widened to match). `BASE` pins at
+   **`f467fc20`** at seal (the amendment commit) unless a later pre-seal commit supersedes.
+5. **Group membership via setgid dirs**, not `ws-*`'s primary group (a primary-group
+   shortcut would silently break C2's cross-workspace *code* isolation). Added to the
+   architect provisioning-script requirements.
+
 ## Human rulings carried forward (2026-07-15/16)
 
 Escalation triggers BINDING; registry SSOT rule adopted; data-at-rest gate before first
