@@ -105,6 +105,21 @@ repos:
         files: ^uv\.lock$
         pass_filenames: true
 
+      # Personal AI Platform workspace registry (product SSOT). Run the
+      # STRUCTURAL layer only at commit time: shape + ws-<slug> law + Hard
+      # Rule 6 credential scan, all of which hold off-box where no ws-* user
+      # exists. The live host-state layer (unix_user resolves, root exists) is
+      # the Step-8 $VALIDATE_CMD, run on the host, not here. `language: python`
+      # + `additional_dependencies: [pyyaml]` guarantees a parser in the hook
+      # venv even on a base image that ships neither PyYAML nor jq.
+      - id: validate-workspaces
+        name: validate workspace registry (structural)
+        language: python
+        entry: python scripts/validate_workspaces.py --schema-only
+        files: ^deploy/personal-platform/workspaces\.yaml$
+        pass_filenames: false
+        additional_dependencies: [pyyaml]
+
   # ── File hygiene ────────────────────────────────────────────────
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0

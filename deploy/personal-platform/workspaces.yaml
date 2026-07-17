@@ -1,0 +1,77 @@
+# workspaces.yaml — Personal AI Platform workspace registry (PRODUCT SSOT).
+#
+# WHAT THIS IS
+#   The single source of truth for the *product* view of each workspace: which
+#   folder maps to which client/identity, and the ecosystem hooks downstream
+#   tasks (kb-three-tier, secrets-manager, the future workspace switcher) derive
+#   their targets from. One entry per workspace. Schema: workspaces.schema.md.
+#
+# WHAT THIS IS NOT — READ THIS BEFORE EDITING
+#   This file is NOT the security registry. The launch wrapper `ws-launch`
+#   resolves cwd -> workspace uid against the ROOT-OWNED, read-only
+#   /etc/code-server-workspaces/<slug>.conf (SLUG/UID/GID), hardcoded in the
+#   launch path. This file is coder/ws-personal-writable and must NEVER sit in
+#   the privilege-drop path — a writable registry there would BE the bypass.
+#   (See reviews/workspace-layer_infra-report.md, "OPEN QUESTION for the fork".)
+#
+# HARD RULE 6 (non-negotiable): NO inline credentials, tokens, or connection
+#   strings anywhere in this file. `secret_store` and `git.credential_helper`
+#   are POINTERS only; project `repo` URLs are the clean canonical form with no
+#   embedded userinfo/token. `scripts/validate_workspaces.py` enforces this and
+#   fails the commit if a credential-shaped string appears.
+#
+# VALIDATION
+#   Structural (runs anywhere, incl. pre-commit off-box):
+#     python3 scripts/validate_workspaces.py --schema-only
+#   Full (structural + live host-state; the Step-8 $VALIDATE_CMD):
+#     python3 scripts/validate_workspaces.py
+
+workspaces:
+  - slug: personal
+    # Law (enforced by the validator + alpha C7): unix_user == "ws-" + slug.
+    unix_user: ws-personal
+    # Workspace code tree — the folder that groups this workspace's repos.
+    root: /home/coder/repos/personal
+    # CLAUDE_CONFIG_DIR for this workspace's Claude Code state (own uid, 0700).
+    config_dir: /home/ws-personal/.claude
+    # kb-three-tier clone target slug (law: ^kb-ws-.+). Forward reference; the
+    # kb repo itself is a downstream task.
+    kb_repo: kb-ws-personal
+    # secrets-manager pointer (scheme:name). A REFERENCE, never a secret value.
+    secret_store: keychain:personal
+    # Reserved partition-seam integer (Stage 3). Non-zero on purpose: id 0 is a
+    # reserved/rejected sentinel (see schema doc + spec Stage-3 note), so personal
+    # never has to migrate off 0 later.
+    workspace_id: 1
+    git:
+      name: "Cristóbal Elton"
+      email: celton@cristobalelton.com
+      # POINTER to the credential-helper backing file (git `store` helper). The
+      # actual token lives ONLY in that gitignored file, managed by the separate
+      # gitconfig-includeIf deliverable — never here.
+      credential_helper: "store:/home/ws-personal/.git-credentials"
+    # Per-project git bindings (pre-builds the Phase-3 project-owns-git slot).
+    # `repo` is the clean canonical URL (no embedded token); `branch` is the
+    # default branch. All 5 personal repos belong to the `personal` workspace
+    # (human-confirmed 2026-07-16).
+    projects:
+      - name: omnigent
+        path: /home/coder/repos/personal/omnigent
+        repo: https://github.com/Zuus89/omnigent.git
+        branch: main
+      - name: vps-infra
+        path: /home/coder/repos/personal/vps-infra
+        repo: https://github.com/Zuus89/vps-infra.git
+        branch: main
+      - name: lifecycle-framework
+        path: /home/coder/repos/personal/lifecycle-framework
+        repo: https://github.com/celtonchamberlain/lifecycle-framework.git
+        branch: main
+      - name: saga-voice
+        path: /home/coder/repos/personal/saga-voice
+        repo: https://github.com/Zuus89/saga-voice.git
+        branch: main
+      - name: zuus89.github.io
+        path: /home/coder/repos/personal/zuus89.github.io
+        repo: https://github.com/Zuus89/zuus89.github.io.git
+        branch: main
