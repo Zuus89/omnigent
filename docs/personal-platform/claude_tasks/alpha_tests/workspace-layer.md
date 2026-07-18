@@ -5,8 +5,8 @@ task: "workspace-layer"
 status: sealed
 created: "2026-07-16"
 sealed_at: "2026-07-16"
-resealed_at: "2026-07-16"
-reseal: "post-seal correction — mechanism assertions DELETED, observable behaviors UNCHANGED. See the RE-SEAL block at the top. /audit-corpus: a post-seal modification is expected HIGH severity; this file explains itself below."
+resealed_at: "2026-07-17"
+reseal: "post-seal correction — mechanism assertions DELETED, observable behaviors UNCHANGED. See the RE-SEAL block at the top. /audit-corpus: a post-seal modification is expected HIGH severity; this file explains itself below. // 2026-07-17 SECOND scoped re-seal (human ruling, Cristobal): C4-a ONLY — the topology clause 'config_dir under root' is superseded by the mechanism-agnostic config-isolation PROPERTY; every other sealed criterion byte-identical; precedent 220f2db8. See the C4-a RE-SEAL note in the C4 section."
 related_decisions:
   - "workspace-layer.md (FROZEN spec — its acceptance criteria are behavior-level and unchanged; its illustrative permission-mechanism table is superseded by the infra report)"
   - "reviews/workspace-layer_infra-report.md (independent live VPS measurement that disproved the sealed mechanism)"
@@ -519,8 +519,17 @@ docker exec -u root "$CS" sh -c 'pkill -f "'"$WS_LAUNCH"'"; true'      # cleanup
 Non-destructive; no API call. Grades **behavior** (who can read whose state; where the launch wrote
 its state), never a directory mode.
 ```sh
-# (a) the registry places ws-test's config dir UNDER ws-test's own root (its own state base):
-case "$WSTEST_CFGDIR" in "$WSTEST_ROOT"/*) echo "UNDER_ROOT" ;; *) echo "OUTSIDE_ROOT" ;; esac  # expected: UNDER_ROOT
+# (a) [C4-a RE-SEALED 2026-07-17 — human ruling (Cristobal), scoped to C4-a; see the C4-a RE-SEAL
+#      note directly beneath this code block. Precedent 220f2db8.]
+#   SUPERSEDED (topology — NOT graded): the old (a) required config_dir to be a filesystem descendant
+#   of root, which the shipped `personal` workspace itself does not satisfy (config_dir
+#   /home/ws-personal/.claude is OUTSIDE root /home/coder/repos/personal). Original criterion, kept
+#   verbatim for the freeze trail:
+#       case "$WSTEST_CFGDIR" in "$WSTEST_ROOT"/*) echo "UNDER_ROOT" ;; *) echo "OUTSIDE_ROOT" ;; esac  # expected: UNDER_ROOT
+#   NEW (a) = the config-isolation PROPERTY, wherever config lives (location NOT graded); three legs:
+#     (i)   owner reads its OWN config              — observed by C2-own / the owner sentinel   (rc=0)
+#     (ii)  coder/editor DENIED the config          — observed by (b) below                     (rc!=0)
+#     (iii) cross-workspace read of config DENIED    — observed by (d)/(d′) below + C2-cross      (rc!=0)
 # (b) ws-test's state base is PRIVATE — coder cannot read the sentinel ws-test placed there (C2-own):
 docker exec -u coder "$CS" sh -c 'cat "'"$WSTEST_CFGDIR"'/own.sentinel" >/dev/null 2>&1; echo "rc=$?"'
 #   expected: rc != 0   (behavioral privacy of the state base — no mode asserted)
@@ -543,7 +552,38 @@ docker exec -u ws-test "$CS" sh -c \
   'find "'"$WSTEST_CFGDIR"'" -newer "/tmp/alpha-wrap-t0-'"$NONCE"'" 2>/dev/null | head -3'
 #   expected: ≥1 path (the launched claude wrote its state base inside $WSTEST_CFGDIR)
 ```
-- **PASS iff** (a) `UNDER_ROOT`, (b) rc≠0, (c) `ABSENT_OR_OWN`, (d) rc≠0, (d′) rc≠0, (f) ≥1 path.
+
+> **⚠ C4-a RE-SEAL — scoped, human-ruled (Cristobal, 2026-07-17). Precedent: 220f2db8.**
+> The ONE sanctioned post-seal edit authorized after Step 8 began; it touches **C4-a only** — every
+> other sealed criterion is byte-identical (not renumbered, not reworded). `/audit-corpus`: a post-seal
+> modification is expected HIGH severity; this note is the on-the-record justification.
+>
+> **SUPERSEDED — the old (a) graded topology, not a security property, and is wrong for this
+> architecture.** Old (a): `case "$WSTEST_CFGDIR" in "$WSTEST_ROOT"/*) echo "UNDER_ROOT"` — it required
+> `config_dir` to be a filesystem descendant of `root`. The shipped, accepted `personal` workspace
+> declares `config_dir: /home/ws-personal/.claude` **outside** `root: /home/coder/repos/personal` (the
+> delivered architecture keeps agent config in the workspace Unix HOME). Grading the topology literally
+> FAILS correct, shipped code — the same mechanism-coupling class the 220f2db8 re-seal deleted for
+> `C2-struct`.
+>
+> **NEW C4-a criterion — the config-isolation PROPERTY, wherever config lives (location NOT graded):**
+>   - **(i)**  the owning workspace uid reads its OWN config (rc=0);
+>   - **(ii)** the `coder`/editor plane is DENIED the config (rc≠0, permission-denied class);
+>   - **(iii)** a cross-workspace read of another workspace's config is DENIED (rc≠0).
+>   **C4-a PASS iff all three legs hold.** No mode, group, ACL, or path-topology is asserted. Legs are
+>   observed by checks already in this test: (i) C2-own / the owner sentinel; (ii) C4-a leg (b); (iii)
+>   C4-a legs (d)/(d′) + C2-cross.
+>
+> **NOT goalpost-moving (mid-Step-8 re-seal integrity):** this DELETES a non-security topology check and
+> SUBSTITUTES the actual security assertions — a strengthening/clarification, never a loosening. The old
+> (a) could pass on a string-match while proving nothing about confidentiality; the new (a) requires
+> demonstrated privacy of the config against BOTH the editor plane AND peer workspaces. No isolation
+> guarantee is weakened; only the location requirement — never a security property — is removed. C4 legs
+> (b)–(f) are unchanged. Authority: human governance ruling logged to `activity_log.jsonl`
+> (2026-07-17T14:45:58Z); Hard Rule 9 satisfied (explicit authorization, not silent override). Absent
+> that ruling this scoped re-seal is void and the superseded topology (a) above is authoritative.
+
+- **PASS iff** (a) the C4-a config-isolation property holds — owner reads own config; `coder` denied; cross-ws read denied (see the C4-a RE-SEAL note above; **topology NOT graded**) — (b) rc≠0, (c) `ABSENT_OR_OWN`, (d) rc≠0, (d′) rc≠0, (f) ≥1 path.
   [behavioral item 7: one workspace's logged-in state / transcripts are not visible to the other]
 - **Now-status:** needs provisioning (config-dir relocation) + PF-3 + C2-wrap (for f) → **BLOCKED**.
 
