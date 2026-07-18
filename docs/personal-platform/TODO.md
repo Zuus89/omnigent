@@ -37,8 +37,8 @@ Status markers: `Ready` · `In Progress` · `Blocked` · `Done`
 
 | Status | Item | Blocked by |
 |--------|------|------------|
-| In Progress | Build the Workspace layer for real — Omnigent has no equivalent (its "workspace" is a filesystem path on a session, i.e. our Project, not an identity/credential boundary over multiple projects). Steps 1–4 done + devils-advocate review; de review + Step-6 resolution pending — see `context_snapshot.md`. | V1 complete |
-| Blocked | Implement the three-tier knowledge base (Global / Workspace / Project) with the promotion flow. | V1 complete |
+| Done | Build the Workspace layer for real — Omnigent has no equivalent (its "workspace" is a filesystem path on a session, i.e. our Project, not an identity/credential boundary over multiple projects). **CLOSED 2026-07-17 (A2′): full 10-step lifecycle, Step-8 alpha test PASS 42/42, kernel-enforced per-client isolation live via `ws-launch`. See chronicle 2026-07-17.** | V1 complete |
+| Ready (unblocked) | Implement the three-tier knowledge base (Global / Workspace / Project) with the promotion flow. Brief captured under `claude_tasks/`. | ~~Workspace layer~~ done |
 | Blocked | Build the KB curator agent + review panel. | Three-tier KB |
 | Done (already native to Omnigent) | ~~Background-agent status view~~ — confirmed live: `SubagentsPanel.tsx` + `RunningDot` + session `idle`/`running` states already exist. Nothing to build here. | — |
 
@@ -54,8 +54,11 @@ Status markers: `Ready` · `In Progress` · `Blocked` · `Done`
 
 ## Next up
 
-Phase 2 started 2026-07-14 with the Workspace-layer task (full 10-step lifecycle, In
-Progress above — resume point in `context_snapshot.md`). Briefs are also captured for
-`kb-three-tier` and `secrets-manager` (see `claude_tasks/`), both blocked by the
-Workspace layer; the `secrets-manager` item still needs a human-approved row in this
-roadmap.
+Phase 2's foundation — the **Workspace-layer task — CLOSED 2026-07-17** (full 10-step
+lifecycle, alpha PASS; see chronicle). It no longer blocks anything. Next natural pick:
+**`kb-three-tier`** (three-tier KB, now Ready above). Also queued: the three `ws-launch`
+flags (`--shell` [highest], scalable persistence, `.claude` audit gap — each needs a spec +
+code-reviewer gate + an infra SHA re-pin) and `secrets-manager` (brief captured, still needs
+a human-approved row in this roadmap). Deferred cross-repo item: 3 sibling repos carry
+embedded tokens in their remote URLs (fork is clean) — see `context_snapshot.md`. Sequencing
+is a Cristóbal decision.

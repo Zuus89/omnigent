@@ -224,3 +224,66 @@ remembering for any future fine-grained-PAT setup on this project.
 **Alpha test:** N/A — credential/config troubleshooting, no behavioral change to the product.
 
 **Next action:** unchanged — Phase 2 or Phase 3, per `plan.md`'s "Delivery vehicle" section.
+
+## 2026-07-17 — Phase 2 `workspace-layer` (A2′) CLOSED: alpha test PASS, kernel-enforced per-client isolation live
+
+**Context:** The first full-10-step-lifecycle task and Phase 2's foundation — build the
+Workspace entity as a real per-client identity/credential boundary (Omnigent has no
+equivalent; its "workspace" is just a session filesystem path = our Project). A `/council`
+overturned the original design; the human-approved resolution was **A2′**: each workspace is
+its own **Unix user** (`ws-<slug>`, own group gid 2001+) inside the single code-server
+container, kernel-enforced isolation on the agent path, **no root in the container**
+(master-key principle), editor access via POSIX ACLs, per-workspace `CLAUDE_CONFIG_DIR`,
+secrets `0700`, host `auditd` coverage. Split build: the fork carries the product registry +
+validator + the `ws-launch` privilege-drop wrapper; the vps-infra architect owns the
+root-plane (image layer, provisioning, auditd, limits, the live drop).
+
+**Summary:** Step-8 frozen alpha test rendered final **§6 verdict = PASS — 42/42 mandatory
+checks**, folded across both execution planes (DA-measured as genuine `ws-personal` uid 1001
++ infra root-plane, relayed per-step via Cristóbal under the master-key principle). C8-V1–V3
+ran fork-side on the restored registry (V2 ghost → loud non-zero naming the slug); infra's
+teardown round confirmed clean (canary unchanged pid 467628 — no container restart at any
+point — `ws-test` GONE, registry personal-only, auditd ruleset intact). Committed docs-only
+at `4d96e51a`, pushed to `origin/main`. Human validation (Step 9): Cristóbal accepted the
+PASS and released the commit hold.
+
+**Key findings / decisions:**
+- **Two mid-Step-8 governance events, both human-ruled, both on record (Hard Rule 9 by
+  explicit authorization, not silent override):** (1) a **scoped C4-a re-seal** — the sealed
+  criterion graded config-dir *topology* (`config_dir under root`), which the already-shipped
+  `personal` workspace itself violates (config in the Unix HOME, code ACL-shared), so grading
+  it literally would FAIL correct production code. Superseded by the mechanism-agnostic
+  config-isolation *property* (owner-reads-own / coder-denied / cross-ws-denied); every other
+  sealed criterion byte-identical (precedent 220f2db8). (2) **C2-audit** raised to gated-on-fix
+  then closed when infra added uid-scoped auditd rules so the deep-read direction logs
+  literally. Same defect class the earlier mechanism-agnostic re-seal existed to correct — a
+  latent mechanism-coupling that survived it.
+- **A killed session did not lose the task.** The prior session (`d0af876d`) was killed
+  mid-run by infra's non-PID-scoped `pkill -f ws-launch`; the recovered session (`dd61b8cf`)
+  resumed entirely from the durable git-tracked artifacts — the append-only report + activity
+  log + sealed test were the whole recovery surface. Validates the "every consequential step
+  leaves a durable trace" rule under a real context-loss event.
+- **The bias-free plane split worked:** the DA performed the cross-read itself as uid 1001 and
+  observed the denial; infra stood up the throwaway second workspace + planted secrets via the
+  real provisioning path. Neither side could fake the other's evidence.
+
+**Questions raised/resolved:** the C4-a topology-vs-property contradiction was resolved by a
+direct human ruling + `da` scoped re-seal (the human chose this over a `/council`).
+
+**Deferred (out of alpha scope, carried to the snapshot as Phase-2 follow-ups):**
+- **Embedded-token exposure in 3 sibling repos** (`saga-voice`, `vps-infra`,
+  `zuus89.github.io`) — remote URLs still carry tokens. The **fork itself is clean/OAuth**.
+  Remediation = `git remote set-url` tokenless (infra) + **Cristóbal rotates the 3 tokens on
+  GitHub (human-only)**. `lifecycle-framework` is clean. (Note: the token-in-URL convention is
+  the tower's, not the VPS's now that `gh` is configured.)
+- **`provision-workspace.sh:148` blanket `chmod 660`** rewrites tracked file modes (caused 29
+  spurious mode-only diffs). Infra's fix (`chmod ug+rw,o-rwx`, preserves the x-bit) is ready to
+  land in vps-infra PR #4 on hold release.
+- **A-5:** the sealed §3 fixture's latent `date '+%x %T'` (2-digit year) pattern, left
+  untouched under the da freeze rule — a future human-ruled fixture correction; changed no
+  verdict.
+
+**Next action:** Phase 2 continues — `kb-three-tier` (three-tier KB, now unblocked by the
+workspace layer) is the natural next task; the three `ws-launch` flags (`--shell` [highest],
+scalable persistence, `.claude` audit gap) and `secrets-manager` (needs a human-approved TODO
+row) are also queued. Sequencing is a Cristóbal decision.
