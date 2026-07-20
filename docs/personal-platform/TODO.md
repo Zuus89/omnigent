@@ -59,6 +59,7 @@ lifecycle, alpha PASS; see chronicle). It no longer blocks anything. Next natura
 **`kb-three-tier`** (three-tier KB, now Ready above). Also queued: the three `ws-launch`
 flags (`--shell` [highest], scalable persistence, `.claude` audit gap — each needs a spec +
 code-reviewer gate + an infra SHA re-pin) and `secrets-manager` (brief captured, still needs
-a human-approved row in this roadmap). Deferred cross-repo item: 3 sibling repos carry
-embedded tokens in their remote URLs (fork is clean) — see `context_snapshot.md`. Sequencing
+a human-approved row in this roadmap). ~~Deferred cross-repo item: 3 sibling repos carried
+embedded tokens in their remote URLs~~ — **resolved 2026-07-19** (all 5 repos verified
+tokenless + OAuth-only; token deleted on GitHub — see `context_snapshot.md`). Sequencing
 is a Cristóbal decision.

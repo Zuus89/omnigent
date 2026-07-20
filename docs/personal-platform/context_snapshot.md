@@ -53,11 +53,12 @@ Phase-2 queue below.
 
 ## Deferred follow-ups (carried from the workspace-layer close — do not lose)
 
-- ⚠️ **Embedded-token exposure in 3 sibling repos:** `saga-voice`, `vps-infra`,
-  `zuus89.github.io` still carry tokens in their remote URLs. **The fork itself is clean
-  (tokenless, `ws-personal` OAuth via gh).** `lifecycle-framework` is clean. Remediation:
-  `git remote set-url` tokenless (infra) **+ Cristóbal rotates the 3 tokens on GitHub —
-  human-only, no agent can do it.** Live credential exposure until done.
+- ✅ **RESOLVED 2026-07-19 — embedded-token exposure in 3 sibling repos:** remediation
+  verified complete on both sides. All 5 `ws-personal` repos measured tokenless remote URLs
+  + no `.git-credentials` store + single credential path (`gh` OAuth `gho_`, `ls-remote`
+  auth OK on all 3 former offenders); the embedded token itself confirmed deleted on GitHub
+  by Cristóbal (it was the old fine-grained PAT scoped to exactly those 3 repos). Note for
+  other machines: the token-in-URL convention is the **tower's**, not the VPS's.
 - **`provision-workspace.sh:148` `chmod 660` fix** (`chmod ug+rw,o-rwx`, preserves x-bit)
   ready to land in **vps-infra PR #4**.
 - **A-5:** sealed §3 fixture's latent `date '+%x %T'` (2-digit-year) pattern — a future
